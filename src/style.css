@@ -1,0 +1,117 @@
+:root {
+  --bg-main: #fcfbfe;
+  --bg-subtle: #f4f1fb;
+  --surface: #ffffff;
+  --primary: #6344d4;
+  --primary-hover: #5234be;
+  --primary-soft: #ede8ff;
+  --accent: #f43f7a;
+  --text-main: #181226;
+  --text-secondary: #58506c;
+  --text-muted: #867e99;
+  --border: #e8e3f3;
+  --danger: #d92d53;
+  --danger-bg: #fef1f4;
+
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --radius-pill: 9999px;
+
+  --shadow-subtle: 0 2px 10px rgba(24, 18, 38, 0.04);
+  --shadow-elevated: 0 14px 36px rgba(99, 68, 212, 0.08);
+  --touch-min: 44px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  font-family: 'Inter', 'Hind Siliguri', -apple-system, BlinkMacSystemFont, sans-serif;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+:focus-visible {
+  outline: 2.5px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.container {
+  width: 100%;
+  max-width: 1060px;
+  margin: 0 auto;
+  padding: 0 1.1rem;
+}
+
+@media (min-width: 768px) {
+  .container {
+    padding: 0 2rem;
+  }
+}
+
+/* Minimalist Navbar */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(252, 251, 254, 0.88);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+}
+
+.nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 68px;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  padding: 0.5rem 0;
+}
+
+.brand-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  text-decoration: none;
+  color: var(--text-main);
+  font-weight: 800;
+  font-size: 1.3rem;
+  letter-spacing: -0.02em;
+}
+
+.brand-mark {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--primary), var(--accent));
+  color: #ffffff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Language Switcher Pill */
+.lang-switch {
+  display: inline-flex;
+  align-items: center;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-pill);
+  padding: 3px;
+  cursor: pointer;
+}
+
+.lang-pill {
+  padding: 0.28rem 0.68rem;
+  border-radius: var(--radius-pill);
