@@ -15,6 +15,15 @@ export const supabase: SupabaseClient | null = isSupabaseConfigured
   ? createClient(supabaseUrl, supabaseAnonKey)
   : null;
 
+export interface LeaderboardEntry {
+  submissionId: string;
+  participantNickname: string;
+  score: number;
+  totalQuestions: number;
+  scorePercentage: number;
+  submittedAt: string;
+}
+
 export interface PublicQuiz {
   id: string;
   slug: string;
@@ -23,6 +32,7 @@ export interface PublicQuiz {
   description: string;
   status: 'published' | 'disabled' | 'draft';
   questions: QuizQuestion[];
+  leaderboard?: LeaderboardEntry[];
 }
 
 export interface SubmissionResult {
@@ -65,16 +75,24 @@ export function saveLang(lang: Lang) {
   localStorage.setItem(LANG_KEY, lang);
 }
 
-function generateSlug(title: string): string {
-  const base = title
+function generateSlug(title: string, creatorName: string): string {
+  const cleanTitle = title
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '')
-    .slice(0, 16);
+    .slice(0, 14);
+
+  const cleanCreator = creatorName
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 10);
+
+  const prefix = cleanTitle || cleanCreator || 'bff';
   const bytes = new Uint8Array(6);
   crypto.getRandomValues(bytes);
   const suffix = Array.from(bytes, (b) => (b % 36).toString(36)).join('');
-  return `${base || 'quiz'}-${suffix}`;
+  return `${prefix}-${suffix}`;
 }
 
 function getClientFingerprint(): string {
@@ -99,7 +117,6 @@ function getLocalQuizzes(lang: Lang = 'en'): PublicQuiz[] {
     }
   }
 
-  // Always keep a dynamic bilingual sample quiz ready
   const sampleTpl = TEMPLATES[lang][0];
   const sampleQuiz: PublicQuiz = {
     id: 'sample-quiz-001',
@@ -135,15 +152,16 @@ export const api = {
   async getCurrentUser(): Promise<{ id: string; email: string; displayName: string } | null> {
     if (supabase) {
       const { data } = await supabase.auth.getUser();
-      if (!data.user) return null;
-      return {
-        id: data.user.id,
-        email: data.user.email || '',
-        displayName:
-          (data.user.user_metadata?.display_name as string) ||
-          data.user.email?.split('@')[0] ||
-          'Creator',
-      };
+      if (data.user) {
+        return {
+          id: data.user.id,
+          email: data.user.email || '',
+          displayName:
+            (data.user.user_metadata?.display_name as string) ||
+            data.user.email?.split('@')[0] ||
+            'Creator',
+        };
+      }
     }
     const raw = localStorage.getItem(USER_KEY);
     return raw ? JSON.parse(raw) : null;
@@ -175,7 +193,6 @@ export const api = {
           display_name: displayName.trim(),
         });
       }
-      return;
     }
 
     localStorage.setItem(
@@ -226,69 +243,9 @@ export const api = {
       }
     }
 
-    let user = await this.getCurrentUser();
-    if (!user) {
-      localStorage.setItem(
-        USER_KEY,
-        JSON.stringify({
-          id: 'local-creator-001',
-          email: 'creator@local.app',
-          displayName: params.creatorDisplayName.trim(),
-        })
-      );
-      user = await this.getCurrentUser();
-    }
+    const slug = generateSlug(params.title, params.creatorDisplayName);
 
-    const slug = generateSlug(params.title);
-
-    if (supabase && user && user.id !== 'local-creator-001') {
-      await supabase.from('profiles').upsert({
-        id: user.id,
-        display_name: params.creatorDisplayName.trim(),
-      });
-
-      const { data: quizRow, error: quizErr } = await supabase
-        .from('quizzes')
-        .insert({
-          owner_id: user.id,
-          slug,
-          creator_display_name: params.creatorDisplayName.trim(),
-          title: params.title.trim(),
-          description: params.description.trim(),
-          status: 'published',
-          published_at: new Date().toISOString(),
-        })
-        .select('id, slug')
-        .single();
-
-      if (quizErr || !quizRow) throw new Error(quizErr?.message || 'Failed to publish quiz.');
-
-      for (let i = 0; i < params.questions.length; i++) {
-        const q = params.questions[i];
-        const { data: qRow, error: qErr } = await supabase
-          .from('quiz_questions')
-          .insert({
-            quiz_id: quizRow.id,
-            position: i + 1,
-            question_text: q.questionText.trim(),
-            options: q.options,
-          })
-          .select('id')
-          .single();
-
-        if (qErr || !qRow) throw new Error(qErr?.message || 'Failed to save question.');
-
-        await supabase.from('quiz_answer_keys').insert({
-          question_id: qRow.id,
-          quiz_id: quizRow.id,
-          correct_option_id: q.correctOptionId || 'opt_1',
-        });
-      }
-
-      return { slug: quizRow.slug };
-    }
-
-    // Local Persistence
+    // Save locally so Creator Dashboard on this device always remembers the quiz
     const existing = getLocalQuizzes().filter((q) => q.slug !== 'sample-best-friend-quiz');
     const newQuiz: PublicQuiz = {
       id: crypto.randomUUID ? crypto.randomUUID() : `quiz_${Date.now()}`,
@@ -304,6 +261,29 @@ export const api = {
     };
     existing.unshift(newQuiz);
     localStorage.setItem(QUIZZES_KEY, JSON.stringify(existing));
+
+    // Also publish to Supabase Cloud DB (works with or without account login!)
+    if (supabase) {
+      const { data, error } = await supabase.rpc('create_public_quiz', {
+        p_slug: slug,
+        p_creator_display_name: params.creatorDisplayName.trim(),
+        p_title: params.title.trim(),
+        p_description: params.description.trim(),
+        p_questions: params.questions.map((q) => ({
+          questionText: q.questionText.trim(),
+          options: q.options,
+          correctOptionId: q.correctOptionId || 'opt_1',
+        })),
+      });
+
+      if (error) {
+        throw new Error(error.message || 'Failed to save quiz to cloud.');
+      }
+      if (data && data.slug) {
+        return { slug: data.slug };
+      }
+    }
+
     return { slug };
   },
 
@@ -329,11 +309,16 @@ export const api = {
     if (!found) return { status: 'not_found' };
     if (found.status !== 'published') return { status: 'unavailable' };
 
-    // Strip `correctOptionId` so public state never leaks answers
+    const localSubs = getLocalSubmissions()
+      .filter((s) => s.quizSlug.toLowerCase() === cleanSlug)
+      .sort((a, b) => b.scorePercentage - a.scorePercentage)
+      .slice(0, 15);
+
     return {
       status: 'ok',
       quiz: {
         ...found,
+        leaderboard: localSubs,
         questions: found.questions.map((q) => ({
           id: q.id,
           position: q.position,
@@ -446,7 +431,7 @@ export const api = {
         .eq('owner_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (!error && quizzes) {
+      if (!error && quizzes && quizzes.length > 0) {
         return quizzes.map((q: any) => {
           const subs: SubmissionResult[] = (q.quiz_submissions || []).map((s: any) => ({
             submissionId: s.id,
@@ -522,6 +507,20 @@ export const api = {
     if (raw) {
       const list: PublicQuiz[] = JSON.parse(raw).filter((q: PublicQuiz) => q.id !== quizId);
       localStorage.setItem(QUIZZES_KEY, JSON.stringify(list));
+    }
+  },
+
+  async submitAbuseReport(quizSlug: string, reason: string, details: string) {
+    if (!details.trim() || details.trim().length < 5) {
+      throw new Error('Please write a brief description of the issue.');
+    }
+    if (supabase) {
+      const { error } = await supabase.from('abuse_reports').insert({
+        quiz_slug: quizSlug.trim() || null,
+        reason,
+        details: details.trim().slice(0, 1000),
+      });
+      if (error) throw new Error(error.message);
     }
   },
 };
