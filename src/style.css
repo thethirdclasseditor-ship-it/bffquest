@@ -3,6 +3,8 @@
   --primary-hover: #5835eb;
   --primary-soft: #f3effe;
   --accent: #ff6b8b;
+  --whatsapp: #20b858;
+  --whatsapp-hover: #1aa34c;
   --bg: #fcfbfe;
   --surface: #ffffff;
   --text-main: #18122b;
@@ -45,6 +47,28 @@ body {
 :focus-visible {
   outline: 2.5px solid var(--primary);
   outline-offset: 2px;
+}
+
+/* Smooth Minimalist Animations */
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-in {
+  animation: fadeSlideUp 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-in {
+    animation: none;
+  }
 }
 
 .container {
@@ -172,6 +196,16 @@ body {
   transform: translateY(-1px);
 }
 
+.btn-whatsapp {
+  background: var(--whatsapp);
+  color: #ffffff;
+}
+
+.btn-whatsapp:hover:not(:disabled) {
+  background: var(--whatsapp-hover);
+  transform: translateY(-1px);
+}
+
 .btn-secondary {
   background: var(--primary-soft);
   color: var(--primary);
@@ -257,7 +291,8 @@ body {
 }
 
 .form-input,
-.form-textarea {
+.form-textarea,
+.form-select {
   width: 100%;
   min-height: 44px;
   padding: 0.65rem 0.9rem;
@@ -271,7 +306,8 @@ body {
 }
 
 .form-input:focus,
-.form-textarea:focus {
+.form-textarea:focus,
+.form-select:focus {
   border-color: var(--primary);
   outline: none;
   box-shadow: 0 0 0 3px rgba(109, 74, 255, 0.14);
@@ -324,6 +360,54 @@ body {
   transition: width 0.25s ease;
 }
 
+/* Leaderboard Styling */
+.leaderboard-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  margin-top: 1rem;
+}
+
+.leaderboard-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.7rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
+
+.rank-badge {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--primary-soft);
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 0.82rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rank-badge.top-1 {
+  background: #fef08a;
+  color: #854d0e;
+}
+
+/* Clean Ad Slot Box */
+.ad-slot-box {
+  margin: 2rem auto 0;
+  padding: 0.9rem 1.2rem;
+  border-radius: var(--radius-md);
+  background: #f7f4fe;
+  border: 1px dashed #d8cefa;
+  text-align: center;
+  font-size: 0.84rem;
+  color: var(--text-secondary);
+}
+
 .demo-bar {
   background: var(--text-main);
   color: #f3effe;
@@ -335,6 +419,16 @@ body {
 .alert-error {
   background: var(--danger-bg);
   color: var(--danger);
+  padding: 0.85rem 1rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: 1rem;
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.alert-success {
+  background: var(--success-bg);
+  color: var(--success);
   padding: 0.85rem 1rem;
   border-radius: var(--radius-sm);
   margin-bottom: 1rem;
