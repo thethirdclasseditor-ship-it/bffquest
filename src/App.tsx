@@ -20,6 +20,9 @@ import {
   Download,
   CheckCircle2,
   LogOut,
+  Trophy,
+  MessageCircle,
+  ShieldAlert,
 } from 'lucide-react';
 import {
   BRAND,
@@ -36,6 +39,7 @@ import {
   PublicQuiz,
   SubmissionResult,
   CreatorQuizSummary,
+  LeaderboardEntry,
 } from './api';
 
 interface LangContextType {
@@ -53,10 +57,74 @@ const LangContext = createContext<LangContextType>({
 const useLang = () => useContext(LangContext);
 
 /* ============================================================================
+ * REUSABLE AD BANNER SLOT (Adsterra / Monetag / A-Ads / Direct Sponsor Ready)
+ * ============================================================================ */
+const AdBanner: React.FC<{ slotId: string }> = ({ slotId }) => {
+  if (!BRAND.ads.enabled) return null;
+
+  return (
+    <aside className="ad-slot-box" aria-label="Sponsored Content" data-slot={slotId}>
+      {BRAND.ads.sponsorUrl ? (
+        <a
+          href={BRAND.ads.sponsorUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: 'var(--primary)', fontWeight: 600, textDecoration: 'none' }}
+        >
+          {BRAND.ads.sponsorText}
+        </a>
+      ) : (
+        <span>{BRAND.ads.sponsorText}</span>
+      )}
+    </aside>
+  );
+};
+
+/* ============================================================================
+ * REUSABLE LEADERBOARD COMPONENT
+ * ============================================================================ */
+const LeaderboardCard: React.FC<{ entries?: LeaderboardEntry[] }> = ({ entries = [] }) => {
+  const { t } = useLang();
+
+  return (
+    <div className="card" style={{ marginTop: '1.5rem', textAlign: 'left' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
+        <Trophy size={20} color="var(--primary)" />
+        <h3 style={{ margin: 0, fontSize: '1.15rem' }}>{t.leaderboardTitle}</h3>
+      </div>
+
+      {entries.length === 0 ? (
+        <p style={{ color: 'var(--text-secondary)', fontSize: '0.92rem', margin: 0 }}>
+          {t.leaderboardEmpty}
+        </p>
+      ) : (
+        <div className="leaderboard-list">
+          {entries.map((item, idx) => (
+            <div key={item.submissionId || idx} className="leaderboard-row">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <span className={`rank-badge ${idx === 0 ? 'top-1' : ''}`}>{idx + 1}</span>
+                <strong>{item.participantNickname}</strong>
+              </div>
+              <div style={{ fontWeight: 700, color: 'var(--primary)' }}>
+                {item.score}/{item.totalQuestions} ({Math.round(Number(item.scorePercentage))}%)
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+/* ============================================================================
  * 1. MINIMALIST PREMIUM LAYOUT & LANGUAGE SWITCHER
  * ============================================================================ */
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { lang, setLang, t } = useLang();
+
+  useEffect(() => {
+    document.title = `${BRAND.name} — ${t.tagline}`;
+  }, [lang, t.tagline]);
 
   const handleSwitch = (next: Lang) => {
     setLang(next);
@@ -138,8 +206,17 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               <Link to="/about">About</Link>
               <Link to="/privacy">Privacy Policy</Link>
               <Link to="/terms">Terms</Link>
-              <Link to="/report" style={{ color: 'var(--danger)' }}>
-                Report Abuse
+              <Link
+                to="/report"
+                style={{
+                  color: 'var(--danger)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.3rem',
+                  fontWeight: 600,
+                }}
+              >
+                <ShieldAlert size={15} /> Report Abuse
               </Link>
             </div>
           </div>
@@ -172,7 +249,7 @@ const HomePage: React.FC = () => {
   const sampleQ = TEMPLATES[lang][0].questions[0];
 
   return (
-    <div>
+    <div className="animate-in">
       <section
         style={{
           padding: '3.5rem 0 3rem',
@@ -284,13 +361,15 @@ const HomePage: React.FC = () => {
             <p style={{ color: 'var(--text-secondary)', margin: 0 }}>{t.step3Desc}</p>
           </div>
         </div>
+
+        <AdBanner slotId="home-bottom" />
       </section>
     </div>
   );
 };
 
 /* ============================================================================
- * 3. CREATE QUIZ PAGE (BILINGUAL TEMPLATES & BUILDER)
+ * 3. CREATE QUIZ PAGE (WITH DIRTY-CHECK FIX & WHATSAPP SHARE)
  * ============================================================================ */
 const CreateQuizPage: React.FC = () => {
   const { lang, t } = useLang();
@@ -299,6 +378,7 @@ const CreateQuizPage: React.FC = () => {
   const [creatorName, setCreatorName] = useState('');
   const [title, setTitle] = useState(templates[0].defaultTitle);
   const [description, setDescription] = useState(templates[0].description);
+  const [hasEdited, setHasEdited] = useState(false);
   const [questions, setQuestions] = useState<QuizQuestion[]>(() =>
     templates[0].questions.map((q, idx) => ({
       ...q,
@@ -308,8 +388,9 @@ const CreateQuizPage: React.FC = () => {
     }))
   );
 
-  // Sync default template when user switches language before editing
+  // Only switch template on language change if the user hasn't typed custom edits yet
   useEffect(() => {
+    if (hasEdited) return;
     const tpl = TEMPLATES[lang][0];
     setTitle(tpl.defaultTitle);
     setDescription(tpl.description);
@@ -321,7 +402,7 @@ const CreateQuizPage: React.FC = () => {
         options: q.options.map((o) => ({ ...o })),
       }))
     );
-  }, [lang]);
+  }, [lang, hasEdited]);
 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [publishing, setPublishing] = useState(false);
@@ -341,6 +422,7 @@ const CreateQuizPage: React.FC = () => {
         options: q.options.map((o) => ({ ...o })),
       }))
     );
+    setHasEdited(false);
     setErrorMsg(null);
   };
 
@@ -363,10 +445,13 @@ const CreateQuizPage: React.FC = () => {
   };
 
   const shareUrl = publishedSlug ? `${window.location.origin}/q/${publishedSlug}` : '';
+  const whatsappText = encodeURIComponent(
+    `${title} — Take my ${BRAND.name} friendship quiz and see how well you know me! ${shareUrl}`
+  );
 
   if (publishedSlug) {
     return (
-      <div className="container" style={{ paddingTop: '3rem', maxWidth: '640px' }}>
+      <div className="container animate-in" style={{ paddingTop: '3rem', maxWidth: '640px' }}>
         <div className="card card-elevated" style={{ textAlign: 'center' }}>
           <span className="badge" style={{ marginBottom: '0.75rem' }}>
             {t.publishedBadge}
@@ -396,6 +481,16 @@ const CreateQuizPage: React.FC = () => {
               gap: '0.75rem',
             }}
           >
+            <a
+              href={`https://wa.me/?text=${whatsappText}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-whatsapp"
+            >
+              <MessageCircle size={18} />
+              <span>{t.whatsappShareBtn}</span>
+            </a>
+
             <button
               type="button"
               className="btn btn-primary"
@@ -437,7 +532,7 @@ const CreateQuizPage: React.FC = () => {
   }
 
   return (
-    <div className="container" style={{ paddingTop: '2.25rem', maxWidth: '840px' }}>
+    <div className="container animate-in" style={{ paddingTop: '2.25rem', maxWidth: '840px' }}>
       <h1 style={{ marginBottom: '0.35rem' }}>{t.builderHeading}</h1>
       <p style={{ color: 'var(--text-secondary)', marginTop: 0, marginBottom: '1.5rem' }}>
         {t.builderSub}
@@ -476,7 +571,10 @@ const CreateQuizPage: React.FC = () => {
               className="form-input"
               placeholder={t.yourNamePlaceholder}
               value={creatorName}
-              onChange={(e) => setCreatorName(e.target.value)}
+              onChange={(e) => {
+                setCreatorName(e.target.value);
+                setHasEdited(true);
+              }}
             />
           </div>
           <div className="form-group">
@@ -484,7 +582,10 @@ const CreateQuizPage: React.FC = () => {
             <input
               className="form-input"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                setHasEdited(true);
+              }}
             />
           </div>
         </div>
@@ -493,7 +594,10 @@ const CreateQuizPage: React.FC = () => {
           <input
             className="form-input"
             value={description}
-            onChange={(e) => setDescription(e.target.value)}
+            onChange={(e) => {
+              setDescription(e.target.value);
+              setHasEdited(true);
+            }}
           />
         </div>
       </div>
@@ -521,6 +625,7 @@ const CreateQuizPage: React.FC = () => {
                     setErrorMsg(`Minimum ${BRAND.limits.minQuestions} questions required.`);
                     return;
                   }
+                  setHasEdited(true);
                   setQuestions((prev) => prev.filter((_, idx) => idx !== qIdx));
                 }}
               >
@@ -532,13 +637,14 @@ const CreateQuizPage: React.FC = () => {
               <input
                 className="form-input"
                 value={q.questionText}
-                onChange={(e) =>
+                onChange={(e) => {
+                  setHasEdited(true);
                   setQuestions((prev) =>
                     prev.map((item, idx) =>
                       idx === qIdx ? { ...item, questionText: e.target.value } : item
                     )
-                  )
-                }
+                  );
+                }}
               />
             </div>
 
@@ -566,20 +672,22 @@ const CreateQuizPage: React.FC = () => {
                     <input
                       type="radio"
                       checked={isSelected}
-                      onChange={() =>
+                      onChange={() => {
+                        setHasEdited(true);
                         setQuestions((prev) =>
                           prev.map((item, idx) =>
                             idx === qIdx ? { ...item, correctOptionId: opt.id } : item
                           )
-                        )
-                      }
+                        );
+                      }}
                       style={{ width: '18px', height: '18px', accentColor: 'var(--primary)' }}
                     />
                     <input
                       className="form-input"
                       style={{ border: 'none', background: 'transparent', padding: '0.2rem' }}
                       value={opt.text}
-                      onChange={(e) =>
+                      onChange={(e) => {
+                        setHasEdited(true);
                         setQuestions((prev) =>
                           prev.map((item, idx) =>
                             idx === qIdx
@@ -591,8 +699,8 @@ const CreateQuizPage: React.FC = () => {
                                 }
                               : item
                           )
-                        )
-                      }
+                        );
+                      }}
                     />
                   </div>
                 );
@@ -616,6 +724,7 @@ const CreateQuizPage: React.FC = () => {
           className="btn btn-secondary"
           onClick={() => {
             if (questions.length >= BRAND.limits.maxQuestions) return;
+            setHasEdited(true);
             setQuestions((prev) => [
               ...prev,
               {
@@ -688,7 +797,7 @@ const PublicQuizPage: React.FC = () => {
   }
 
   return (
-    <div className="container" style={{ paddingTop: '3rem', maxWidth: '620px' }}>
+    <div className="container animate-in" style={{ paddingTop: '3rem', maxWidth: '640px' }}>
       <div className="card card-elevated" style={{ textAlign: 'center' }}>
         <span className="badge" style={{ marginBottom: '0.75rem' }}>
           {t.invitedBy} {quiz.creatorDisplayName}
@@ -707,6 +816,8 @@ const PublicQuizPage: React.FC = () => {
           <span>{t.startQuizBtn}</span>
         </Link>
       </div>
+
+      <LeaderboardCard entries={quiz.leaderboard} />
     </div>
   );
 };
@@ -763,7 +874,7 @@ const PlayQuizPage: React.FC = () => {
   };
 
   return (
-    <div className="container" style={{ paddingTop: '2rem', maxWidth: '660px' }}>
+    <div className="container animate-in" style={{ paddingTop: '2rem', maxWidth: '660px' }}>
       <div className="card card-elevated">
         {currentIdx === 0 && (
           <div
@@ -853,6 +964,10 @@ const PlayQuizPage: React.FC = () => {
               type="button"
               className="btn btn-primary"
               onClick={() => {
+                if (currentIdx === 0 && !nickname.trim()) {
+                  setErrorMsg('Please enter your name or nickname first.');
+                  return;
+                }
                 if (!selectedId) {
                   setErrorMsg('Please select an answer.');
                   return;
@@ -879,7 +994,7 @@ const PlayQuizPage: React.FC = () => {
 };
 
 /* ============================================================================
- * 5. RESULT PAGE & SCORE CARD PNG GENERATOR
+ * 5. RESULT PAGE, LEADERBOARD & SCORE CARD PNG GENERATOR
  * ============================================================================ */
 const ResultPage: React.FC = () => {
   const { submissionId = '' } = useParams<{ submissionId: string }>();
@@ -891,12 +1006,25 @@ const ResultPage: React.FC = () => {
   const [result, setResult] = useState<SubmissionResult | null>(
     (location.state as any)?.result || null
   );
+  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
 
   useEffect(() => {
     if (!result) {
-      api.getSubmissionResult(submissionId, token).then(setResult);
+      api.getSubmissionResult(submissionId, token).then((res) => {
+        setResult(res);
+      });
     }
   }, [submissionId, token, result]);
+
+  useEffect(() => {
+    if (result?.quizSlug) {
+      api.getPublicQuizBySlug(result.quizSlug, lang).then((res) => {
+        if (res.status === 'ok' && res.quiz?.leaderboard) {
+          setLeaderboard(res.quiz.leaderboard);
+        }
+      });
+    }
+  }, [result, lang]);
 
   if (!result) {
     return (
@@ -912,41 +1040,51 @@ const ResultPage: React.FC = () => {
   }
 
   const fb = getScoreFeedback(result.scorePercentage, lang);
+  const quizUrl = `${window.location.origin}/q/${result.quizSlug}`;
+  const shareText = `I scored ${result.score}/${result.totalQuestions} (${result.scorePercentage}%) on ${result.creatorDisplayName}'s ${BRAND.name} Quiz! Can you beat my score? ${quizUrl}`;
 
   const downloadScoreCard = () => {
     const canvas = document.createElement('canvas');
     canvas.width = 800;
-    canvas.height = 440;
+    canvas.height = 460;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
     ctx.fillStyle = '#18122B';
-    ctx.fillRect(0, 0, 800, 440);
-    ctx.fillStyle = '#6D4AFF';
-    ctx.fillRect(28, 28, 744, 384);
+    ctx.fillRect(0, 0, 800, 460);
+
+    const grad = ctx.createLinearGradient(28, 28, 772, 432);
+    grad.addColorStop(0, '#6D4AFF');
+    grad.addColorStop(1, '#FF6B8B');
+    ctx.fillStyle = grad;
+    ctx.fillRect(28, 28, 744, 404);
 
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 26px sans-serif';
-    ctx.fillText(`${BRAND.name} • Friendship Score Card`, 64, 90);
+    ctx.font = 'bold 28px sans-serif';
+    ctx.fillText(`${BRAND.name} • Official Friendship Score`, 64, 92);
 
-    ctx.font = 'bold 64px sans-serif';
+    ctx.font = 'bold 68px sans-serif';
     ctx.fillText(
       `${result.score}/${result.totalQuestions} (${result.scorePercentage}%)`,
       64,
-      190
+      195
     );
 
     ctx.fillStyle = '#F3EFFE';
-    ctx.font = 'bold 28px sans-serif';
-    ctx.fillText(fb.title, 64, 250);
+    ctx.font = 'bold 30px sans-serif';
+    ctx.fillText(fb.title, 64, 255);
 
     ctx.fillStyle = '#FFFFFF';
-    ctx.font = '22px sans-serif';
+    ctx.font = '23px sans-serif';
     ctx.fillText(
-      `${result.participantNickname} • ${result.creatorDisplayName}'s Quiz`,
+      `Player: ${result.participantNickname}  |  Quiz by: ${result.creatorDisplayName}`,
       64,
-      320
+      325
     );
+
+    ctx.font = '18px sans-serif';
+    ctx.fillStyle = 'rgba(255,255,255,0.85)';
+    ctx.fillText(window.location.host, 64, 385);
 
     const link = document.createElement('a');
     link.download = `${BRAND.name.toLowerCase()}-score.png`;
@@ -955,7 +1093,7 @@ const ResultPage: React.FC = () => {
   };
 
   return (
-    <div className="container" style={{ paddingTop: '2.5rem', maxWidth: '640px' }}>
+    <div className="container animate-in" style={{ paddingTop: '2.5rem', maxWidth: '640px' }}>
       <div className="card card-elevated" style={{ textAlign: 'center' }}>
         <span className="badge">{t.scoreRevealBadge}</span>
         <h1 style={{ fontSize: '3rem', color: 'var(--primary)', margin: '0.35rem 0' }}>
@@ -975,19 +1113,31 @@ const ResultPage: React.FC = () => {
             marginBottom: '1.75rem',
           }}
         >
+          <a
+            href={`https://wa.me/?text=${encodeURIComponent(shareText)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="btn btn-whatsapp"
+          >
+            <MessageCircle size={18} />
+            <span>{t.whatsappShareBtn}</span>
+          </a>
+
           <button
             type="button"
             className="btn btn-secondary"
             onClick={async () => {
-              const quizUrl = `${window.location.origin}/q/${result.quizSlug}`;
-              const msg = `${result.score}/${result.totalQuestions} (${result.scorePercentage}%) on ${result.creatorDisplayName}'s Quiz!`;
               if (navigator.share) {
                 try {
-                  await navigator.share({ title: result.quizTitle, text: msg, url: quizUrl });
+                  await navigator.share({
+                    title: result.quizTitle,
+                    text: shareText,
+                    url: quizUrl,
+                  });
                   return;
                 } catch {}
               }
-              await navigator.clipboard.writeText(`${msg} ${quizUrl}`);
+              await navigator.clipboard.writeText(shareText);
               alert(t.copiedBtn);
             }}
           >
@@ -1017,6 +1167,9 @@ const ResultPage: React.FC = () => {
           </Link>
         </div>
       </div>
+
+      <LeaderboardCard entries={leaderboard} />
+      <AdBanner slotId="result-bottom" />
     </div>
   );
 };
@@ -1048,7 +1201,7 @@ const DashboardPage: React.FC = () => {
 
   if (!user) {
     return (
-      <div className="container" style={{ paddingTop: '3rem', maxWidth: '460px' }}>
+      <div className="container animate-in" style={{ paddingTop: '3rem', maxWidth: '460px' }}>
         <div className="card card-elevated">
           <h1 style={{ marginTop: 0 }}>{t.signInTitle}</h1>
           <p style={{ color: 'var(--text-secondary)' }}>{t.signInSub}</p>
@@ -1111,7 +1264,7 @@ const DashboardPage: React.FC = () => {
       : 0;
 
   return (
-    <div className="container" style={{ paddingTop: '2.25rem' }}>
+    <div className="container animate-in" style={{ paddingTop: '2.25rem' }}>
       <div
         style={{
           display: 'flex',
@@ -1251,12 +1404,12 @@ const DashboardPage: React.FC = () => {
 };
 
 /* ============================================================================
- * 7. GUIDES & LEGAL PAGES (SEO & ADSENSE READY)
+ * 7. GUIDES, REPORT ABUSE FORM & LEGAL PAGES
  * ============================================================================ */
 const GuidesPage: React.FC = () => {
   const { lang } = useLang();
   return (
-    <div className="container" style={{ paddingTop: '2.5rem', maxWidth: '820px' }}>
+    <div className="container animate-in" style={{ paddingTop: '2.5rem', maxWidth: '820px' }}>
       <h1>
         {lang === 'bn'
           ? 'ফ্রেন্ডশিপ গাইড এবং সেরা কুইজ আইডিয়া'
@@ -1286,12 +1439,87 @@ const GuidesPage: React.FC = () => {
             : 'Quick 5-question quizzes let busy friends across different cities share a laugh on their own schedule.'}
         </p>
       </div>
+
+      <AdBanner slotId="guides-bottom" />
+    </div>
+  );
+};
+
+const ReportAbusePage: React.FC = () => {
+  const { t } = useLang();
+  const [slug, setSlug] = useState('');
+  const [reason, setReason] = useState('harassment');
+  const [details, setDetails] = useState('');
+  const [done, setDone] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  return (
+    <div className="container animate-in" style={{ paddingTop: '2.5rem', maxWidth: '620px' }}>
+      <div className="card card-elevated">
+        <h1 style={{ marginTop: 0 }}>{t.reportTitle}</h1>
+        <p style={{ color: 'var(--text-secondary)' }}>{t.reportSub}</p>
+
+        {done ? (
+          <div className="alert-success">{t.reportSuccess}</div>
+        ) : (
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              setErr(null);
+              try {
+                await api.submitAbuseReport(slug, reason, details);
+                setDone(true);
+              } catch (error: any) {
+                setErr(error.message);
+              }
+            }}
+          >
+            {err && <div className="alert-error">{err}</div>}
+            <div className="form-group">
+              <label className="form-label">{t.reportSlugLabel}</label>
+              <input
+                className="form-input"
+                placeholder="e.g., /q/ahad-bff-xyz"
+                value={slug}
+                onChange={(e) => setSlug(e.target.value)}
+              />
+            </div>
+            <div className="form-group">
+              <label className="form-label">{t.reportReasonLabel}</label>
+              <select
+                className="form-select"
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+              >
+                <option value="harassment">Harassment or Bullying</option>
+                <option value="privacy">Private Information Exposed</option>
+                <option value="inappropriate">Inappropriate Content</option>
+                <option value="spam">Spam or Misleading Link</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="form-label">{t.reportDetailsLabel}</label>
+              <textarea
+                className="form-textarea"
+                rows={4}
+                required
+                value={details}
+                onChange={(e) => setDetails(e.target.value)}
+              />
+            </div>
+            <button type="submit" className="btn btn-primary">
+              {t.reportSubmitBtn}
+            </button>
+          </form>
+        )}
+      </div>
     </div>
   );
 };
 
 const SimpleInfoPage: React.FC<{ title: string; text: string }> = ({ title, text }) => (
-  <div className="container" style={{ paddingTop: '2.5rem', maxWidth: '720px' }}>
+  <div className="container animate-in" style={{ paddingTop: '2.5rem', maxWidth: '720px' }}>
     <div className="card">
       <h1 style={{ marginTop: 0 }}>{title}</h1>
       <p style={{ color: 'var(--text-secondary)' }}>{text}</p>
@@ -1314,6 +1542,7 @@ export const App: React.FC = () => {
             <Route path="/result/:submissionId" element={<ResultPage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/guides" element={<GuidesPage />} />
+            <Route path="/report" element={<ReportAbusePage />} />
             <Route
               path="/about"
               element={
@@ -1338,15 +1567,6 @@ export const App: React.FC = () => {
                 <SimpleInfoPage
                   title="Terms & Community Guidelines"
                   text="Quizzes are playful social games. Harassment, bullying, or sharing private personal information is strictly prohibited."
-                />
-              }
-            />
-            <Route
-              path="/report"
-              element={
-                <SimpleInfoPage
-                  title="Report Abuse"
-                  text={`To report an inappropriate quiz link for removal, contact ${BRAND.contactEmail}.`}
                 />
               }
             />
