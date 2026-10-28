@@ -1,16 +1,26 @@
 export type Lang = 'en' | 'bn';
 
+export type GameType =
+  | 'quiz'
+  | 'ama'
+  | 'guess_side'
+  | 'two_truths'
+  | 'wrapped'
+  | 'blind_ranking'
+  | 'would_you_rather'
+  | 'daily_quest';
+
 export const BRAND = {
   name: import.meta.env.VITE_APP_NAME || 'BFFquest',
-  storagePrefix: 'bffquest_v3_',
+  storagePrefix: 'bffquest_v4_',
   contactEmail: import.meta.env.VITE_CONTACT_EMAIL || 'support@bffquest.com',
   limits: {
-    minQuestions: 5,
+    minQuestions: 3,
     maxQuestions: 15,
   },
   ads: {
     enabled: import.meta.env.VITE_ENABLE_ADS === 'true',
-    sponsorText: 'Sponsored • Create & Share Your BFFquest Quiz Today!',
+    sponsorText: 'Sponsored • Play & Share BFFquest with your squad!',
     sponsorUrl: '',
   },
 };
@@ -18,6 +28,7 @@ export const BRAND = {
 export interface QuizOption {
   id: string;
   text: string;
+  icon?: string;
   isCustom?: boolean;
 }
 
@@ -33,10 +44,194 @@ export interface QuizTemplate {
   id: string;
   name: string;
   badge: string;
+  accent: string;
+  icon: string;
   defaultTitle: string;
   description: string;
   questions: Omit<QuizQuestion, 'id' | 'position'>[];
 }
+
+export interface GameModeMeta {
+  id: GameType;
+  category: 'quiz' | 'party' | 'daily';
+  accent: string;
+  icon: string;
+  route: string;
+  isCreatable: boolean;
+  title: Record<Lang, string>;
+  subtitle: Record<Lang, string>;
+  badge: Record<Lang, string>;
+}
+
+export const GAME_MODES: GameModeMeta[] = [
+  {
+    id: 'quiz',
+    category: 'quiz',
+    accent: '#7C5CFA',
+    icon: 'spark',
+    route: '/create?type=quiz',
+    isCreatable: true,
+    title: { en: 'Friendship Quiz', bn: 'ফ্রেন্ডশিপ কুইজ' },
+    subtitle: { en: 'See who knows you best', bn: 'দেখুন কে আপনাকে সবচেয়ে ভালো চেনে' },
+    badge: { en: 'Classic', bn: 'জনপ্রিয়' },
+  },
+  {
+    id: 'ama',
+    category: 'party',
+    accent: '#5B9BFA',
+    icon: 'bubble',
+    route: '/inbox',
+    isCreatable: false,
+    title: { en: 'Ask Me Anything', bn: 'আস্ক মি এনিথিং (AMA)' },
+    subtitle: { en: 'Your private question inbox', bn: 'আপনার প্রাইভেট অ্যানোনিমাস ইনবক্স' },
+    badge: { en: 'Inbox', bn: 'ইনবক্স' },
+  },
+  {
+    id: 'guess_side',
+    category: 'quiz',
+    accent: '#D58BF5',
+    icon: 'coffee',
+    route: '/create?type=guess_side',
+    isCreatable: true,
+    title: { en: 'Guess My Side', bn: 'গেস মাই সাইড' },
+    subtitle: { en: 'Which side would I pick?', bn: 'দুটি অপশনের কোনটি আমার পছন্দ?' },
+    badge: { en: 'This / That', bn: 'পছন্দ' },
+  },
+  {
+    id: 'two_truths',
+    category: 'party',
+    accent: '#F2B84B',
+    icon: 'mask',
+    route: '/create?type=two_truths',
+    isCreatable: true,
+    title: { en: 'Two Truths & One Lie', bn: 'দুটি সত্য ও একটি মিথ্যা' },
+    subtitle: { en: 'Spot the hidden lie', bn: '৩টি কথার মধ্যে মিথ্যাটি খুঁজে বের করুন' },
+    badge: { en: 'Spot Lie', bn: 'মিথ্যা ধরুন' },
+  },
+  {
+    id: 'wrapped',
+    category: 'daily',
+    accent: '#D58BF5',
+    icon: 'spark',
+    route: '/wrapped',
+    isCreatable: false,
+    title: { en: 'BFFQuest Wrapped', bn: 'BFFQuest র‍্যাপড' },
+    subtitle: { en: 'Your real gameplay recap', bn: 'আপনার কুইজ ও গেমিং রিক্যাপ কার্ড' },
+    badge: { en: 'Recap', bn: 'রিক্যাপ' },
+  },
+  {
+    id: 'blind_ranking',
+    category: 'party',
+    accent: '#4FD1E8',
+    icon: 'badge',
+    route: '/create?type=blind_ranking',
+    isCreatable: true,
+    title: { en: 'Blind Ranking', bn: 'ব্লাইন্ড র‍্যাংকিং' },
+    subtitle: { en: 'Rank 1–5 before seeing next', bn: 'পরেরটি না দেখে ১–৫ র‍্যাংক করুন' },
+    badge: { en: '1 to 5', bn: 'র‍্যাংকিং' },
+  },
+  {
+    id: 'would_you_rather',
+    category: 'party',
+    accent: '#7C5CFA',
+    icon: 'sun',
+    route: '/create?type=would_you_rather',
+    isCreatable: true,
+    title: { en: 'Would You Rather?', bn: 'উড ইউ রাদার?' },
+    subtitle: { en: 'Two scenarios, live group vote', bn: 'দুটি কঠিন পরিস্থিতি ও গ্রুপ ভোটিং' },
+    badge: { en: 'Vote', bn: 'ভোটিং' },
+  },
+  {
+    id: 'daily_quest',
+    category: 'daily',
+    accent: '#3FD08A',
+    icon: 'flame',
+    route: '/daily',
+    isCreatable: false,
+    title: { en: 'Daily Quest', bn: 'ডেইলি কুয়েস্ট' },
+    subtitle: { en: 'One challenge a day & streaks', bn: 'প্রতিদিনের চ্যালেঞ্জ ও স্ট্রিক' },
+    badge: { en: 'Daily', bn: 'আজকের' },
+  },
+];
+
+export interface DailyQuestItem {
+  id: string;
+  taskType: 'play_any' | 'create_any' | 'score_70' | 'ama_setup';
+  targetCount: number;
+  title: Record<Lang, string>;
+  description: Record<Lang, string>;
+}
+
+export const DAILY_QUESTS: DailyQuestItem[] = [
+  {
+    id: 'dq_play_1',
+    taskType: 'play_any',
+    targetCount: 1,
+    title: {
+      en: 'Play Any Friendship Game',
+      bn: 'যেকোনো ১টি ফ্রেন্ডশিপ গেম খেলুন',
+    },
+    description: {
+      en: 'Complete at least 1 quiz or game session today to lock in your daily streak.',
+      bn: 'আজকের স্ট্রিক চালু রাখতে যেকোনো ১টি কুইজ বা গেম সম্পূর্ণ খেলুন।',
+    },
+  },
+  {
+    id: 'dq_create_1',
+    taskType: 'create_any',
+    targetCount: 1,
+    title: {
+      en: 'Create & Publish a Game',
+      bn: 'নতুন ১টি কুইজ বা গেম তৈরি করুন',
+    },
+    description: {
+      en: 'Build a Quiz, Guess My Side, Two Truths, Blind Ranking, or Would You Rather game today.',
+      bn: 'আজ যেকোনো একটি নতুন গেম তৈরি করে লিংক জেনারেট করুন।',
+    },
+  },
+  {
+    id: 'dq_score_70',
+    taskType: 'score_70',
+    targetCount: 1,
+    title: {
+      en: 'Score 70%+ on Any Game',
+      bn: 'যেকোনো গেমে ৭০% বা তার বেশি স্কোর করুন',
+    },
+    description: {
+      en: 'Prove your best-friend intuition by scoring at least 70% on any quiz today.',
+      bn: 'যেকোনো কুইজ বা গেমে অন্তত ৭০% স্কোর করে আজকের চ্যালেঞ্জ জিতুন।',
+    },
+  },
+];
+
+export interface BadgeMeta {
+  id: string;
+  title: Record<Lang, string>;
+  desc: Record<Lang, string>;
+}
+
+export const BADGES: BadgeMeta[] = [
+  {
+    id: 'first_play',
+    title: { en: 'First Spark', bn: 'প্রথম পদক্ষেপ' },
+    desc: { en: 'Played your first game', bn: 'প্রথমবার গেম খেলেছেন' },
+  },
+  {
+    id: 'creator_star',
+    title: { en: 'Game Architect', bn: 'গেম নির্মাতা' },
+    desc: { en: 'Published a game for friends', bn: 'বন্ধুদের জন্য গেম তৈরি করেছেন' },
+  },
+  {
+    id: 'mind_reader',
+    title: { en: 'Mind Reader', bn: 'মাইন্ড রিডার' },
+    desc: { en: 'Scored 80%+ on a game', bn: '৮০%+ স্কোর অর্জন করেছেন' },
+  },
+  {
+    id: 'streak_3',
+    title: { en: '3-Day Flame', bn: '৩ দিনের স্ট্রিক' },
+    desc: { en: 'Completed 3 daily quests', bn: '৩ দিন ডেইলি কুয়েস্ট সম্পন্ন করেছেন' },
+  },
+];
 
 function makeQ(
   questionText: string,
@@ -61,188 +256,577 @@ function makeQ(
 const EN_CUSTOM = 'Write your own answer...';
 const BN_CUSTOM = 'নিজের মতো উত্তর লিখুন...';
 
+/* ============================================================================
+ * PRESETS FOR NEW GAME MODES (Guess My Side, Two Truths, Blind Ranking, WYR)
+ * ============================================================================ */
+export const GAME_PRESETS: Record<
+  Exclude<GameType, 'quiz' | 'ama' | 'wrapped' | 'daily_quest'>,
+  Record<Lang, { defaultTitle: string; description: string; questions: Omit<QuizQuestion, 'id' | 'position'>[] }>
+> = {
+  guess_side: {
+    en: {
+      defaultTitle: 'Guess My Side: This or That?',
+      description: 'Can you guess which side I would pick in every pair?',
+      questions: [
+        {
+          questionText: 'Morning Beverage Vibe',
+          options: [
+            { id: 'opt_1', text: 'Iced / Hot Coffee', icon: 'coffee' },
+            { id: 'opt_2', text: 'Masala Milk Tea', icon: 'tea' },
+          ],
+          correctOptionId: 'opt_1',
+        },
+        {
+          questionText: 'Ideal Vacation Escape',
+          options: [
+            { id: 'opt_1', text: 'Misty Mountains', icon: 'mount' },
+            { id: 'opt_2', text: 'Sunny Ocean Beach', icon: 'sun' },
+          ],
+          correctOptionId: 'opt_1',
+        },
+        {
+          questionText: 'Peak Productivity Hours',
+          options: [
+            { id: 'opt_1', text: 'Early Morning Sun', icon: 'sun' },
+            { id: 'opt_2', text: '2 AM Night Owl', icon: 'moon' },
+          ],
+          correctOptionId: 'opt_2',
+        },
+        {
+          questionText: 'Weekend Hangout Plan',
+          options: [
+            { id: 'opt_1', text: 'Cozy Home & Movies', icon: 'moon' },
+            { id: 'opt_2', text: 'Outing & Street Food', icon: 'flame' },
+          ],
+          correctOptionId: 'opt_2',
+        },
+        {
+          questionText: 'Texting Style in Chats',
+          options: [
+            { id: 'opt_1', text: 'Short Instant Texts', icon: 'bubble' },
+            { id: 'opt_2', text: 'Long Voice Notes', icon: 'spark' },
+          ],
+          correctOptionId: 'opt_1',
+        },
+      ],
+    },
+    bn: {
+      defaultTitle: 'গেস মাই সাইড: আমার পছন্দ কোনটি?',
+      description: 'প্রতিটি জোড়ার মধ্যে আমি কোনটি বেছে নেব তা অনুমান করো!',
+      questions: [
+        {
+          questionText: 'চায়ের আড্ডা নাকি কফি?',
+          options: [
+            { id: 'opt_1', text: 'কড়া কফি / কোল্ড কফি', icon: 'coffee' },
+            { id: 'opt_2', text: 'মালাই বা দুধ চা', icon: 'tea' },
+          ],
+          correctOptionId: 'opt_2',
+        },
+        {
+          questionText: 'ঘুরতে যাওয়ার সেরা জায়গা',
+          options: [
+            { id: 'opt_1', text: 'শান্ত পাহাড় ও মেঘ', icon: 'mount' },
+            { id: 'opt_2', text: 'সমুদ্র সৈকত', icon: 'sun' },
+          ],
+          correctOptionId: 'opt_1',
+        },
+        {
+          questionText: 'আমার সবচেয়ে প্রিয় সময়',
+          options: [
+            { id: 'opt_1', text: 'সকালের স্নিগ্ধ রোদ', icon: 'sun' },
+            { id: 'opt_2', text: 'রাত ২টার নীরবতা', icon: 'moon' },
+          ],
+          correctOptionId: 'opt_2',
+        },
+        {
+          questionText: 'ছুটির দিনের প্ল্যান',
+          options: [
+            { id: 'opt_1', text: 'বাসায় আরাম ও মুভি', icon: 'moon' },
+            { id: 'opt_2', text: 'বাইরে আড্ডা ও স্ট্রিট ফুড', icon: 'flame' },
+          ],
+          correctOptionId: 'opt_2',
+        },
+        {
+          questionText: 'চ্যাটিং করার ধরন',
+          options: [
+            { id: 'opt_1', text: 'ছোট টেক্সট মেসেজ', icon: 'bubble' },
+            { id: 'opt_2', text: 'লম্বা ভয়েস নোট', icon: 'spark' },
+          ],
+          correctOptionId: 'opt_1',
+        },
+      ],
+    },
+  },
+  two_truths: {
+    en: {
+      defaultTitle: 'Two Truths & One Lie — Spot My Lie!',
+      description: 'In each round, two statements about me are true and one is a total lie.',
+      questions: [
+        {
+          questionText: 'Round 1: Everyday Habits — Which one is the LIE?',
+          options: [
+            { id: 'opt_1', text: 'I have pulled an all-nighter before a big day' },
+            { id: 'opt_2', text: 'I hate eating biryani and street food' },
+            { id: 'opt_3', text: 'I check my phone within 2 minutes of waking up' },
+          ],
+          correctOptionId: 'opt_2',
+        },
+        {
+          questionText: 'Round 2: Friendship Lore — Spot the LIE!',
+          options: [
+            { id: 'opt_1', text: 'I can keep a secret for years without telling anyone' },
+            { id: 'opt_2', text: 'I sometimes mentally reply to a text and forget to send it' },
+            { id: 'opt_3', text: 'I have never arrived late to a hangout in my life' },
+          ],
+          correctOptionId: 'opt_3',
+        },
+        {
+          questionText: 'Round 3: Hidden Talents & Quirks — Spot the LIE!',
+          options: [
+            { id: 'opt_1', text: 'I love building or exploring cool tech projects' },
+            { id: 'opt_2', text: 'I have gone a whole month without using the internet' },
+            { id: 'opt_3', text: 'I overthink small conversations at 2 AM' },
+          ],
+          correctOptionId: 'opt_2',
+        },
+      ],
+    },
+    bn: {
+      defaultTitle: 'দুটি সত্য ও একটি মিথ্যা — আমার মিথ্যাটি ধরো!',
+      description: 'প্রতিটি রাউন্ডে আমার সম্পর্কে ২টি সত্যি এবং ১টি মিথ্যা কথা আছে। কোনটি মিথ্যা?',
+      questions: [
+        {
+          questionText: 'রাউন্ড ১: প্রতিদিনের অভ্যাস — কোন কথাটি মিথ্যা (Lie)?',
+          options: [
+            { id: 'opt_1', text: 'আমি মাঝে মাঝে সারারাত না ঘুমিয়ে কাজ বা আড্ডা দিয়েছি' },
+            { id: 'opt_2', text: 'আমি বিরিয়ানি এবং স্ট্রিট ফুড একদমই পছন্দ করি না' },
+            { id: 'opt_3', text: 'ঘুম থেকে উঠে ২ মিনিটের মধ্যেই আমি ফোন চেক করি' },
+          ],
+          correctOptionId: 'opt_2',
+        },
+        {
+          questionText: 'রাউন্ড ২: বন্ধুত্বের গল্প — কোন কথাটি মিথ্যা (Lie)?',
+          options: [
+            { id: 'opt_1', text: 'আমি যেকোনো গোপন কথা বছরের পর বছর নিজের কাছে রাখতে পারি' },
+            { id: 'opt_2', text: 'মাঝে মাঝে মনে মনে মেসেজের উত্তর দিয়ে আসল রিপ্লাই দিতে ভুলে যাই' },
+            { id: 'opt_3', text: 'আমি জীবনে কখনো আড্ডায় ১ মিনিটও দেরি করে পৌঁছাইনি' },
+          ],
+          correctOptionId: 'opt_3',
+        },
+        {
+          questionText: 'রাউন্ড ৩: শখ ও অভ্যাস — কোন কথাটি মিথ্যা (Lie)?',
+          options: [
+            { id: 'opt_1', text: 'নতুন টেকনোলজি বা ক্রিয়েটিভ প্রজেক্ট নিয়ে কাজ করতে আমার দারুণ লাগে' },
+            { id: 'opt_2', text: 'আমি টানা ১ মাস ইন্টারনেট ও ফোন ছাড়া কাটিয়েছি' },
+            { id: 'opt_3', text: 'রাত ২টায় শুয়ে আমি পুরনো কথা নিয়ে ওভারথিংক করি' },
+          ],
+          correctOptionId: 'opt_2',
+        },
+      ],
+    },
+  },
+  blind_ranking: {
+    en: {
+      defaultTitle: 'Blind Ranking: My Top 5 Comfort Foods',
+      description: 'Items appear one by one. Lock each into slots #1 to #5 before seeing the next!',
+      questions: [
+        {
+          questionText: 'Kacchi Biryani',
+          options: [
+            { id: 'opt_1', text: 'Rank #1' },
+            { id: 'opt_2', text: 'Rank #2' },
+            { id: 'opt_3', text: 'Rank #3' },
+            { id: 'opt_4', text: 'Rank #4' },
+            { id: 'opt_5', text: 'Rank #5' },
+          ],
+          correctOptionId: 'opt_1',
+        },
+        {
+          questionText: 'Loaded Cheese Pizza',
+          options: [
+            { id: 'opt_1', text: 'Rank #1' },
+            { id: 'opt_2', text: 'Rank #2' },
+            { id: 'opt_3', text: 'Rank #3' },
+            { id: 'opt_4', text: 'Rank #4' },
+            { id: 'opt_5', text: 'Rank #5' },
+          ],
+          correctOptionId: 'opt_2',
+        },
+        {
+          questionText: 'Crispy Burger & Fries',
+          options: [
+            { id: 'opt_1', text: 'Rank #1' },
+            { id: 'opt_2', text: 'Rank #2' },
+            { id: 'opt_3', text: 'Rank #3' },
+            { id: 'opt_4', text: 'Rank #4' },
+            { id: 'opt_5', text: 'Rank #5' },
+          ],
+          correctOptionId: 'opt_3',
+        },
+        {
+          questionText: 'Spicy Fuchka / Street Food',
+          options: [
+            { id: 'opt_1', text: 'Rank #1' },
+            { id: 'opt_2', text: 'Rank #2' },
+            { id: 'opt_3', text: 'Rank #3' },
+            { id: 'opt_4', text: 'Rank #4' },
+            { id: 'opt_5', text: 'Rank #5' },
+          ],
+          correctOptionId: 'opt_4',
+        },
+        {
+          questionText: 'Iced Cold Coffee & Cake',
+          options: [
+            { id: 'opt_1', text: 'Rank #1' },
+            { id: 'opt_2', text: 'Rank #2' },
+            { id: 'opt_3', text: 'Rank #3' },
+            { id: 'opt_4', text: 'Rank #4' },
+            { id: 'opt_5', text: 'Rank #5' },
+          ],
+          correctOptionId: 'opt_5',
+        },
+      ],
+    },
+    bn: {
+      defaultTitle: 'ব্লাইন্ড র‍্যাংকিং: আমার প্রিয় ৫টি খাবার',
+      description: 'খাবারগুলো একে একে আসবে। পরেরটি না দেখেই ১ থেকে ৫ নম্বরে সাজাও!',
+      questions: [
+        {
+          questionText: 'কাচ্চি বিরিয়ানি',
+          options: [
+            { id: 'opt_1', text: 'র‍্যাংক #১' },
+            { id: 'opt_2', text: 'র‍্যাংক #২' },
+            { id: 'opt_3', text: 'র‍্যাংক #৩' },
+            { id: 'opt_4', text: 'র‍্যাংক #৪' },
+            { id: 'opt_5', text: 'র‍্যাংক #৫' },
+          ],
+          correctOptionId: 'opt_1',
+        },
+        {
+          questionText: 'চিজ পিৎজা বা পাস্তা',
+          options: [
+            { id: 'opt_1', text: 'র‍্যাংক #১' },
+            { id: 'opt_2', text: 'র‍্যাংক #২' },
+            { id: 'opt_3', text: 'র‍্যাংক #৩' },
+            { id: 'opt_4', text: 'র‍্যাংক #৪' },
+            { id: 'opt_5', text: 'র‍্যাংক #৫' },
+          ],
+          correctOptionId: 'opt_2',
+        },
+        {
+          questionText: 'বার্গার ও ফ্রেঞ্চ ফ্রাই',
+          options: [
+            { id: 'opt_1', text: 'র‍্যাংক #১' },
+            { id: 'opt_2', text: 'র‍্যাংক #২' },
+            { id: 'opt_3', text: 'র‍্যাংক #৩' },
+            { id: 'opt_4', text: 'র‍্যাংক #৪' },
+            { id: 'opt_5', text: 'র‍্যাংক #৫' },
+          ],
+          correctOptionId: 'opt_3',
+        },
+        {
+          questionText: 'ঝাল ফুচকা ও চটপটি',
+          options: [
+            { id: 'opt_1', text: 'র‍্যাংক #১' },
+            { id: 'opt_2', text: 'র‍্যাংক #২' },
+            { id: 'opt_3', text: 'র‍্যাংক #৩' },
+            { id: 'opt_4', text: 'র‍্যাংক #৪' },
+            { id: 'opt_5', text: 'র‍্যাংক #৫' },
+          ],
+          correctOptionId: 'opt_4',
+        },
+        {
+          questionText: 'কোল্ড কফি ও পেস্ট্রি',
+          options: [
+            { id: 'opt_1', text: 'র‍্যাংক #১' },
+            { id: 'opt_2', text: 'র‍্যাংক #২' },
+            { id: 'opt_3', text: 'র‍্যাংক #৩' },
+            { id: 'opt_4', text: 'র‍্যাংক #৪' },
+            { id: 'opt_5', text: 'র‍্যাংক #৫' },
+          ],
+          correctOptionId: 'opt_5',
+        },
+      ],
+    },
+  },
+  would_you_rather: {
+    en: {
+      defaultTitle: 'Would You Rather? — Squad Edition',
+      description: 'Pick one scenario in each dilemma and see how the group votes!',
+      questions: [
+        {
+          questionText: 'Superpower Dilemma',
+          options: [
+            { id: 'opt_1', text: 'Travel 10 years into the future', icon: 'sun' },
+            { id: 'opt_2', text: 'Rewind 10 years into the past with your current memory', icon: 'moon' },
+          ],
+          correctOptionId: 'opt_2',
+        },
+        {
+          questionText: 'Tech & Lifestyle Dilemma',
+          options: [
+            { id: 'opt_1', text: 'Have unlimited free food at any restaurant forever', icon: 'coffee' },
+            { id: 'opt_2', text: 'Have free first-class flights to any country forever', icon: 'spark' },
+          ],
+          correctOptionId: 'opt_2',
+        },
+        {
+          questionText: 'Friendship Dilemma',
+          options: [
+            { id: 'opt_1', text: 'Have 1 ultra-loyal best friend for life', icon: 'badge' },
+            { id: 'opt_2', text: 'Have a huge squad of 20 fun hangout friends', icon: 'bubble' },
+          ],
+          correctOptionId: 'opt_1',
+        },
+      ],
+    },
+    bn: {
+      defaultTitle: 'উড ইউ রাদার? — কোনটি বেছে নেবে?',
+      description: 'দুটি কঠিন অপশনের মধ্যে ১টি বেছে নাও এবং দেখো কত শতাংশ বন্ধু তোমার দলে!',
+      questions: [
+        {
+          questionText: 'টাইম ট্রাভেল করার সুযোগ পেলে কোনটি নেবে?',
+          options: [
+            { id: 'opt_1', text: '১০ বছর ভবিষ্যতে গিয়ে নিজেকে দেখা', icon: 'sun' },
+            { id: 'opt_2', text: 'এখনকার সব বুদ্ধি নিয়ে ১০ বছর অতীতে ফিরে যাওয়া', icon: 'moon' },
+          ],
+          correctOptionId: 'opt_2',
+        },
+        {
+          questionText: 'আজীবনের জন্য কোন সুবিধাটি বেছে নেবে?',
+          options: [
+            { id: 'opt_1', text: 'পৃথিবীর যেকোনো রেস্তোরাঁয় আজীবন ফ্রি খাবার', icon: 'coffee' },
+            { id: 'opt_2', text: 'পৃথিবীর যেকোনো দেশে আজীবন ফ্রি বিমান ভ্রমণ', icon: 'spark' },
+          ],
+          correctOptionId: 'opt_2',
+        },
+        {
+          questionText: 'বন্ধুত্বের ক্ষেত্রে কোনটি বেশি গুরুত্বপূর্ণ?',
+          options: [
+            { id: 'opt_1', text: 'সারাজীবনের জন্য ১ জন শতভাগ বিশ্বস্ত বেস্ট ফ্রেন্ড থাকা', icon: 'badge' },
+            { id: 'opt_2', text: 'আড্ডা দেওয়ার মতো ২০ জন মজার মানুষের বিশাল গ্রুপ থাকা', icon: 'bubble' },
+          ],
+          correctOptionId: 'opt_1',
+        },
+      ],
+    },
+  },
+};
+
 export const COPY = {
   en: {
-    tagline: 'Minimalist Friendship Games',
-    heroTitle1: 'Discover Who Knows You Best on',
+    tagline: 'Friendship quiz games',
+    heroTitle1: 'Better Friends.',
+    heroTitle2: 'Bigger Moments.',
     heroSub:
-      'Pick from 8+ interactive templates, customize your questions in 60 seconds, share your link anywhere, and watch your friends compete on your live leaderboard!',
-    createBtn: 'Create Your Quiz',
+      'Create fun quizzes, challenge your friends, and discover how well they really know you.',
+    createBtn: 'Create a Quiz',
+    exploreBtn: 'Explore Games',
     sampleBtn: 'Try Sample Quiz',
+    navHome: 'Home',
+    navExplore: 'Explore',
+    navCreate: 'Create',
+    navInbox: 'Inbox',
+    navProfile: 'Profile',
     navGuides: 'Guides',
     navDashboard: 'My Quizzes',
-    navCreate: 'Create Quiz',
     demoBanner:
-      'Local Demo Mode: Quizzes work only in this browser until Supabase Cloud is connected.',
-    step1Title: '1. Pick a Template & Edit',
-    step1Desc:
-      'Choose from 8 fun categories in English or Bangla. Every question includes 3 choices + a write-your-own slot!',
-    step2Title: '2. Copy & Share Link',
-    step2Desc:
-      'One-tap copy or share directly to WhatsApp & Messenger. Friends play instantly with zero sign-up.',
-    step3Title: '3. Podium Leaderboard',
-    step3Desc:
-      'See who gets Gold, Silver, and Bronze on your live leaderboard and read their custom written answers!',
-    builderHeading: 'Create Your BFFquest Quiz',
+      'Local Demo Mode: Connect Supabase for cross-device cloud sharing.',
+    qaCreateTitle: 'Create a quiz',
+    qaCreateSub: 'Write your own questions',
+    qaPlayTitle: 'Play with friends',
+    qaPlaySub: 'Challenge them with a link',
+    qaShareTitle: 'Share a result',
+    qaShareSub: 'Show off your score',
+    howItWorksTitle: 'How it works',
+    step1Title: 'Create your quiz',
+    step1Desc: 'Pick a template or write your own questions across 5 game modes.',
+    step2Title: 'Share it with friends',
+    step2Desc: 'Send one direct link anywhere your friends hang out.',
+    step3Title: 'Discover your results',
+    step3Desc: 'See who knows you best, compare sides, and climb the podium.',
+    featuredTemplatesTitle: 'Featured templates',
+    useTemplateBtn: 'Use template',
+    exploreGamesTitle: 'Explore games',
+    seeAllGamesBtn: 'See all games ›',
+    ctaBannerTitle: 'Ready to see who knows you best?',
+    ctaBannerSub: 'Your quizzes, inbox, and play stats stay saved automatically.',
+    builderHeading: 'Create Your BFFquest Game',
     builderSub:
-      'Tap any template below to load questions, edit anything you like, and tap the circle next to your true answer.',
-    loadTemplateLabel: 'Choose a Quick-Load Editable Template (8 Categories):',
-    templateLoadedMsg: 'Template loaded! You can now edit any question below.',
+      'Choose a game mode & template below, customize your prompts, and publish your shareable link.',
+    loadTemplateLabel: 'Choose a Quick-Load Editable Template:',
+    templateLoadedMsg: 'Template loaded! You can edit any field below.',
     yourNameLabel: 'Your Display Name *',
     yourNamePlaceholder: 'e.g., Ahad',
-    quizTitleLabel: 'Quiz Title *',
+    quizTitleLabel: 'Game / Quiz Title *',
     quizDescLabel: 'Short Note for Friends (Optional)',
     questionLabel: 'Question',
     selectTrueAnswer: '3 Fixed Choices + 1 Write-In Slot (Tap circle for true answer) *',
-    customSlotHint: 'Option 4 (Player writes their own answer — select circle if any written answer counts as correct)',
-    addQuestionBtn: '+ Add Question',
-    publishBtn: 'Publish & Get Share Link',
-    publishingBtn: 'Publishing to Cloud...',
+    customSlotHint: 'Option 4 (Player writes their own answer)',
+    addQuestionBtn: '+ Add Round / Question',
+    publishBtn: 'Publish & Get Link',
+    publishingBtn: 'Publishing...',
     publishedBadge: 'Published Live',
-    publishedHeading: 'Your Quiz Link Is Ready!',
+    publishedHeading: 'Your Game Link Is Ready!',
     publishedSub:
       'Copy your direct link below or share straight to WhatsApp. Friends on any phone can play immediately.',
-    directLinkLabel: 'Direct Shareable Link (Tap to select or use Copy button):',
+    directLinkLabel: 'Direct Shareable Link:',
     copyLinkBtn: 'Copy Direct Link',
-    copiedBtn: 'Link Copied to Clipboard!',
-    copyManualHint: 'Link selected! Press Copy on your screen/keyboard.',
+    copiedBtn: 'Copied!',
+    copyManualHint: 'Link selected! Press Copy on your screen.',
     whatsappShareBtn: 'Share on WhatsApp',
     shareNativeBtn: 'More Share Options',
-    openQuizBtn: 'Open Quiz Page',
-    invitedBy: 'Quiz Created by',
-    questionsCount: 'Questions',
+    openQuizBtn: 'Open Game Page',
+    invitedBy: 'Created by',
+    questionsCount: 'Rounds',
     noAccountNeeded: 'No Sign-Up Needed',
-    startQuizBtn: 'Start Quiz Now',
-    nicknameLabel: 'Your Name or Nickname (Shown on Leaderboard) *',
+    startQuizBtn: 'Play Now',
+    nicknameLabel: 'Your Name or Nickname *',
     nicknamePlaceholder: 'e.g., Rafi',
     writeOwnLabel: 'Or write your own answer',
     writeOwnPlaceholder: 'Type your custom answer here...',
     backBtn: 'Back',
-    nextBtn: 'Next Question',
-    finishBtn: 'Submit & See Score',
-    scoreRevealBadge: 'Official Score Reveal',
-    shareScoreBtn: 'Copy Score Link',
-    downloadCardBtn: 'Download Score Card',
+    nextBtn: 'Next',
+    finishBtn: 'Lock In & See Result',
+    scoreRevealBadge: 'Official Result',
+    shareScoreBtn: 'Copy Link',
+    downloadCardBtn: 'Download Card',
     challengeBackTitle: 'Now Turn the Tables!',
     challengeBackSub:
-      'Create your own BFFquest quiz in 60 seconds and see if your friends can beat your score.',
-    customAnswersTitle: 'Your Written Answers',
-    leaderboardTitle: 'Friends Leaderboard',
-    leaderboardSub: 'Ranked by highest score & fastest completion',
+      'Create your own BFFquest game in 60 seconds and challenge your friends back.',
+    customAnswersTitle: 'Written Answers',
+    leaderboardTitle: 'Leaderboard',
+    leaderboardSub: 'Top friends ranked by highest score',
     participantsCount: 'Played',
-    leaderboardEmpty: 'No friend has finished this quiz yet—be the first to claim #1 Gold!',
-    dashboardTitle: 'My Created Quizzes',
+    leaderboardEmpty: 'No friend has finished this game yet—be #1 on the podium!',
+    dashboardTitle: 'My Profile & Created Games',
     dashboardSub:
-      'Quizzes you create on this browser are saved automatically here so you can check scores, read custom answers, pause, or delete anytime.',
-    totalQuizzes: 'My Quizzes',
+      'Manage your published games, view friend scores, or open your BFFQuest Wrapped recap.',
+    totalQuizzes: 'My Games',
     totalSubmissions: 'Total Plays',
-    avgScore: 'Weighted Avg Score',
+    avgScore: 'Weighted Avg',
     pauseBtn: 'Pause',
     activateBtn: 'Publish',
     deleteBtn: 'Delete',
-    confirmDeleteQuiz: 'Are you sure you want to permanently delete this quiz and all its scores?',
+    confirmDeleteQuiz: 'Permanently delete this game and all its scores?',
     recentSubmissions: 'Friend Scores & Custom Answers:',
-    noQuizzesYet: 'You have not created any quizzes yet. Create your first quiz in 60 seconds!',
-    reportTitle: 'Report Inappropriate Quiz',
-    reportSub: 'Help us keep BFFquest positive and safe. Report any abusive or privacy-violating quiz below.',
-    reportSlugLabel: 'Quiz Link or Slug (Optional)',
+    noQuizzesYet: 'You have not created any games yet. Launch your first one in 60 seconds!',
+    reportTitle: 'Report Inappropriate Content',
+    reportSub: 'Help us keep BFFquest positive and safe.',
+    reportSlugLabel: 'Game Link or Slug (Optional)',
     reportReasonLabel: 'Reason *',
     reportDetailsLabel: 'Details *',
     reportSubmitBtn: 'Submit Report',
-    reportSuccess: 'Thank you! Your report has been recorded for admin review.',
+    reportSuccess: 'Thank you! Your report has been recorded for review.',
     adminTitle: 'Site-Owner Admin Panel',
-    footerNote: 'Scores are playful friendship games, not psychological assessments.',
+    footerNote: 'Playful friendship games • Built with Liquid Glass.',
   },
   bn: {
-    tagline: 'প্রিমিয়াম ফ্রেন্ডশিপ কুইজ প্ল্যাটফর্ম',
-    heroTitle1: 'কে আপনাকে সবচেয়ে ভালো চেনে তা জানুন',
+    tagline: 'প্রিমিয়াম ফ্রেন্ডশিপ গেমস',
+    heroTitle1: 'বেটার ফ্রেন্ডস।',
+    heroTitle2: 'বিগার মোমেন্টস।',
     heroSub:
-      '৮টিরও বেশি মজার টেমপ্লেট থেকে প্রশ্ন বেছে নিন, ৬০ সেকেন্ডে নিজের কুইজ সাজিয়ে লিংক শেয়ার করুন এবং লাইভ লিডারবোর্ডে দেখুন আপনার বন্ধুদের মধ্যে কে প্রথম হয়!',
-    createBtn: 'নিজের কুইজ তৈরি করুন',
+      'মজার কুইজ ও গেম তৈরি করুন, বন্ধুদের চ্যালেঞ্জ ছুড়ে দিন এবং দেখুন তারা আপনাকে সত্যিই কতটা ভালো চেনে।',
+    createBtn: 'কুইজ তৈরি করুন',
+    exploreBtn: 'সব গেম দেখুন',
     sampleBtn: 'স্যাম্পল কুইজ খেলুন',
+    navHome: 'হোম',
+    navExplore: 'গেমস',
+    navCreate: 'তৈরি করুন',
+    navInbox: 'ইনবক্স',
+    navProfile: 'প্রোফাইল',
     navGuides: 'গাইড',
-    navDashboard: 'আমার কুইজ',
-    navCreate: 'কুইজ বানান',
+    navDashboard: 'আমার গেমস',
     demoBanner:
-      'লোকাল ডেমো মোড: Supabase যুক্ত না থাকলে কুইজ শুধু এই ব্রাউজারে কাজ করবে।',
-    step1Title: '১. টেমপ্লেট ও প্রশ্ন সাজান',
-    step1Desc:
-      '৮টি ক্যাটাগরির বাংলা বা ইংরেজি টেমপ্লেট বেছে নিন। প্রতিটি প্রশ্নে ৩টি অপশন + ১টি নিজের মতো উত্তর লেখার বক্স থাকে!',
-    step2Title: '২. ডিরেক্ট লিংক কপি ও শেয়ার',
-    step2Desc:
-      '১ ক্লিকে লিংক কপি করুন বা হোয়াটসঅ্যাপে পাঠান। বন্ধুদের কোনো অ্যাকাউন্ট খুলতে হবে না।',
-    step3Title: '৩. প্রিমিয়াম লিডারবোর্ড',
-    step3Desc:
-      'কে গোল্ড, সিলভার ও ব্রোঞ্জ পেল তা লিডারবোর্ডে দেখুন এবং বন্ধুদের নিজ হাতে লেখা উত্তরগুলো পড়ুন!',
-    builderHeading: 'আপনার BFFquest কুইজ তৈরি করুন',
+      'লোকাল ডেমো মোড: সব ডিভাইসে শেয়ার করার জন্য Supabase কানেক্ট করুন।',
+    qaCreateTitle: 'কুইজ তৈরি করুন',
+    qaCreateSub: 'নিজের মতো প্রশ্ন সাজান',
+    qaPlayTitle: 'বন্ধুদের সাথে খেলুন',
+    qaPlaySub: 'এক লিংকেই চ্যালেঞ্জ পাঠান',
+    qaShareTitle: 'রেজাল্ট শেয়ার করুন',
+    qaShareSub: 'স্কোর কার্ড ডাউনলোড করুন',
+    howItWorksTitle: 'কীভাবে কাজ করে',
+    step1Title: 'গেম বা কুইজ সাজান',
+    step1Desc: 'রেডিমেড টেমপ্লেট বেছে নিন অথবা নিজের মতো প্রশ্ন যোগ করুন।',
+    step2Title: 'বন্ধুদের লিংক পাঠান',
+    step2Desc: 'হোয়াটসঅ্যাপ বা মেসেঞ্জারে ১ ক্লিকেই লিংক শেয়ার করুন।',
+    step3Title: 'ফলাফল ও র‍্যাংকিং দেখুন',
+    step3Desc: 'দেখুন কে আপনার সাথে সবচেয়ে বেশি মেলে এবং লিডারবোর্ডে প্রথম হয়।',
+    featuredTemplatesTitle: 'জনপ্রিয় টেমপ্লেটসমূহ',
+    useTemplateBtn: 'টেমপ্লেট ব্যবহার করুন',
+    exploreGamesTitle: 'সবগুলো গেম মোড',
+    seeAllGamesBtn: 'সব গেম দেখুন ›',
+    ctaBannerTitle: 'দেখতে চান কে আপনাকে সবচেয়ে ভালো চেনে?',
+    ctaBannerSub: 'আপনার সব কুইজ, ইনবক্স এবং খেলার রেকর্ড স্বয়ংক্রিয়ভাবে সেভ থাকে।',
+    builderHeading: 'নতুন BFFquest গেম তৈরি করুন',
     builderSub:
-      'নিচের যেকোনো টেমপ্লেটে ট্যাপ করে প্রশ্ন লোড করুন, নিজের মতো এডিট করুন এবং সঠিক উত্তরের পাশের গোল বৃত্তে টিক দিন।',
-    loadTemplateLabel: 'রেডিমেড এডিটেবল টেমপ্লেট বেছে নিন (৮টি ক্যাটাগরি):',
-    templateLoadedMsg: 'টেমপ্লেট লোড হয়েছে! এখন নিচের যেকোনো প্রশ্ন আপনার মতো পরিবর্তন করতে পারেন।',
+      'নিচে গেম মোড বা টেমপ্লেট বেছে নিন, নিজের মতো সাজিয়ে পাবলিশ করুন এবং বন্ধুদের লিংক পাঠান।',
+    loadTemplateLabel: 'রেডিমেড এডিটেবল টেমপ্লেট বেছে নিন:',
+    templateLoadedMsg: 'টেমপ্লেট লোড হয়েছে! নিচে নিজের মতো এডিট করতে পারেন।',
     yourNameLabel: 'আপনার নাম *',
     yourNamePlaceholder: 'যেমন: আহাদ',
-    quizTitleLabel: 'কুইজের শিরোনাম *',
-    quizDescLabel: 'বন্ধুদের জন্য ছোট নোট (ঐচ্ছিক)',
+    quizTitleLabel: 'গেম বা কুইজের শিরোনাম *',
+    quizDescLabel: 'বন্ধুদের জন্য ছোট বার্তা (ঐচ্ছিক)',
     questionLabel: 'প্রশ্ন',
-    selectTrueAnswer: '৩টি ফিক্সড অপশন + ১টি নিজের মতো লেখার অপশন (সঠিক উত্তরের বৃত্তে টিক দিন) *',
-    customSlotHint: '৪ নম্বর অপশন (এখানে বন্ধুরা নিজেদের মতো উত্তর টাইপ করতে পারবে)',
-    addQuestionBtn: '+ নতুন প্রশ্ন যোগ করুন',
+    selectTrueAnswer: '৩টি অপশন + ১টি নিজের মতো লেখার অপশন (সঠিক উত্তরের বৃত্তে টিক দিন) *',
+    customSlotHint: '৪ নম্বর অপশন (বন্ধুরা নিজেদের মতো উত্তর লিখতে পারবে)',
+    addQuestionBtn: '+ নতুন প্রশ্ন / রাউন্ড যোগ করুন',
     publishBtn: 'পাবলিশ করুন ও লিংক নিন',
-    publishingBtn: 'ক্লাউডে সেভ হচ্ছে...',
+    publishingBtn: 'পাবলিশ হচ্ছে...',
     publishedBadge: 'সফলভাবে পাবলিশ হয়েছে',
-    publishedHeading: 'আপনার কুইজ লিংক তৈরি!',
+    publishedHeading: 'আপনার গেম লিংক তৈরি!',
     publishedSub:
-      'নিচের বাটন থেকে ডিরেক্ট লিংক কপি করুন অথবা হোয়াটসঅ্যাপে বন্ধুদের পাঠান। যেকোনো ফোন থেকে সরাসরি খেলা যাবে।',
-    directLinkLabel: 'ডিরেক্ট শেয়ার লিংক (সিলেক্ট করুন অথবা কপি বাটনে চাপুন):',
-    copyLinkBtn: 'ডিরেক্ট লিংক কপি করুন',
-    copiedBtn: 'লিংক কপি হয়েছে!',
-    copyManualHint: 'লিংক সিলেক্ট হয়েছে! এবার আপনার স্ক্রিন থেকে Copy চাপুন।',
-    whatsappShareBtn: 'হোয়াটসঅ্যাপে শেয়ার করুন',
+      'নিচে ডিরেক্ট লিংক কপি করুন অথবা হোয়াটসঅ্যাপে বন্ধুদের পাঠান।',
+    directLinkLabel: 'ডিরেক্ট শেয়ার লিংক:',
+    copyLinkBtn: 'লিংক কপি করুন',
+    copiedBtn: 'কপি হয়েছে!',
+    copyManualHint: 'লিংক সিলেক্ট হয়েছে! এবার Copy চাপুন।',
+    whatsappShareBtn: 'হোয়াটসঅ্যাপে শেয়ার',
     shareNativeBtn: 'অন্যান্য অ্যাপে শেয়ার',
-    openQuizBtn: 'কুইজ পেজ খুলুন',
-    invitedBy: 'আমন্ত্রণ জানিয়েছেন',
-    questionsCount: 'টি প্রশ্ন',
+    openQuizBtn: 'গেম পেজ খুলুন',
+    invitedBy: 'তৈরি করেছেন',
+    questionsCount: 'টি রাউন্ড',
     noAccountNeeded: 'অ্যাকাউন্ট ছাড়াই খেলুন',
-    startQuizBtn: 'কুইজ শুরু করুন',
-    nicknameLabel: 'আপনার নাম বা ডাকনাম (লিডারবোর্ডে এই নাম দেখা যাবে) *',
+    startQuizBtn: 'খেলা শুরু করুন',
+    nicknameLabel: 'আপনার নাম বা ডাকনাম *',
     nicknamePlaceholder: 'যেমন: রাফি',
     writeOwnLabel: 'অথবা নিজের মতো উত্তর লিখুন',
     writeOwnPlaceholder: 'এখানে আপনার উত্তরটি লিখুন...',
     backBtn: 'পেছনে',
-    nextBtn: 'পরের প্রশ্ন',
-    finishBtn: 'সাবমিট করুন ও স্কোর দেখুন',
-    scoreRevealBadge: 'ফলাফল ও স্কোর',
-    shareScoreBtn: 'স্কোর লিংক কপি করুন',
-    downloadCardBtn: 'স্কোর কার্ড ডাউনলোড',
+    nextBtn: 'পরের ধাপ',
+    finishBtn: 'সাবমিট করুন ও ফলাফল দেখুন',
+    scoreRevealBadge: 'ফলাফল',
+    shareScoreBtn: 'লিংক কপি করুন',
+    downloadCardBtn: 'কার্ড ডাউনলোড',
     challengeBackTitle: 'এবার আপনার পালা!',
     challengeBackSub:
-      'মাত্র ১ মিনিটে নিজের কুইজ বানিয়ে বন্ধুদের পাল্টা চ্যালেঞ্জ ছুড়ে দিন।',
-    customAnswersTitle: 'আপনার লেখা কাস্টম উত্তরসমূহ',
-    leaderboardTitle: 'সেরা বন্ধুদের লিডারবোর্ড',
-    leaderboardSub: 'সর্বোচ্চ স্কোর ও দ্রুততম সময়ের ভিত্তিতে র‍্যাংকিং',
+      'মাত্র ১ মিনিটে নিজের গেম বানিয়ে বন্ধুদের পাল্টা চ্যালেঞ্জ ছুড়ে দিন।',
+    customAnswersTitle: 'লেখা কাস্টম উত্তরসমূহ',
+    leaderboardTitle: 'লিডারবোর্ড',
+    leaderboardSub: 'সর্বোচ্চ স্কোরের ভিত্তিতে সেরা বন্ধুদের তালিকা',
     participantsCount: 'জন খেলেছে',
-    leaderboardEmpty: 'এখনো কেউ এই কুইজটি খেলেনি—সবার আগে খেলে ১ম স্থান (🥇) দখল করুন!',
-    dashboardTitle: 'আমার তৈরি কুইজসমূহ',
+    leaderboardEmpty: 'এখনো কেউ খেলেনি—সবার আগে খেলে ১ম স্থান দখল করুন!',
+    dashboardTitle: 'আমার প্রোফাইল ও তৈরি করা গেমস',
     dashboardSub:
-      'আপনার তৈরি করা কুইজগুলো এখানে স্বয়ংক্রিয়ভাবে সেভ থাকে। যেকোনো সময় বন্ধুদের স্কোর ও লেখা উত্তর দেখুন।',
-    totalQuizzes: 'মোট কুইজ',
-    totalSubmissions: 'মোট অংশগ্রহণ',
+      'আপনার তৈরি করা সব গেম, বন্ধুদের স্কোর এবং BFFQuest Wrapped রিক্যাপ এখানে দেখুন।',
+    totalQuizzes: 'মোট গেম',
+    totalSubmissions: 'মোট খেলা হয়েছে',
     avgScore: 'গড় স্কোর',
     pauseBtn: 'বিরতি',
     activateBtn: 'চালু করুন',
     deleteBtn: 'ডিলিট',
-    confirmDeleteQuiz: 'আপনি কি নিশ্চিত যে এই কুইজ এবং এর সব স্কোর ডিলিট করতে চান?',
+    confirmDeleteQuiz: 'আপনি কি নিশ্চিত যে এই গেম এবং এর সব স্কোর ডিলিট করতে চান?',
     recentSubmissions: 'বন্ধুদের স্কোর ও লিখিত উত্তর:',
-    noQuizzesYet: 'আপনি এখনো কোনো কুইজ তৈরি করেননি। মাত্র ৬০ সেকেন্ডে প্রথম কুইজটি বানিয়ে ফেলুন!',
+    noQuizzesYet: 'আপনি এখনো কোনো গেম তৈরি করেননি। ৬০ সেকেন্ডে প্রথমটি তৈরি করুন!',
     reportTitle: 'অভিযোগ জানান (Report Abuse)',
-    reportSub: 'কোনো আপত্তিকর কুইজ লিংক সম্পর্কে অভিযোগ জানাতে নিচের ফর্মটি পূরণ করুন।',
-    reportSlugLabel: 'কুইজের লিংক বা স্লাগ (ঐচ্ছিক)',
+    reportSub: 'কোনো আপত্তিকর লিংক বা প্রশ্নের বিরুদ্ধে অভিযোগ জানান।',
+    reportSlugLabel: 'গেম লিংক বা স্লাগ (ঐচ্ছিক)',
     reportReasonLabel: 'অভিযোগের কারণ *',
     reportDetailsLabel: 'বিস্তারিত বিবরণ *',
     reportSubmitBtn: 'অভিযোগ জমা দিন',
     reportSuccess: 'ধন্যবাদ! আপনার অভিযোগটি অ্যাডমিন রিভিউয়ের জন্য জমা হয়েছে।',
     adminTitle: 'সাইট অ্যাডমিন প্যানেল',
-    footerNote: 'স্কোরগুলো নিছক বন্ধুত্বপূর্ণ খেলার ফলাফল, কোনো মনস্তাত্ত্বিক মূল্যায়ন নয়।',
+    footerNote: 'ফ্রেন্ডশিপ গেমিং প্ল্যাটফর্ম • লিকুইড গ্লাস সংস্করণ।',
   },
 };
 
@@ -252,6 +836,8 @@ export const TEMPLATES: Record<Lang, QuizTemplate[]> = {
       id: 'best-friends',
       name: '🔥 Best Friends Classic',
       badge: 'Popular',
+      accent: '#7C5CFA',
+      icon: 'bubble',
       defaultTitle: 'How Well Do You Actually Know Me?',
       description: 'Everyday habits, comfort foods, and how I react in classic situations.',
       questions: [
@@ -297,6 +883,8 @@ export const TEMPLATES: Record<Lang, QuizTemplate[]> = {
       id: 'campus-crew',
       name: '🎓 Campus & Squad Trivia',
       badge: 'Squad',
+      accent: '#5B9BFA',
+      icon: 'coffee',
       defaultTitle: 'The Ultimate Campus & Hangout Squad Test',
       description: 'Canteen talks, group projects, and late-night hangout habits.',
       questions: [
@@ -342,6 +930,8 @@ export const TEMPLATES: Record<Lang, QuizTemplate[]> = {
       id: 'funny-roast',
       name: '😂 Funny Roast & Red Flags',
       badge: 'Funny',
+      accent: '#D58BF5',
+      icon: 'spark',
       defaultTitle: 'Do You Know My Biggest Quirks & Red Flags?',
       description: 'Let’s see if you know my funny habits and daily chaos.',
       questions: [
@@ -386,6 +976,8 @@ export const TEMPLATES: Record<Lang, QuizTemplate[]> = {
       id: 'siblings-cousins',
       name: '🏡 Siblings & Cousins',
       badge: 'Family',
+      accent: '#4FD1E8',
+      icon: 'sun',
       defaultTitle: 'The Ultimate Cousin & Sibling Bond Test',
       description: 'Family dinners, childhood secrets, and Eid hangout memories.',
       questions: [
@@ -430,6 +1022,8 @@ export const TEMPLATES: Record<Lang, QuizTemplate[]> = {
       id: 'couples-vibe',
       name: '💖 Partner & Crush Vibe',
       badge: 'Special',
+      accent: '#D58BF5',
+      icon: 'spark',
       defaultTitle: 'How Well Do You Know My Heart?',
       description: 'Love languages, ideal dates, and the little things I notice.',
       questions: [
@@ -474,6 +1068,8 @@ export const TEMPLATES: Record<Lang, QuizTemplate[]> = {
       id: 'gaming-night',
       name: '🎮 Gaming & Night Owls',
       badge: 'Gamer',
+      accent: '#7C5CFA',
+      icon: 'flame',
       defaultTitle: 'Night Owl & Gaming Squad Quiz',
       description: 'Rank matches, chess battles, and 3 AM discord vibes.',
       questions: [
@@ -514,100 +1110,14 @@ export const TEMPLATES: Record<Lang, QuizTemplate[]> = {
         ),
       ],
     },
-    {
-      id: 'childhood-memories',
-      name: '🚲 Childhood & School Days',
-      badge: 'Nostalgia',
-      defaultTitle: 'Do You Know My School & Childhood Story?',
-      description: 'Backbench memories, school tiffin, and growing up.',
-      questions: [
-        makeQ(
-          'What kind of student was I back in school?',
-          'Quietly smart—studied right before exams',
-          'Backbench entertainer with all the jokes',
-          'Front-row regular who finished homework early',
-          EN_CUSTOM
-        ),
-        makeQ(
-          'What was my favorite thing about school breaks/tiffin?',
-          'Street food outside the school gate',
-          'Playing cricket or football in 35°C heat',
-          'Sharing tiffin in the classroom with the gang',
-          EN_CUSTOM
-        ),
-        makeQ(
-          'Which subject did I secretly enjoy (or hate the least)?',
-          'Math, Computers, or Science',
-          'English & Literature stories',
-          'None—I was there for the friends!',
-          EN_CUSTOM
-        ),
-        makeQ(
-          'What was my favorite afternoon pastime as a kid?',
-          'Playing video games or cartoons',
-          'Cycling or playing outside till sunset',
-          'Drawing, crafting, or experimenting with things',
-          EN_CUSTOM
-        ),
-        makeQ(
-          'If I could relive one day from our old days, what would it be?',
-          'Our last day of school hangout with the whole crew',
-          'A carefree rainy day holiday with zero worries',
-          'Our first big trip or picnic together',
-          EN_CUSTOM
-        ),
-      ],
-    },
-    {
-      id: 'long-distance',
-      name: '✈️ Long-Distance BFFs',
-      badge: 'Forever',
-      defaultTitle: 'Miles Apart, Still Best Friends?',
-      description: 'For friends who don’t talk every day but never lose the bond.',
-      questions: [
-        makeQ(
-          'How do we usually catch up after weeks of being busy?',
-          'A sudden 2-hour call covering 6 months of lore',
-          'Sending reels and memes daily without words',
-          'Meeting up after months like zero time passed',
-          EN_CUSTOM
-        ),
-        makeQ(
-          'What is the first thing we must do when we meet in person?',
-          'Go straight to our favorite food spot',
-          'Walk around for hours roasting everything',
-          'Take a photo we forget to post',
-          EN_CUSTOM
-        ),
-        makeQ(
-          'How do you know I am genuinely proud of you?',
-          'I hype up your wins to everyone I know',
-          'I send a heartfelt message when you least expect it',
-          'I roast you to your face but defend you everywhere',
-          EN_CUSTOM
-        ),
-        makeQ(
-          'What keeps our friendship strong despite busy schedules?',
-          'Zero ego even if someone replies late',
-          'Sharing the exact same sense of humor',
-          'Always showing up when things get serious',
-          EN_CUSTOM
-        ),
-        makeQ(
-          'Where will our friendship be 10 years from now?',
-          'Successful, travelling together, same terrible jokes',
-          'Still sending memes at 2 AM',
-          'Neighbors or business partners!',
-          EN_CUSTOM
-        ),
-      ],
-    },
   ],
   bn: [
     {
       id: 'best-friends',
       name: '🔥 বেস্ট ফ্রেন্ড ক্লাসিক',
       badge: 'জনপ্রিয়',
+      accent: '#7C5CFA',
+      icon: 'bubble',
       defaultTitle: 'তুমি আমাকে কতটা ভালো চেনো?',
       description: 'আমার প্রতিদিনের অভ্যাস, প্রিয় খাবার এবং মজার কিছু পছন্দ নিয়ে কুইজ।',
       questions: [
@@ -653,6 +1163,8 @@ export const TEMPLATES: Record<Lang, QuizTemplate[]> = {
       id: 'campus-crew',
       name: '🎓 ক্যাম্পাস ও আড্ডা গ্যাং',
       badge: 'আড্ডা',
+      accent: '#5B9BFA',
+      icon: 'coffee',
       defaultTitle: 'আমাদের আড্ডা ও ক্যাম্পাস গ্যাং কুইজ',
       description: 'ক্যান্টিনের চা, গ্রুপ প্রজেক্ট এবং প্রতিদিনের আড্ডার স্মৃতি।',
       questions: [
@@ -698,6 +1210,8 @@ export const TEMPLATES: Record<Lang, QuizTemplate[]> = {
       id: 'funny-roast',
       name: '😂 মজার রোস্ট ও রেড ফ্ল্যাগ',
       badge: 'ফানি',
+      accent: '#D58BF5',
+      icon: 'spark',
       defaultTitle: 'আমার সবচেয়ে মজার অভ্যাস ও রেড ফ্ল্যাগ কোনটি?',
       description: 'দেখা যাক আমার পাগলামি আর অদ্ভুত অভ্যাসগুলো তুমি কতটা জানো!',
       questions: [
@@ -742,6 +1256,8 @@ export const TEMPLATES: Record<Lang, QuizTemplate[]> = {
       id: 'siblings-cousins',
       name: '🏡 ভাই-বোন ও কাজিন স্কোয়াড',
       badge: 'ফ্যামিলি',
+      accent: '#4FD1E8',
+      icon: 'sun',
       defaultTitle: 'কাজিন ও ভাই-বোনদের বন্ডিং টেস্ট!',
       description: 'ঈদের আড্ডা, বিয়ের দাওয়াত এবং ছোটবেলার গোপন সব স্মৃতি।',
       questions: [
@@ -786,6 +1302,8 @@ export const TEMPLATES: Record<Lang, QuizTemplate[]> = {
       id: 'couples-vibe',
       name: '💖 প্রিয় মানুষ ও স্পেশাল ভাইব',
       badge: 'স্পেশাল',
+      accent: '#D58BF5',
+      icon: 'spark',
       defaultTitle: 'তুমি আমার মনের কথা কতটা বোঝো?',
       description: 'ভালোলাগা, ছোট ছোট যত্ন এবং অব্যক্ত কথার কুইজ।',
       questions: [
@@ -830,6 +1348,8 @@ export const TEMPLATES: Record<Lang, QuizTemplate[]> = {
       id: 'gaming-night',
       name: '🎮 গেমিং ও রাতজাগা স্কোয়াড',
       badge: 'গেমার',
+      accent: '#7C5CFA',
+      icon: 'flame',
       defaultTitle: 'নাইট আউল ও গেমিং স্কোয়াড কুইজ',
       description: 'দাবা, গেমিং ম্যাচ এবং রাত ৩টার আড্ডার বন্ধুদের জন্য।',
       questions: [
@@ -866,94 +1386,6 @@ export const TEMPLATES: Record<Lang, QuizTemplate[]> = {
           'রাত ১২টায় শুভরাত্রি বলে রাত ৩টায় ঘুমাই',
           'কথা বলতে বলতেই হঠাৎ ঘুমিয়ে পড়ি',
           'যখন বলি ঠিক তখনই ঘুমিয়ে পড়ি',
-          BN_CUSTOM
-        ),
-      ],
-    },
-    {
-      id: 'childhood-memories',
-      name: '🚲 স্কুল জীবন ও শৈশব',
-      badge: 'নস্টালজিয়া',
-      defaultTitle: 'আমার স্কুল জীবন ও ছোটবেলা কতটা জানো?',
-      description: 'স্কুল টিফিন, ব্যাকবেঞ্চের গল্প এবং শৈশবের সোনালী দিন।',
-      questions: [
-        makeQ(
-          'স্কুল জীবনে আমি ঠিক কোন ধরনের ছাত্র ছিলাম?',
-          'চুপচাপ কিন্তু পরীক্ষার আগের রাতে পড়ে ভালো রেজাল্ট করা',
-          'ব্যাকবেঞ্চে বসে পুরো ক্লাস মাতিয়ে রাখা',
-          'সময়মতো সব হোমওয়ার্ক শেষ করা ভদ্র ছাত্র',
-          BN_CUSTOM
-        ),
-        makeQ(
-          'স্কুলের টিফিন ব্রেকে আমার সবচেয়ে প্রিয় কাজ কী ছিল?',
-          'স্কুল গেটের বাইরের ঝালমুড়ি, ফুচকা বা আচার খাওয়া',
-          'কড়া রোদে ক্রিকেট বা ফুটবল খেলতে নেমে যাওয়া',
-          'ক্লাসরুমে বসে বন্ধুদের সাথে টিফিন ভাগাভাগি করা',
-          BN_CUSTOM
-        ),
-        makeQ(
-          'স্কুলে কোন ক্লাস বা বিষয়টি আমার সবচেয়ে ভালো লাগত?',
-          'গণিত, আইসিটি বা বিজ্ঞান',
-          'বাংলা বা ইংরেজি গল্পের ক্লাস',
-          'পড়ার চেয়ে বন্ধুদের সাথে দেখা হওয়াটাই আসল ছিল!',
-          BN_CUSTOM
-        ),
-        makeQ(
-          'ছোটবেলায় বিকেল হলেই আমার প্রধান আকর্ষণ কী ছিল?',
-          'মাঠে খেলতে যাওয়া বা সাইকেল চালানো',
-          'টিভিতে প্রিয় কার্টুন বা ভিডিও গেম খেলা',
-          'নতুন কিছু বানানো বা আঁকাআঁকি করা',
-          BN_CUSTOM
-        ),
-        makeQ(
-          'পুরোনো দিনের কোন একটি দিন ফিরে পেলে আমি বারবার বাঁচতে চাইব?',
-          'স্কুলের শেষ দিনটিতে সব বন্ধুদের সাথে আড্ডা',
-          'ঝুম বৃষ্টির দিনে স্কুল ছুটি হওয়ার সেই আনন্দ',
-          'বন্ধুদের সাথে প্রথমবার দূরে কোথাও পিকনিক বা ট্যুর',
-          BN_CUSTOM
-        ),
-      ],
-    },
-    {
-      id: 'long-distance',
-      name: '✈️ দূরের কিন্তু কাছের বন্ধু',
-      badge: 'চিরকালের',
-      defaultTitle: 'দূরে থাকলেও আমাদের বন্ধুত্ব কতটা অটুট?',
-      description: 'যাদের সাথে প্রতিদিন কথা হয় না, কিন্তু সম্পর্ক একটুও বদলায়নি।',
-      questions: [
-        makeQ(
-          'অনেকদিন ব্যস্ত থাকার পর আমাদের কীভাবে আবার কথা শুরু হয়?',
-          'হঠাৎ ২ ঘণ্টার লম্বা কলে গত ৬ মাসের সব গল্প শেষ করা',
-          'কথা না হলেও প্রতিদিন মজার রিলস ও মিম পাঠানো',
-          'অনেক মাস পর দেখা হলেও মনে হয় গতকালই কথা হয়েছে',
-          BN_CUSTOM
-        ),
-        makeQ(
-          'অনেকদিন পর সামনাসামনি দেখা হলে আমাদের প্রথম কাজ কী হয়?',
-          'সোজা আমাদের প্রিয় খাবারের দোকানে চলে যাওয়া',
-          'ঘণ্টার পর ঘণ্টা হাঁটতে হাঁটতে পুরনো গল্প করা',
-          'ছবি তোলা (যা আর কখনো পোস্ট করা হয় না)',
-          BN_CUSTOM
-        ),
-        makeQ(
-          'ব্যস্ততার মাঝেও আমাদের বন্ধুত্ব টিকে থাকার আসল রহস্য কী?',
-          'লেট রিপ্লাই নিয়ে কোনো অভিমান বা ইগো না থাকা',
-          'আমাদের দুজনের সেন্স অব হিউমার একদম এক হওয়া',
-          'বিপদে বা দরকারে সবসময় একে অপরের পাশে থাকা',
-          BN_CUSTOM
-        ),
-        makeQ(
-          'বন্ধুর কোনো সাফল্যে আমি কীভাবে আনন্দ প্রকাশ করি?',
-          'সবার কাছে গর্ব করে তার সাফল্যের গল্প বলি',
-          'মন থেকে বড় একটি শুভেচ্ছা মেসেজ পাঠাই',
-          'সামনে পচাই কিন্তু পেছনে সবসময় সাপোর্ট করি',
-          BN_CUSTOM
-        ),
-        makeQ(
-          'আজ থেকে ১০ বছর পর আমাদের বন্ধুত্ব কোথায় থাকবে?',
-          'নিজ নিজ জায়গায় সফল, কিন্তু আড্ডায় সেই আগের মতোই পাগলাটে',
-          'তখনো রাত ২টায় একে অপরকে মিম পাঠাব',
-          'একসাথে নতুন কোনো প্রজেক্ট বা বিজনেস করব!',
           BN_CUSTOM
         ),
       ],
