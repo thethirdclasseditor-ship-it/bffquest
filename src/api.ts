@@ -5,7 +5,6 @@ import {
   GAME_PRESETS,
   DAILY_QUESTS,
   QuizQuestion,
-  QuizOption,
   Lang,
   GameType,
   DailyQuestItem,
@@ -22,8 +21,22 @@ export const isSupabaseConfigured = Boolean(
 );
 
 export const supabase: SupabaseClient | null = isSupabaseConfigured
-  ? createClient(supabaseUrl, supabaseAnonKey)
+  ? createClient(supabaseUrl, supabaseAnonKey, {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+      },
+    })
   : null;
+
+export interface AuthUser {
+  id: string;
+  email: string;
+  displayName: string;
+  avatarUrl: string;
+  provider: string;
+}
 
 export interface LeaderboardEntry {
   submissionId: string;
@@ -39,11 +52,11 @@ export interface CustomAnswerItem {
   customAnswer: string;
 }
 
-export interface SubmissionDetailItem {
+export interface QuestionResultDetail {
   questionId: string;
   position: number;
   questionText: string;
-  options: QuizOption[];
+  options: { id: string; text: string; icon?: string; isCustom?: boolean }[];
   selectedOptionId: string;
   correctOptionId: string;
   isCorrect: boolean;
@@ -62,7 +75,7 @@ export interface PublicQuiz {
   title: string;
   description: string;
   status: 'published' | 'disabled' | 'draft';
-  gameType: GameType;
+  gameType?: GameType;
   settings?: Record<string, any>;
   totalParticipants?: number;
   questions: QuizQuestion[];
@@ -82,7 +95,7 @@ export interface SubmissionResult {
   totalQuestions: number;
   scorePercentage: number;
   customAnswers?: CustomAnswerItem[];
-  details?: SubmissionDetailItem[];
+  details?: QuestionResultDetail[];
   submittedAt: string;
   clientFingerprint?: string;
 }
@@ -106,77 +119,46 @@ export interface AmaQuestionItem {
   status: 'private' | 'published' | 'skipped' | 'blocked';
   isReported?: boolean;
   createdAt?: string;
-  answeredAt?: string | null;
+  answeredAt?: string;
 }
 
-export interface AmaInboxCreatorData {
+export interface AmaInboxData {
   id: string;
   slug: string;
   creatorDisplayName: string;
   promptText: string;
   isOpen: boolean;
-  questions: AmaQuestionItem[];
+  questions?: AmaQuestionItem[];
+  publishedQuestions?: AmaQuestionItem[];
 }
 
-export interface AmaInboxPublicData {
-  id: string;
-  slug: string;
-  creatorDisplayName: string;
-  promptText: string;
-  isOpen: boolean;
-  publishedQuestions: {
-    id: string;
-    questionText: string;
-    answerText: string;
-    answeredAt?: string | null;
-  }[];
-}
-
-export interface PlayHistoryItem {
-  id: string;
-  slug: string;
-  title: string;
-  creatorName: string;
-  gameType: GameType;
-  score: number;
-  total: number;
-  scorePercentage: number;
-  playedAt: string;
-  dateKey: string;
-}
-
-export interface DailyQuestState {
-  todayKey: string;
-  quest: DailyQuestItem;
-  completedToday: boolean;
-  progressCount: number;
-  currentStreak: number;
-  bestStreak: number;
-  completedDates: string[];
-  weekDays: { label: string; dateKey: string; done: boolean; isToday: boolean }[];
-  monthDays: { dayNum: number; dateKey: string; done: boolean; isToday: boolean }[];
-  unlockedBadgeIds: string[];
-}
-
-export interface WrappedSummary {
+export interface WrappedRecapData {
   hasEnoughData: boolean;
   totalPlayed: number;
   totalCreated: number;
-  bestScorePercentage: number;
-  averageScorePercentage: number;
-  topQuizTitle: string;
-  topGameType: GameType;
-  uniqueFriendsCount: number;
+  bestScorePct: number;
+  avgScorePct: number;
+  topGameTitle: string;
+  topGameMode: GameType;
+  totalFriendsReached: number;
   currentStreak: number;
-  unlockedBadgeIds: string[];
-  recentPlays: PlayHistoryItem[];
+  unlockedBadges: string[];
+}
+
+export interface DailyQuestStatus {
+  todayKey: string;
+  quest: DailyQuestItem;
+  isCompletedToday: boolean;
+  currentStreak: number;
+  completedDates: string[];
+  unlockedBadges: string[];
 }
 
 export interface AdminQuizItem {
   id: string;
   slug: string;
   title: string;
-  gameType: GameType;
+  gameType?: GameType;
   creatorDisplayName: string;
   status: 'published' | 'disabled' | 'draft';
   createdAt: string;
@@ -201,16 +183,28 @@ export interface AdminDashboardData {
   reports: AdminReportItem[];
 }
 
+interface LocalActivityRecord {
+  playedGames: {
+    slug: string;
+    title: string;
+    gameType: GameType;
+    scorePercentage: number;
+    playedAt: string;
+  }[];
+  createdGamesCount: number;
+  completedQuestDates: string[];
+  unlockedBadges: string[];
+}
+
 const LANG_KEY = `${BRAND.storagePrefix}lang`;
 const QUIZZES_KEY = `${BRAND.storagePrefix}quizzes`;
 const SUBS_KEY = `${BRAND.storagePrefix}subs`;
+const AMA_KEY = `${BRAND.storagePrefix}ama_inbox`;
+const ACTIVITY_KEY = `${BRAND.storagePrefix}activity`;
 const CREATOR_TOKEN_KEY = `${BRAND.storagePrefix}creator_token`;
+const ACTIVE_USER_ID_KEY = `${BRAND.storagePrefix}active_uid`;
 const ADMIN_KEY_STORAGE = `${BRAND.storagePrefix}admin_key`;
 const FP_KEY = `${BRAND.storagePrefix}fp`;
-const PLAY_HISTORY_KEY = `${BRAND.storagePrefix}play_history`;
-const CREATE_DATES_KEY = `${BRAND.storagePrefix}create_dates`;
-const QUEST_DATES_KEY = `${BRAND.storagePrefix}quest_dates`;
-const LOCAL_AMA_KEY = `${BRAND.storagePrefix}local_ama`;
 
 const SAMPLE_SLUGS = new Set([
   'sample-best-friend-quiz',
@@ -241,6 +235,9 @@ export function saveAdminKey(key: string) {
   }
 }
 
+/**
+ * Multi-layer clipboard helper with fallback for mobile & WebView browsers
+ */
 export async function copyTextSafely(
   text: string
 ): Promise<{ ok: boolean; method: 'clipboard' | 'fallback' | 'manual' }> {
@@ -251,7 +248,7 @@ export async function copyTextSafely(
       await navigator.clipboard.writeText(text);
       return { ok: true, method: 'clipboard' };
     } catch {
-      // Fall through to legacy textarea copy
+      // Fallback below
     }
   }
 
@@ -272,7 +269,7 @@ export async function copyTextSafely(
       return { ok: true, method: 'fallback' };
     }
   } catch {
-    // Fall through to manual prompt
+    // Manual fallback
   }
 
   return { ok: false, method: 'manual' };
@@ -293,16 +290,22 @@ export function getCreatorToken(): string {
   return token;
 }
 
-export function getClientFingerprint(): string {
-  let fp = localStorage.getItem(FP_KEY);
-  if (!fp) {
-    fp = generateRandomHex(12);
-    localStorage.setItem(FP_KEY, fp);
-  }
-  return fp;
+function rotateGuestCreatorToken(): string {
+  const next = `ct_${generateRandomHex(14)}`;
+  localStorage.setItem(CREATOR_TOKEN_KEY, next);
+  return next;
 }
 
-function generateSlug(title: string, creatorName: string, prefixFallback = 'bff'): string {
+/**
+ * Returns storage key scoped to the currently logged-in permanent user ID (or guest)
+ * so two users on the same device never mix local cache.
+ */
+function getScopedKey(baseKey: string): string {
+  const activeUid = localStorage.getItem(ACTIVE_USER_ID_KEY) || 'guest';
+  return `${baseKey}_${activeUid}`;
+}
+
+function generateSlug(title: string, creatorName: string): string {
   const cleanTitle = title
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
@@ -315,300 +318,181 @@ function generateSlug(title: string, creatorName: string, prefixFallback = 'bff'
     .replace(/^-+|-+$/g, '')
     .slice(0, 10);
 
-  const prefix = cleanTitle || cleanCreator || prefixFallback;
-  const bytes = new Uint8Array(5);
+  const prefix = cleanTitle || cleanCreator || 'bff';
+  const bytes = new Uint8Array(6);
   crypto.getRandomValues(bytes);
   const suffix = Array.from(bytes, (b) => (b % 36).toString(36)).join('');
   return `${prefix}-${suffix}`;
 }
 
+function getClientFingerprint(): string {
+  let fp = localStorage.getItem(FP_KEY);
+  if (!fp) {
+    fp = generateRandomHex(12);
+    localStorage.setItem(FP_KEY, fp);
+  }
+  return fp;
+}
+
 /* ============================================================================
- * REAL GAMEPLAY, DAILY QUEST & WRAPPED TRACKING ENGINE
+ * REAL GAMEPLAY ACTIVITY, STREAK & CLOUD WRAPPED ENGINE
  * ============================================================================ */
-export function getLocalDateKey(date: Date = new Date()): string {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
-
-function addDays(base: Date, offset: number): Date {
-  const next = new Date(base);
-  next.setDate(next.getDate() + offset);
-  return next;
-}
-
-function getPlayHistory(): PlayHistoryItem[] {
-  const raw = localStorage.getItem(PLAY_HISTORY_KEY);
-  if (!raw) return [];
-  try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-function getCreateDates(): string[] {
-  const raw = localStorage.getItem(CREATE_DATES_KEY);
-  if (!raw) return [];
-  try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-function getStoredQuestDates(): string[] {
-  const raw = localStorage.getItem(QUEST_DATES_KEY);
-  if (!raw) return [];
-  try {
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveQuestDate(dateKey: string) {
-  const existing = new Set(getStoredQuestDates());
-  existing.add(dateKey);
-  localStorage.setItem(QUEST_DATES_KEY, JSON.stringify(Array.from(existing).sort()));
-}
-
-function getQuestForDate(date: Date = new Date()): DailyQuestItem {
-  const utcDays = Math.floor(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()) / 86400000);
-  return DAILY_QUESTS[Math.abs(utcDays) % DAILY_QUESTS.length];
-}
-
-function evaluateAndSyncTodayQuest() {
+function getTodayDateString(): string {
   const now = new Date();
-  const todayKey = getLocalDateKey(now);
-  const quest = getQuestForDate(now);
-  const playsToday = getPlayHistory().filter((p) => p.dateKey === todayKey);
-  const createsToday = getCreateDates().filter((d) => d === todayKey);
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, '0');
+  const dd = String(now.getDate()).padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}`;
+}
 
-  let done = false;
-  if (quest.taskType === 'play_any' && playsToday.length >= 1) {
-    done = true;
-  } else if (quest.taskType === 'create_any' && createsToday.length >= 1) {
-    done = true;
-  } else if (quest.taskType === 'score_70' && playsToday.some((p) => p.scorePercentage >= 70)) {
-    done = true;
-  } else if (quest.taskType === 'ama_setup' && createsToday.length >= 1) {
-    done = true;
+export function getTodayQuest(): DailyQuestItem {
+  const todayStr = getTodayDateString();
+  let hash = 0;
+  for (let i = 0; i < todayStr.length; i++) {
+    hash = (hash * 31 + todayStr.charCodeAt(i)) % 1000;
   }
+  return DAILY_QUESTS[hash % DAILY_QUESTS.length];
+}
 
-  if (done) {
-    saveQuestDate(todayKey);
+function getLocalActivity(): LocalActivityRecord {
+  const raw = localStorage.getItem(getScopedKey(ACTIVITY_KEY));
+  if (!raw) {
+    return {
+      playedGames: [],
+      createdGamesCount: 0,
+      completedQuestDates: [],
+      unlockedBadges: [],
+    };
+  }
+  try {
+    const parsed = JSON.parse(raw);
+    return {
+      playedGames: Array.isArray(parsed.playedGames) ? parsed.playedGames : [],
+      createdGamesCount: Number(parsed.createdGamesCount || 0),
+      completedQuestDates: Array.isArray(parsed.completedQuestDates)
+        ? parsed.completedQuestDates
+        : [],
+      unlockedBadges: Array.isArray(parsed.unlockedBadges) ? parsed.unlockedBadges : [],
+    };
+  } catch {
+    return {
+      playedGames: [],
+      createdGamesCount: 0,
+      completedQuestDates: [],
+      unlockedBadges: [],
+    };
   }
 }
 
-function recordPlayActivity(item: Omit<PlayHistoryItem, 'dateKey'>) {
-  const list = getPlayHistory();
-  const entry: PlayHistoryItem = {
-    ...item,
-    dateKey: getLocalDateKey(new Date(item.playedAt)),
-  };
-  list.unshift(entry);
-  localStorage.setItem(PLAY_HISTORY_KEY, JSON.stringify(list.slice(0, 200)));
-  evaluateAndSyncTodayQuest();
+function saveLocalActivity(act: LocalActivityRecord) {
+  localStorage.setItem(getScopedKey(ACTIVITY_KEY), JSON.stringify(act));
 }
 
-function recordCreatorActivity() {
-  const todayKey = getLocalDateKey();
-  const list = getCreateDates();
-  list.push(todayKey);
-  localStorage.setItem(CREATE_DATES_KEY, JSON.stringify(list.slice(-200)));
-  evaluateAndSyncTodayQuest();
-}
-
-function computeStreaks(completedDates: string[]): { currentStreak: number; bestStreak: number } {
-  const completedSet = new Set(completedDates);
+function calculateConsecutiveStreak(dates: string[]): number {
+  if (!dates || dates.length === 0) return 0;
+  const uniqueSet = new Set(dates);
   const today = new Date();
-  const todayKey = getLocalDateKey(today);
-  const yesterdayKey = getLocalDateKey(addDays(today, -1));
+  let streak = 0;
 
-  let currentStreak = 0;
-  if (completedSet.has(todayKey) || completedSet.has(yesterdayKey)) {
-    let cursor = completedSet.has(todayKey) ? today : addDays(today, -1);
-    while (completedSet.has(getLocalDateKey(cursor))) {
-      currentStreak += 1;
-      cursor = addDays(cursor, -1);
-    }
-  }
+  for (let i = 0; i < 365; i++) {
+    const d = new Date(today);
+    d.setDate(today.getDate() - i);
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
+      d.getDate()
+    ).padStart(2, '0')}`;
 
-  const sorted = Array.from(completedSet).sort();
-  let bestStreak = 0;
-  let running = 0;
-  let prevDate: Date | null = null;
-
-  for (const key of sorted) {
-    const [y, m, d] = key.split('-').map(Number);
-    const dt = new Date(y, m - 1, d);
-    if (prevDate) {
-      const diffDays = Math.round((dt.getTime() - prevDate.getTime()) / 86400000);
-      running = diffDays === 1 ? running + 1 : 1;
+    if (uniqueSet.has(key)) {
+      streak += 1;
+    } else if (i === 0) {
+      continue;
     } else {
-      running = 1;
+      break;
     }
-    if (running > bestStreak) bestStreak = running;
-    prevDate = dt;
   }
-
-  return { currentStreak, bestStreak: Math.max(bestStreak, currentStreak) };
+  return streak;
 }
 
-export function getDailyQuestState(extraCreatedCount = 0): DailyQuestState {
-  evaluateAndSyncTodayQuest();
-  const now = new Date();
-  const todayKey = getLocalDateKey(now);
-  const quest = getQuestForDate(now);
-  const completedDates = getStoredQuestDates();
-  const completedSet = new Set(completedDates);
-  const plays = getPlayHistory();
-  const creates = getCreateDates();
+async function recordRealActivity(event: {
+  type: 'play' | 'create';
+  slug?: string;
+  title?: string;
+  gameType?: GameType;
+  scorePercentage?: number;
+}) {
+  const act = getLocalActivity();
+  const todayKey = getTodayDateString();
+  const todayQuest = getTodayQuest();
 
-  const playsToday = plays.filter((p) => p.dateKey === todayKey);
-  const createsToday = creates.filter((d) => d === todayKey);
-
-  let progressCount = 0;
-  if (quest.taskType === 'play_any') progressCount = Math.min(1, playsToday.length);
-  if (quest.taskType === 'create_any') progressCount = Math.min(1, createsToday.length);
-  if (quest.taskType === 'score_70') {
-    progressCount = playsToday.some((p) => p.scorePercentage >= 70) ? 1 : 0;
+  if (event.type === 'play') {
+    act.playedGames.unshift({
+      slug: event.slug || 'game',
+      title: event.title || 'BFFquest Game',
+      gameType: event.gameType || 'quiz',
+      scorePercentage: Number(event.scorePercentage ?? 0),
+      playedAt: new Date().toISOString(),
+    });
+    act.playedGames = act.playedGames.slice(0, 100);
+  } else if (event.type === 'create') {
+    act.createdGamesCount += 1;
   }
 
-  const { currentStreak, bestStreak } = computeStreaks(completedDates);
-
-  // Build Monday-to-Sunday current week
-  const dayOfWeek = (now.getDay() + 6) % 7; // 0 = Monday, 6 = Sunday
-  const monday = addDays(now, -dayOfWeek);
-  const labels = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
-  const weekDays = labels.map((label, idx) => {
-    const dt = addDays(monday, idx);
-    const key = getLocalDateKey(dt);
-    return {
-      label,
-      dateKey: key,
-      done: completedSet.has(key),
-      isToday: key === todayKey,
-    };
-  });
-
-  // Build 28-day (4-week aligned) calendar history
-  const start28 = addDays(monday, -21);
-  const monthDays = Array.from({ length: 28 }, (_, idx) => {
-    const dt = addDays(start28, idx);
-    const key = getLocalDateKey(dt);
-    return {
-      dayNum: dt.getDate(),
-      dateKey: key,
-      done: completedSet.has(key),
-      isToday: key === todayKey,
-    };
-  });
-
-  const totalCreated = Math.max(creates.length, extraCreatedCount, getLocalCreatedQuizzes().length);
-  const unlockedBadgeIds: string[] = [];
-  if (plays.length >= 1) unlockedBadgeIds.push('first_play');
-  if (totalCreated >= 1) unlockedBadgeIds.push('creator_star');
-  if (plays.some((p) => p.scorePercentage >= 80)) unlockedBadgeIds.push('mind_reader');
-  if (bestStreak >= 3 || completedDates.length >= 3) unlockedBadgeIds.push('streak_3');
-
-  return {
-    todayKey,
-    quest,
-    completedToday: completedSet.has(todayKey),
-    progressCount,
-    currentStreak,
-    bestStreak,
-    completedDates,
-    weekDays,
-    monthDays,
-    unlockedBadgeIds,
-  };
-}
-
-export function getWrappedSummary(cloudCreatedCount = 0): WrappedSummary {
-  const plays = getPlayHistory();
-  const localCreated = getLocalCreatedQuizzes().length;
-  const totalCreated = Math.max(cloudCreatedCount, localCreated, getCreateDates().length);
-  const dq = getDailyQuestState(totalCreated);
-
-  const hasEnoughData = plays.length > 0 || totalCreated > 0;
-  if (!hasEnoughData) {
-    return {
-      hasEnoughData: false,
-      totalPlayed: 0,
-      totalCreated: 0,
-      bestScorePercentage: 0,
-      averageScorePercentage: 0,
-      topQuizTitle: '—',
-      topGameType: 'quiz',
-      uniqueFriendsCount: 0,
-      currentStreak: 0,
-      unlockedBadgeIds: [],
-      recentPlays: [],
-    };
-  }
-
-  const bestScorePercentage =
-    plays.length > 0 ? Math.max(...plays.map((p) => p.scorePercentage)) : 0;
-  const averageScorePercentage =
-    plays.length > 0
-      ? Math.round(plays.reduce((acc, p) => acc + p.scorePercentage, 0) / plays.length)
-      : 0;
-
-  const sortedByScore = [...plays].sort((a, b) => b.scorePercentage - a.scorePercentage);
-  const topQuizTitle = sortedByScore[0]?.title || getLocalCreatedQuizzes()[0]?.title || BRAND.name;
-
-  const modeCounts: Partial<Record<GameType, number>> = {};
-  for (const p of plays) {
-    modeCounts[p.gameType] = (modeCounts[p.gameType] || 0) + 1;
-  }
-  let topGameType: GameType = 'quiz';
-  let topModeCount = 0;
-  (Object.keys(modeCounts) as GameType[]).forEach((gt) => {
-    const cnt = modeCounts[gt] || 0;
-    if (cnt > topModeCount) {
-      topModeCount = cnt;
-      topGameType = gt;
+  let questDone = act.completedQuestDates.includes(todayKey);
+  if (!questDone) {
+    if (todayQuest.taskType === 'play_any' && event.type === 'play') {
+      questDone = true;
+    } else if (todayQuest.taskType === 'create_any' && event.type === 'create') {
+      questDone = true;
+    } else if (
+      todayQuest.taskType === 'score_70' &&
+      event.type === 'play' &&
+      Number(event.scorePercentage || 0) >= 70
+    ) {
+      questDone = true;
     }
-  });
+    if (questDone) {
+      act.completedQuestDates.push(todayKey);
+    }
+  }
 
-  const uniqueFriendsCount = new Set(
-    plays.map((p) => p.creatorName.trim().toLowerCase()).filter(Boolean)
-  ).size;
+  const badges = new Set(act.unlockedBadges);
+  if (act.playedGames.length >= 1) badges.add('first_play');
+  if (act.createdGamesCount >= 1) badges.add('creator_star');
+  if (act.playedGames.some((p) => p.scorePercentage >= 80)) badges.add('mind_reader');
+  if (calculateConsecutiveStreak(act.completedQuestDates) >= 3) badges.add('streak_3');
 
-  return {
-    hasEnoughData: true,
-    totalPlayed: plays.length,
-    totalCreated,
-    bestScorePercentage,
-    averageScorePercentage,
-    topQuizTitle,
-    topGameType,
-    uniqueFriendsCount,
-    currentStreak: dq.currentStreak,
-    unlockedBadgeIds: dq.unlockedBadgeIds,
-    recentPlays: plays.slice(0, 6),
-  };
+  act.unlockedBadges = Array.from(badges);
+  saveLocalActivity(act);
+
+  // If authenticated in Supabase, persist quest dates & badges to cloud profile immediately
+  if (supabase) {
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (sessionData?.session?.user) {
+        await supabase.rpc('sync_user_account', {
+          p_creator_token: null,
+          p_local_quest_dates: act.completedQuestDates,
+          p_local_badges: act.unlockedBadges,
+        });
+      }
+    } catch {
+      // Non-blocking background sync
+    }
+  }
 }
 
 /* ============================================================================
- * SAMPLE GAMES & LOCAL STORAGE HELPERS
+ * BUILT-IN SAMPLE GAMES (Excluded from Creator Dashboard)
  * ============================================================================ */
-function getBuiltInSampleQuiz(slug: string, lang: Lang = 'en'): PublicQuiz | null {
-  const creatorName = lang === 'bn' ? 'আহাদ' : 'Ahad';
+function getSampleQuizBySlug(slug: string, lang: Lang = 'en'): PublicQuiz | null {
+  const clean = slug.trim().toLowerCase();
+  const creator = lang === 'bn' ? 'আহাদ' : 'Ahad';
 
-  if (slug === 'sample-best-friend-quiz') {
+  if (clean === 'sample-best-friend-quiz') {
     const tpl = TEMPLATES[lang][0];
     return {
       id: 'sample-quiz-001',
-      slug,
-      creatorDisplayName: creatorName,
+      slug: 'sample-best-friend-quiz',
+      creatorDisplayName: creator,
       title: tpl.defaultTitle,
       description: tpl.description,
       status: 'published',
@@ -622,32 +506,29 @@ function getBuiltInSampleQuiz(slug: string, lang: Lang = 'en'): PublicQuiz | nul
     };
   }
 
-  const presetMap: Record<
-    string,
-    Exclude<GameType, 'quiz' | 'ama' | 'wrapped' | 'daily_quest'>
-  > = {
+  const presetMap: Record<string, Exclude<GameType, 'quiz' | 'ama' | 'wrapped' | 'daily_quest'>> = {
     'sample-guess-side': 'guess_side',
     'sample-two-truths': 'two_truths',
     'sample-blind-ranking': 'blind_ranking',
     'sample-would-you-rather': 'would_you_rather',
   };
 
-  const gameType = presetMap[slug];
-  if (!gameType) return null;
+  const mode = presetMap[clean];
+  if (!mode) return null;
 
-  const preset = GAME_PRESETS[gameType][lang];
+  const preset = GAME_PRESETS[mode][lang];
   return {
-    id: `sample-${gameType}`,
-    slug,
-    creatorDisplayName: creatorName,
+    id: `sample-${mode}`,
+    slug: clean,
+    creatorDisplayName: creator,
     title: preset.defaultTitle,
     description: preset.description,
     status: 'published',
-    gameType,
-    settings: gameType === 'would_you_rather' ? { groupVoting: true } : {},
+    gameType: mode,
+    settings: { groupVoting: true, lockPositions: true },
     questions: preset.questions.map((q, idx) => ({
       ...q,
-      id: `sample_${gameType}_${idx + 1}`,
+      id: `sample_${mode}_q_${idx + 1}`,
       position: idx + 1,
       options: q.options.map((o) => ({ ...o })),
     })),
@@ -655,14 +536,18 @@ function getBuiltInSampleQuiz(slug: string, lang: Lang = 'en'): PublicQuiz | nul
 }
 
 function getLocalCreatedQuizzes(): PublicQuiz[] {
-  const raw = localStorage.getItem(QUIZZES_KEY);
+  const raw = localStorage.getItem(getScopedKey(QUIZZES_KEY));
   if (!raw) return [];
   try {
     const parsed: PublicQuiz[] = JSON.parse(raw);
-    return parsed.filter((q) => !SAMPLE_SLUGS.has(q.slug));
+    return parsed.filter((q) => !SAMPLE_SLUGS.has(q.slug.toLowerCase()));
   } catch {
     return [];
   }
+}
+
+function saveLocalCreatedQuizzes(list: PublicQuiz[]) {
+  localStorage.setItem(getScopedKey(QUIZZES_KEY), JSON.stringify(list));
 }
 
 function getLocalSubmissions(): SubmissionResult[] {
@@ -675,35 +560,264 @@ function getLocalSubmissions(): SubmissionResult[] {
   }
 }
 
-function computeLocalVoteStats(slug: string, questions: QuizQuestion[]): Record<string, VoteStatItem> {
-  const subs = getLocalSubmissions().filter((s) => s.quizSlug.toLowerCase() === slug.toLowerCase());
-  const stats: Record<string, VoteStatItem> = {};
-  for (const q of questions) {
-    let opt1 = 0;
-    let opt2 = 0;
-    for (const s of subs) {
-      const det = s.details?.find((d) => d.questionId === q.id);
-      if (det?.selectedOptionId === 'opt_1') opt1 += 1;
-      if (det?.selectedOptionId === 'opt_2') opt2 += 1;
-    }
-    stats[q.id] = { opt_1: opt1, opt_2: opt2, total: opt1 + opt2 };
-  }
-  return stats;
-}
-
-/* ============================================================================
- * MAIN API OBJECT
- * ============================================================================ */
 export const api = {
   isDemoMode: !isSupabaseConfigured,
 
+  /* ==========================================================================
+   * 0. REAL AUTHENTICATION & PERMANENT USER CLOUD SYNC
+   * ========================================================================== */
+  async syncAuthenticatedUser(): Promise<AuthUser | null> {
+    if (!supabase) return null;
+
+    const { data: sessionData } = await supabase.auth.getSession();
+    const user = sessionData?.session?.user;
+
+    if (!user) {
+      localStorage.removeItem(ACTIVE_USER_ID_KEY);
+      return null;
+    }
+
+    const previousUid = localStorage.getItem(ACTIVE_USER_ID_KEY);
+    // Only claim guest creations if transitioning from guest ('') to this user
+    const guestTokenToClaim = !previousUid ? localStorage.getItem(CREATOR_TOKEN_KEY) : null;
+    const guestActRaw = !previousUid ? localStorage.getItem(`${ACTIVITY_KEY}_guest`) : null;
+    let guestDates: string[] = [];
+    let guestBadges: string[] = [];
+
+    if (guestActRaw) {
+      try {
+        const parsed = JSON.parse(guestActRaw);
+        guestDates = Array.isArray(parsed.completedQuestDates) ? parsed.completedQuestDates : [];
+        guestBadges = Array.isArray(parsed.unlockedBadges) ? parsed.unlockedBadges : [];
+      } catch {}
+    }
+
+    // Set active user scope to permanent UUID
+    localStorage.setItem(ACTIVE_USER_ID_KEY, user.id);
+
+    const userAct = getLocalActivity();
+    const mergedLocalDates = Array.from(new Set([...userAct.completedQuestDates, ...guestDates]));
+    const mergedLocalBadges = Array.from(new Set([...userAct.unlockedBadges, ...guestBadges]));
+
+    try {
+      const { data: syncData, error } = await supabase.rpc('sync_user_account', {
+        p_creator_token: guestTokenToClaim,
+        p_local_quest_dates: mergedLocalDates,
+        p_local_badges: mergedLocalBadges,
+      });
+
+      // Clear guest token & guest activity once claimed so another user on this device never inherits it
+      if (guestTokenToClaim) {
+        rotateGuestCreatorToken();
+        localStorage.removeItem(`${ACTIVITY_KEY}_guest`);
+      }
+
+      if (!error && syncData) {
+        const cloudDates = Array.isArray(syncData.completedQuestDates)
+          ? syncData.completedQuestDates
+          : mergedLocalDates;
+        const cloudBadges = Array.isArray(syncData.unlockedBadges)
+          ? syncData.unlockedBadges
+          : mergedLocalBadges;
+
+        saveLocalActivity({
+          ...userAct,
+          completedQuestDates: cloudDates,
+          unlockedBadges: cloudBadges,
+        });
+
+        return {
+          id: user.id,
+          email: syncData.email || user.email || '',
+          displayName:
+            syncData.displayName ||
+            user.user_metadata?.display_name ||
+            user.user_metadata?.full_name ||
+            user.email?.split('@')[0] ||
+            'Player',
+          avatarUrl: syncData.avatarUrl || user.user_metadata?.avatar_url || '',
+          provider: syncData.provider || user.app_metadata?.provider || 'email',
+        };
+      }
+    } catch {
+      // Fallback to session metadata if RPC fails
+    }
+
+    return {
+      id: user.id,
+      email: user.email || '',
+      displayName:
+        user.user_metadata?.display_name ||
+        user.user_metadata?.full_name ||
+        user.user_metadata?.name ||
+        user.email?.split('@')[0] ||
+        'Player',
+      avatarUrl: user.user_metadata?.avatar_url || user.user_metadata?.picture || '',
+      provider: user.app_metadata?.provider || 'email',
+    };
+  },
+
+  onAuthStateChange(callback: (user: AuthUser | null) => void) {
+    if (!supabase) {
+      callback(null);
+      return () => {};
+    }
+
+    const { data: listener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_OUT' || !session?.user) {
+        localStorage.removeItem(ACTIVE_USER_ID_KEY);
+        callback(null);
+      } else {
+        const synced = await this.syncAuthenticatedUser();
+        callback(synced);
+      }
+    });
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
+  },
+
+  async signInWithEmail(email: string, password: string): Promise<AuthUser> {
+    if (!supabase) {
+      throw new Error('Authentication requires Supabase Cloud connection.');
+    }
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail || !password) {
+      throw new Error('Please enter both your email and password.');
+    }
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: cleanEmail,
+      password,
+    });
+
+    if (error || !data.user) {
+      throw new Error(error?.message || 'Invalid email or password.');
+    }
+
+    const synced = await this.syncAuthenticatedUser();
+    if (!synced) throw new Error('Could not load user profile.');
+    return synced;
+  },
+
+  async signUpWithEmail(params: {
+    email: string;
+    password: string;
+    displayName: string;
+  }): Promise<{ user: AuthUser | null; needsEmailConfirmation: boolean }> {
+    if (!supabase) {
+      throw new Error('Registration requires Supabase Cloud connection.');
+    }
+    const cleanEmail = params.email.trim().toLowerCase();
+    const cleanName = params.displayName.trim();
+
+    if (!cleanName) {
+      throw new Error('Please enter your display name.');
+    }
+    if (!cleanEmail || params.password.length < 6) {
+      throw new Error('Password must be at least 6 characters long.');
+    }
+
+    const { data, error } = await supabase.auth.signUp({
+      email: cleanEmail,
+      password: params.password,
+      options: {
+        data: {
+          display_name: cleanName,
+          full_name: cleanName,
+        },
+        emailRedirectTo: `${window.location.origin}/dashboard`,
+      },
+    });
+
+    if (error) {
+      throw new Error(error.message || 'Could not create account.');
+    }
+
+    if (data.session && data.user) {
+      const synced = await this.syncAuthenticatedUser();
+      return { user: synced, needsEmailConfirmation: false };
+    }
+
+    return { user: null, needsEmailConfirmation: true };
+  },
+
+  async signInWithSocial(provider: 'google' | 'facebook'): Promise<void> {
+    if (!supabase) {
+      throw new Error('Social login requires Supabase Cloud connection.');
+    }
+
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider,
+      options: {
+        redirectTo: `${window.location.origin}/dashboard`,
+      },
+    });
+
+    if (error) {
+      throw new Error(error.message || `Could not sign in with ${provider}.`);
+    }
+  },
+
+  async sendPasswordReset(email: string): Promise<void> {
+    if (!supabase) {
+      throw new Error('Password reset requires Supabase Cloud connection.');
+    }
+    const cleanEmail = email.trim().toLowerCase();
+    if (!cleanEmail) {
+      throw new Error('Please enter your account email address.');
+    }
+
+    const { error } = await supabase.auth.resetPasswordForEmail(cleanEmail, {
+      redirectTo: `${window.location.origin}/auth?mode=update_password`,
+    });
+
+    if (error) {
+      throw new Error(error.message || 'Could not send password reset email.');
+    }
+  },
+
+  async updateNewPassword(newPassword: string): Promise<void> {
+    if (!supabase) throw new Error('Supabase not configured.');
+    if (!newPassword || newPassword.length < 6) {
+      throw new Error('New password must be at least 6 characters.');
+    }
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) throw new Error(error.message || 'Could not update password.');
+  },
+
+  async updateProfileName(displayName: string): Promise<void> {
+    if (!supabase) throw new Error('Supabase not configured.');
+    const clean = displayName.trim();
+    if (!clean) throw new Error('Display name cannot be empty.');
+
+    const { error } = await supabase.rpc('update_my_profile_name', {
+      p_display_name: clean,
+    });
+    if (error) throw new Error(error.message);
+    await supabase.auth.updateUser({ data: { display_name: clean, full_name: clean } });
+  },
+
+  async signOut(): Promise<void> {
+    localStorage.removeItem(ACTIVE_USER_ID_KEY);
+    // Rotate guest token on sign-out so the browser starts clean for any other user
+    rotateGuestCreatorToken();
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
+  },
+
+  /* ==========================================================================
+   * 1. CREATE & PUBLISH ANY GAME MODE
+   * ========================================================================== */
   async publishQuiz(params: {
     creatorDisplayName: string;
     title: string;
     description: string;
-    questions: QuizQuestion[];
     gameType?: GameType;
     settings?: Record<string, any>;
+    questions: QuizQuestion[];
   }): Promise<{ slug: string; gameType: GameType }> {
     const gameType: GameType = params.gameType || 'quiz';
 
@@ -722,81 +836,83 @@ export const api = {
       );
     }
 
-    const normalizedQuestions: QuizQuestion[] = params.questions.map((q, idx) => {
-      const roundNum = idx + 1;
+    for (let i = 0; i < params.questions.length; i++) {
+      const q = params.questions[i];
+      if (!q.questionText.trim()) {
+        throw new Error(`Round/Question ${i + 1} text cannot be empty.`);
+      }
 
       if (gameType === 'guess_side' || gameType === 'would_you_rather') {
-        const o1 = q.options[0]?.text.trim() || '';
-        const o2 = q.options[1]?.text.trim() || '';
-        if (!o1 || !o2) {
-          throw new Error(`Please fill in both choices for Round ${roundNum}.`);
+        if (!q.options[0]?.text.trim() || !q.options[1]?.text.trim()) {
+          throw new Error(`Both Option A and Option B are required in Round ${i + 1}.`);
         }
-        const promptText = q.questionText.trim() || `${o1} vs ${o2}`;
+      } else if (gameType === 'two_truths') {
+        if (q.options.slice(0, 3).some((o) => !o.text.trim())) {
+          throw new Error(`All 3 statements are required in Round ${i + 1}.`);
+        }
+      } else if (gameType === 'quiz') {
+        if (q.options.slice(0, 3).some((o) => !o.text.trim())) {
+          throw new Error(`Please fill in the first 3 choices for Question ${i + 1}.`);
+        }
+      }
+    }
+
+    const slug = generateSlug(params.title, params.creatorDisplayName);
+    const creatorToken = getCreatorToken();
+
+    const normalizedQuestions: QuizQuestion[] = params.questions.map((q, idx) => {
+      if (gameType === 'guess_side' || gameType === 'would_you_rather') {
         return {
           ...q,
-          position: roundNum,
-          questionText: promptText,
-          correctOptionId: q.correctOptionId === 'opt_2' ? 'opt_2' : 'opt_1',
+          position: idx + 1,
+          questionText: q.questionText.trim(),
+          correctOptionId: q.correctOptionId || 'opt_1',
           options: [
-            { id: 'opt_1', text: o1, icon: q.options[0]?.icon || 'sun' },
-            { id: 'opt_2', text: o2, icon: q.options[1]?.icon || 'moon' },
+            {
+              id: 'opt_1',
+              text: q.options[0]?.text.trim() || 'Option A',
+              icon: q.options[0]?.icon || 'sun',
+            },
+            {
+              id: 'opt_2',
+              text: q.options[1]?.text.trim() || 'Option B',
+              icon: q.options[1]?.icon || 'moon',
+            },
           ],
         };
       }
 
       if (gameType === 'two_truths') {
-        const s1 = q.options[0]?.text.trim() || '';
-        const s2 = q.options[1]?.text.trim() || '';
-        const s3 = q.options[2]?.text.trim() || '';
-        if (!s1 || !s2 || !s3) {
-          throw new Error(`Please write all 3 statements in Round ${roundNum}.`);
-        }
         return {
           ...q,
-          position: roundNum,
-          questionText: q.questionText.trim() || `Round ${roundNum}: Spot the Lie`,
-          correctOptionId: ['opt_1', 'opt_2', 'opt_3'].includes(q.correctOptionId || '')
-            ? q.correctOptionId
-            : 'opt_2',
+          position: idx + 1,
+          questionText: q.questionText.trim(),
+          correctOptionId: q.correctOptionId || 'opt_2',
           options: [
-            { id: 'opt_1', text: s1 },
-            { id: 'opt_2', text: s2 },
-            { id: 'opt_3', text: s3 },
+            { id: 'opt_1', text: q.options[0]?.text.trim() || '' },
+            { id: 'opt_2', text: q.options[1]?.text.trim() || '' },
+            { id: 'opt_3', text: q.options[2]?.text.trim() || '' },
           ],
         };
       }
 
       if (gameType === 'blind_ranking') {
-        const itemName = q.questionText.trim();
-        if (!itemName) {
-          throw new Error(`Please enter item name #${roundNum} for Blind Ranking.`);
-        }
         const totalSlots = params.questions.length;
-        const slotOptions: QuizOption[] = Array.from({ length: totalSlots }, (_, sIdx) => ({
-          id: `opt_${sIdx + 1}`,
-          text: `Rank #${sIdx + 1}`,
-        }));
         return {
           ...q,
-          position: roundNum,
-          questionText: itemName,
-          correctOptionId: q.correctOptionId || `opt_${roundNum}`,
-          options: slotOptions,
+          position: idx + 1,
+          questionText: q.questionText.trim(),
+          correctOptionId: q.correctOptionId || `opt_${idx + 1}`,
+          options: Array.from({ length: totalSlots }, (_, sIdx) => ({
+            id: `opt_${sIdx + 1}`,
+            text: `Rank #${sIdx + 1}`,
+          })),
         };
-      }
-
-      // Default: Classic Friendship Quiz (3 fixed + 1 custom write-in slot)
-      if (!q.questionText.trim()) {
-        throw new Error(`Question ${roundNum} text cannot be empty.`);
-      }
-      const fixedOptions = q.options.slice(0, 3);
-      if (fixedOptions.some((o) => !o.text.trim())) {
-        throw new Error(`Please fill in the 3 choices for Question ${roundNum}.`);
       }
 
       return {
         ...q,
-        position: roundNum,
+        position: idx + 1,
         questionText: q.questionText.trim(),
         correctOptionId: q.correctOptionId || 'opt_1',
         options: [
@@ -811,10 +927,6 @@ export const api = {
         ],
       };
     });
-
-    const slug = generateSlug(params.title, params.creatorDisplayName, gameType.slice(0, 4));
-    const creatorToken = getCreatorToken();
-    const settings = params.settings || (gameType === 'would_you_rather' ? { groupVoting: true } : {});
 
     let finalSlug = slug;
     let finalId = crypto.randomUUID ? crypto.randomUUID() : `quiz_${Date.now()}`;
@@ -832,7 +944,7 @@ export const api = {
         })),
         p_creator_token: creatorToken,
         p_game_type: gameType,
-        p_settings: settings,
+        p_settings: params.settings || {},
       });
 
       if (error) {
@@ -851,16 +963,25 @@ export const api = {
       description: params.description.trim(),
       status: 'published',
       gameType,
-      settings,
+      settings: params.settings || {},
       questions: normalizedQuestions,
     };
     existing.unshift(newQuiz);
-    localStorage.setItem(QUIZZES_KEY, JSON.stringify(existing));
+    saveLocalCreatedQuizzes(existing);
 
-    recordCreatorActivity();
+    await recordRealActivity({
+      type: 'create',
+      slug: finalSlug,
+      title: params.title.trim(),
+      gameType,
+    });
+
     return { slug: finalSlug, gameType };
   },
 
+  /* ==========================================================================
+   * 2. LOAD PUBLIC QUIZ / GAME BY SLUG
+   * ========================================================================== */
   async getPublicQuizBySlug(
     slug: string,
     lang: Lang = 'en'
@@ -872,8 +993,9 @@ export const api = {
     const cleanSlug = slug.trim().toLowerCase();
 
     if (SAMPLE_SLUGS.has(cleanSlug)) {
-      const sample = getBuiltInSampleQuiz(cleanSlug, lang);
+      const sample = getSampleQuizBySlug(cleanSlug, lang);
       if (!sample) return { status: 'not_found' };
+
       const localSubs = getLocalSubmissions()
         .filter((s) => s.quizSlug.toLowerCase() === cleanSlug)
         .sort((a, b) => b.scorePercentage - a.scorePercentage)
@@ -885,7 +1007,6 @@ export const api = {
           ...sample,
           totalParticipants: localSubs.length,
           leaderboard: localSubs,
-          voteStats: computeLocalVoteStats(cleanSlug, sample.questions),
         },
       };
     }
@@ -903,15 +1024,7 @@ export const api = {
       }
 
       if (data) {
-        if (data.status === 'ok') {
-          return {
-            status: 'ok',
-            quiz: {
-              ...data.quiz,
-              gameType: (data.quiz.gameType as GameType) || 'quiz',
-            },
-          };
-        }
+        if (data.status === 'ok') return { status: 'ok', quiz: data.quiz };
         if (data.status === 'not_found') return { status: 'not_found' };
         return { status: 'unavailable' };
       }
@@ -932,20 +1045,15 @@ export const api = {
       status: 'ok',
       quiz: {
         ...found,
-        gameType: found.gameType || 'quiz',
         totalParticipants: localSubs.length,
         leaderboard: localSubs,
-        voteStats: computeLocalVoteStats(cleanSlug, found.questions),
-        questions: found.questions.map((q) => ({
-          id: q.id,
-          position: q.position,
-          questionText: q.questionText,
-          options: q.options.map((o) => ({ ...o })),
-        })),
       },
     };
   },
 
+  /* ==========================================================================
+   * 3. SUBMIT GAME ANSWERS & COMPUTE COMPARISON DETAILS
+   * ========================================================================== */
   async submitQuizAnswers(params: {
     slug: string;
     participantNickname: string;
@@ -954,7 +1062,7 @@ export const api = {
     lang?: Lang;
   }): Promise<SubmissionResult> {
     const cleanSlug = params.slug.trim().toLowerCase();
-    const fingerprint = `${cleanSlug}:${getClientFingerprint()}`;
+    const fingerprint = `${cleanSlug}:${getClientFingerprint()}:${Date.now()}`;
     const customTexts = params.customTexts || {};
 
     if (supabase && !SAMPLE_SLUGS.has(cleanSlug)) {
@@ -966,24 +1074,21 @@ export const api = {
         p_custom_texts: customTexts,
       });
       if (error) throw new Error(error.message);
-
       const res = data as SubmissionResult;
-      recordPlayActivity({
-        id: res.submissionId,
+
+      await recordRealActivity({
+        type: 'play',
         slug: res.quizSlug,
         title: res.quizTitle,
-        creatorName: res.creatorDisplayName,
-        gameType: (res.gameType as GameType) || 'quiz',
-        score: Number(res.score),
-        total: Number(res.totalQuestions),
-        scorePercentage: Number(res.scorePercentage),
-        playedAt: res.submittedAt || new Date().toISOString(),
+        gameType: res.gameType || 'quiz',
+        scorePercentage: res.scorePercentage,
       });
+
       return res;
     }
 
     const quiz = SAMPLE_SLUGS.has(cleanSlug)
-      ? getBuiltInSampleQuiz(cleanSlug, params.lang || 'en')
+      ? getSampleQuizBySlug(cleanSlug, params.lang || 'en')
       : getLocalCreatedQuizzes().find((q) => q.slug.toLowerCase() === cleanSlug);
 
     if (!quiz || quiz.status !== 'published') {
@@ -992,17 +1097,17 @@ export const api = {
 
     let correctCount = 0;
     const customAnswersList: CustomAnswerItem[] = [];
-    const detailsList: SubmissionDetailItem[] = [];
+    const detailsList: QuestionResultDetail[] = [];
 
     for (const q of quiz.questions) {
       const selected = params.answers[q.id];
       if (!selected) throw new Error('Please complete all steps before submitting.');
 
       let isCorrect = false;
-      if (quiz.gameType === 'quiz' && selected === 'opt_4') {
+      if (selected === 'opt_4' && quiz.gameType === 'quiz') {
         const written = (customTexts[q.id] || '').trim();
         if (!written) {
-          throw new Error('Please write your custom answer or pick one of the choices.');
+          throw new Error('Please write your custom answer or pick a choice.');
         }
         customAnswersList.push({
           questionText: q.questionText,
@@ -1027,7 +1132,7 @@ export const api = {
     }
 
     const totalQuestions = quiz.questions.length;
-    const scorePercentage = Math.round((correctCount / Math.max(1, totalQuestions)) * 100);
+    const scorePercentage = Math.round((correctCount / totalQuestions) * 100);
     const resultToken = generateRandomHex(10);
 
     const result: SubmissionResult = {
@@ -1035,7 +1140,7 @@ export const api = {
       resultToken,
       quizSlug: quiz.slug,
       quizTitle: quiz.title,
-      gameType: quiz.gameType,
+      gameType: quiz.gameType || 'quiz',
       creatorDisplayName: quiz.creatorDisplayName,
       participantNickname: params.participantNickname.trim() || 'Friend',
       score: correctCount,
@@ -1051,16 +1156,12 @@ export const api = {
     subs.unshift(result);
     localStorage.setItem(SUBS_KEY, JSON.stringify(subs));
 
-    recordPlayActivity({
-      id: result.submissionId,
-      slug: result.quizSlug,
-      title: result.quizTitle,
-      creatorName: result.creatorDisplayName,
-      gameType: quiz.gameType,
-      score: result.score,
-      total: result.totalQuestions,
-      scorePercentage: result.scorePercentage,
-      playedAt: result.submittedAt,
+    await recordRealActivity({
+      type: 'play',
+      slug: quiz.slug,
+      title: quiz.title,
+      gameType: quiz.gameType || 'quiz',
+      scorePercentage,
     });
 
     return result;
@@ -1089,6 +1190,9 @@ export const api = {
     return null;
   },
 
+  /* ==========================================================================
+   * 4. CREATOR DASHBOARD (TIED TO PERMANENT USER ID WHEN LOGGED IN)
+   * ========================================================================== */
   async getCreatorDashboard(): Promise<CreatorQuizSummary[]> {
     const creatorToken = getCreatorToken();
 
@@ -1163,7 +1267,7 @@ export const api = {
     const list = getLocalCreatedQuizzes().map((q) =>
       q.id === quizId ? { ...q, status: nextStatus as 'published' | 'disabled' } : q
     );
-    localStorage.setItem(QUIZZES_KEY, JSON.stringify(list));
+    saveLocalCreatedQuizzes(list);
   },
 
   async deleteQuiz(quizId: string) {
@@ -1178,15 +1282,303 @@ export const api = {
     }
 
     const list = getLocalCreatedQuizzes().filter((q) => q.id !== quizId);
-    localStorage.setItem(QUIZZES_KEY, JSON.stringify(list));
+    saveLocalCreatedQuizzes(list);
   },
 
+  /* ==========================================================================
+   * 5. ASK ME ANYTHING (AMA) PRIVATE INBOX & PUBLIC QUESTION API
+   * ========================================================================== */
+  async getCreatorAmaInbox(): Promise<{ hasInbox: boolean; inbox?: AmaInboxData }> {
+    const creatorToken = getCreatorToken();
+
+    if (supabase) {
+      const { data, error } = await supabase.rpc('get_creator_ama_inbox', {
+        p_creator_token: creatorToken,
+      });
+      if (error) throw new Error(error.message);
+      if (data?.hasInbox && data.inbox) {
+        return { hasInbox: true, inbox: data.inbox as AmaInboxData };
+      }
+      return { hasInbox: false };
+    }
+
+    const raw = localStorage.getItem(getScopedKey(AMA_KEY));
+    if (!raw) return { hasInbox: false };
+    try {
+      return { hasInbox: true, inbox: JSON.parse(raw) };
+    } catch {
+      return { hasInbox: false };
+    }
+  },
+
+  async upsertAmaInbox(params: {
+    creatorDisplayName: string;
+    promptText: string;
+    isOpen: boolean;
+    existingSlug?: string;
+  }): Promise<AmaInboxData> {
+    if (!params.creatorDisplayName.trim()) {
+      throw new Error('Please enter your display name.');
+    }
+    const creatorToken = getCreatorToken();
+    const slug = params.existingSlug || generateSlug('ama', params.creatorDisplayName.trim());
+
+    if (supabase) {
+      const { data, error } = await supabase.rpc('upsert_ama_inbox', {
+        p_slug: slug,
+        p_creator_display_name: params.creatorDisplayName.trim(),
+        p_creator_token: creatorToken,
+        p_prompt_text: params.promptText.trim() || 'Ask me anything anonymously!',
+        p_is_open: params.isOpen,
+      });
+      if (error) throw new Error(error.message);
+      return data as AmaInboxData;
+    }
+
+    const existing = await this.getCreatorAmaInbox();
+    const inbox: AmaInboxData = {
+      id: existing.inbox?.id || 'local_ama_1',
+      slug: existing.inbox?.slug || slug,
+      creatorDisplayName: params.creatorDisplayName.trim(),
+      promptText: params.promptText.trim() || 'Ask me anything anonymously!',
+      isOpen: params.isOpen,
+      questions: existing.inbox?.questions || [],
+    };
+    localStorage.setItem(getScopedKey(AMA_KEY), JSON.stringify(inbox));
+    return inbox;
+  },
+
+  async getPublicAmaInbox(
+    slug: string
+  ): Promise<{ status: 'ok' | 'not_found'; inbox?: AmaInboxData }> {
+    const cleanSlug = slug.trim().toLowerCase();
+
+    if (supabase) {
+      const { data, error } = await supabase.rpc('get_public_ama_inbox', {
+        p_slug: cleanSlug,
+      });
+      if (!error && data?.status === 'ok') {
+        return { status: 'ok', inbox: data.inbox as AmaInboxData };
+      }
+      return { status: 'not_found' };
+    }
+
+    const local = await this.getCreatorAmaInbox();
+    if (local.hasInbox && local.inbox && local.inbox.slug.toLowerCase() === cleanSlug) {
+      const published = (local.inbox.questions || []).filter((q) => q.status === 'published');
+      return {
+        status: 'ok',
+        inbox: { ...local.inbox, publishedQuestions: published },
+      };
+    }
+    return { status: 'not_found' };
+  },
+
+  async sendAmaQuestion(slug: string, questionText: string): Promise<void> {
+    if (!questionText.trim() || questionText.trim().length < 2) {
+      throw new Error('Please type a question first.');
+    }
+    const fp = getClientFingerprint();
+
+    if (supabase) {
+      const { error } = await supabase.rpc('send_ama_question', {
+        p_slug: slug.trim().toLowerCase(),
+        p_question_text: questionText.trim(),
+        p_sender_fingerprint: fp,
+      });
+      if (error) throw new Error(error.message);
+      return;
+    }
+
+    const local = await this.getCreatorAmaInbox();
+    if (!local.hasInbox || !local.inbox) {
+      throw new Error('Inbox not found.');
+    }
+    if (!local.inbox.isOpen) {
+      throw new Error('This inbox is currently closed.');
+    }
+    const newQ: AmaQuestionItem = {
+      id: `ama_q_${Date.now()}`,
+      questionText: questionText.trim(),
+      answerText: '',
+      status: 'private',
+      createdAt: new Date().toISOString(),
+    };
+    local.inbox.questions = [newQ, ...(local.inbox.questions || [])];
+    localStorage.setItem(getScopedKey(AMA_KEY), JSON.stringify(local.inbox));
+  },
+
+  async manageAmaQuestion(params: {
+    questionId: string;
+    action: 'answer' | 'skip' | 'delete' | 'unpublish' | 'block_report';
+    answerText?: string;
+    publish?: boolean;
+  }): Promise<void> {
+    const creatorToken = getCreatorToken();
+
+    if (supabase) {
+      const { error } = await supabase.rpc('manage_ama_question', {
+        p_creator_token: creatorToken,
+        p_question_id: params.questionId,
+        p_action: params.action,
+        p_answer_text: params.answerText || '',
+        p_publish: Boolean(params.publish),
+      });
+      if (error) throw new Error(error.message);
+      return;
+    }
+
+    const local = await this.getCreatorAmaInbox();
+    if (!local.hasInbox || !local.inbox) return;
+    let list = local.inbox.questions || [];
+
+    if (params.action === 'delete' || params.action === 'block_report') {
+      list = list.filter((q) => q.id !== params.questionId);
+    } else {
+      list = list.map((q) => {
+        if (q.id !== params.questionId) return q;
+        if (params.action === 'skip') return { ...q, status: 'skipped' };
+        if (params.action === 'unpublish') return { ...q, status: 'private' };
+        if (params.action === 'answer') {
+          return {
+            ...q,
+            answerText: params.answerText || '',
+            status: params.publish ? 'published' : 'private',
+            answeredAt: new Date().toISOString(),
+          };
+        }
+        return q;
+      });
+    }
+    local.inbox.questions = list;
+    localStorage.setItem(getScopedKey(AMA_KEY), JSON.stringify(local.inbox));
+  },
+
+  /* ==========================================================================
+   * 6. BFFQUEST WRAPPED & DAILY QUEST STATUS (CLOUD + LOCAL PERSISTENCE)
+   * ========================================================================== */
+  async hydrateCloudActivity(): Promise<LocalActivityRecord> {
+    const localAct = getLocalActivity();
+    if (!supabase) return localAct;
+
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData?.session?.user) return localAct;
+
+      const { data, error } = await supabase.rpc('get_my_cloud_activity');
+      if (error || !data?.authenticated) return localAct;
+
+      const cloudPlayed = Array.isArray(data.playedGames) ? data.playedGames : [];
+      const cloudDates = Array.isArray(data.completedQuestDates) ? data.completedQuestDates : [];
+      const cloudBadges = Array.isArray(data.unlockedBadges) ? data.unlockedBadges : [];
+
+      const mergedDates = Array.from(new Set([...localAct.completedQuestDates, ...cloudDates]));
+      const mergedBadges = Array.from(new Set([...localAct.unlockedBadges, ...cloudBadges]));
+      const mergedPlayed = cloudPlayed.length > 0 ? cloudPlayed : localAct.playedGames;
+
+      const updated: LocalActivityRecord = {
+        ...localAct,
+        playedGames: mergedPlayed,
+        completedQuestDates: mergedDates,
+        unlockedBadges: mergedBadges,
+      };
+      saveLocalActivity(updated);
+      return updated;
+    } catch {
+      return localAct;
+    }
+  },
+
+  async getWrappedRecap(): Promise<WrappedRecapData> {
+    const act = await this.hydrateCloudActivity();
+    let createdQuizzes: CreatorQuizSummary[] = [];
+    try {
+      createdQuizzes = await this.getCreatorDashboard();
+    } catch {
+      createdQuizzes = [];
+    }
+
+    const totalPlayed = act.playedGames.length;
+    const totalCreated = Math.max(act.createdGamesCount, createdQuizzes.length);
+    const totalFriendsReached = createdQuizzes.reduce(
+      (sum, q) => sum + q.submissionCount,
+      0
+    );
+
+    const hasEnoughData = totalPlayed > 0 || totalCreated > 0;
+
+    let bestScorePct = 0;
+    let avgScorePct = 0;
+    let topGameTitle = 'Friendship Quiz';
+    let topGameMode: GameType = 'quiz';
+
+    if (totalPlayed > 0) {
+      bestScorePct = Math.max(...act.playedGames.map((p) => Number(p.scorePercentage || 0)));
+      avgScorePct = Math.round(
+        act.playedGames.reduce((a, b) => a + Number(b.scorePercentage || 0), 0) / totalPlayed
+      );
+      const bestGame = act.playedGames.reduce((prev, curr) =>
+        Number(curr.scorePercentage || 0) >= Number(prev.scorePercentage || 0) ? curr : prev
+      );
+      topGameTitle = bestGame.title;
+      topGameMode = bestGame.gameType;
+    } else if (createdQuizzes.length > 0) {
+      const topCreated = createdQuizzes[0];
+      topGameTitle = topCreated.title;
+      topGameMode = topCreated.gameType;
+      bestScorePct = topCreated.averageScorePercentage;
+      avgScorePct = topCreated.averageScorePercentage;
+    }
+
+    const currentStreak = calculateConsecutiveStreak(act.completedQuestDates);
+
+    return {
+      hasEnoughData,
+      totalPlayed,
+      totalCreated,
+      bestScorePct,
+      avgScorePct,
+      topGameTitle,
+      topGameMode,
+      totalFriendsReached,
+      currentStreak,
+      unlockedBadges: act.unlockedBadges,
+    };
+  },
+
+  getDailyQuestStatus(): DailyQuestStatus {
+    const act = getLocalActivity();
+    const todayKey = getTodayDateString();
+    const quest = getTodayQuest();
+    const isCompletedToday = act.completedQuestDates.includes(todayKey);
+    const currentStreak = calculateConsecutiveStreak(act.completedQuestDates);
+
+    return {
+      todayKey,
+      quest,
+      isCompletedToday,
+      currentStreak,
+      completedDates: act.completedQuestDates,
+      unlockedBadges: act.unlockedBadges,
+    };
+  },
+
+  async getDailyQuestStatusAsync(): Promise<DailyQuestStatus> {
+    await this.hydrateCloudActivity();
+    return this.getDailyQuestStatus();
+  },
+
+  /* ==========================================================================
+   * 7. ABUSE REPORT & SITE-OWNER ADMIN PANEL API
+   * ========================================================================== */
   async submitAbuseReport(quizSlug: string, reason: string, details: string) {
     if (!details.trim() || details.trim().length < 5) {
       throw new Error('Please write a brief description of the issue.');
     }
     if (!supabase) {
-      throw new Error('Abuse reporting requires an active Supabase Cloud connection.');
+      throw new Error(
+        'Abuse reporting requires an active cloud connection (currently in Local Demo Mode).'
+      );
     }
     const { error } = await supabase.from('abuse_reports').insert({
       quiz_slug: quizSlug.trim() || null,
@@ -1196,192 +1588,6 @@ export const api = {
     if (error) throw new Error(error.message);
   },
 
-  /* ==========================================================================
-   * 01 · ASK ME ANYTHING (AMA) PRIVATE INBOX API
-   * ========================================================================== */
-  async upsertAmaInbox(params: {
-    creatorDisplayName: string;
-    promptText: string;
-    isOpen: boolean;
-  }): Promise<{ slug: string; isOpen: boolean }> {
-    if (!params.creatorDisplayName.trim()) {
-      throw new Error('Please enter your display name.');
-    }
-    const creatorToken = getCreatorToken();
-    const generatedSlug = generateSlug(params.creatorDisplayName, 'ama', 'ama');
-
-    if (supabase) {
-      const { data, error } = await supabase.rpc('upsert_ama_inbox', {
-        p_slug: generatedSlug,
-        p_creator_display_name: params.creatorDisplayName.trim(),
-        p_creator_token: creatorToken,
-        p_prompt_text: params.promptText.trim() || 'Ask me anything anonymously!',
-        p_is_open: params.isOpen,
-      });
-      if (error) throw new Error(error.message || 'Could not save AMA inbox.');
-      recordCreatorActivity();
-      return { slug: data.slug, isOpen: Boolean(data.isOpen) };
-    }
-
-    // Demo fallback
-    const raw = localStorage.getItem(LOCAL_AMA_KEY);
-    const existing: AmaInboxCreatorData | null = raw ? JSON.parse(raw) : null;
-    const saved: AmaInboxCreatorData = {
-      id: existing?.id || 'local_ama_1',
-      slug: existing?.slug || generatedSlug,
-      creatorDisplayName: params.creatorDisplayName.trim(),
-      promptText: params.promptText.trim() || 'Ask me anything anonymously!',
-      isOpen: params.isOpen,
-      questions: existing?.questions || [],
-    };
-    localStorage.setItem(LOCAL_AMA_KEY, JSON.stringify(saved));
-    recordCreatorActivity();
-    return { slug: saved.slug, isOpen: saved.isOpen };
-  },
-
-  async getCreatorAmaInbox(): Promise<{ hasInbox: boolean; inbox?: AmaInboxCreatorData }> {
-    const creatorToken = getCreatorToken();
-
-    if (supabase) {
-      const { data, error } = await supabase.rpc('get_creator_ama_inbox', {
-        p_creator_token: creatorToken,
-      });
-      if (error) throw new Error(error.message || 'Could not load AMA inbox.');
-      return {
-        hasInbox: Boolean(data?.hasInbox),
-        inbox: data?.inbox as AmaInboxCreatorData | undefined,
-      };
-    }
-
-    const raw = localStorage.getItem(LOCAL_AMA_KEY);
-    if (!raw) return { hasInbox: false };
-    try {
-      const parsed: AmaInboxCreatorData = JSON.parse(raw);
-      return { hasInbox: true, inbox: parsed };
-    } catch {
-      return { hasInbox: false };
-    }
-  },
-
-  async getPublicAmaInbox(
-    slug: string
-  ): Promise<{ status: 'ok' | 'not_found' | 'error'; inbox?: AmaInboxPublicData }> {
-    const cleanSlug = slug.trim().toLowerCase();
-
-    if (supabase) {
-      const { data, error } = await supabase.rpc('get_public_ama_inbox', {
-        p_slug: cleanSlug,
-      });
-      if (error) return { status: 'error' };
-      if (data?.status === 'ok' && data.inbox) {
-        return { status: 'ok', inbox: data.inbox as AmaInboxPublicData };
-      }
-      return { status: 'not_found' };
-    }
-
-    const raw = localStorage.getItem(LOCAL_AMA_KEY);
-    if (!raw) return { status: 'not_found' };
-    try {
-      const parsed: AmaInboxCreatorData = JSON.parse(raw);
-      if (parsed.slug.toLowerCase() !== cleanSlug) return { status: 'not_found' };
-      return {
-        status: 'ok',
-        inbox: {
-          id: parsed.id,
-          slug: parsed.slug,
-          creatorDisplayName: parsed.creatorDisplayName,
-          promptText: parsed.promptText,
-          isOpen: parsed.isOpen,
-          publishedQuestions: parsed.questions
-            .filter((q) => q.status === 'published')
-            .map((q) => ({
-              id: q.id,
-              questionText: q.questionText,
-              answerText: q.answerText,
-              answeredAt: q.answeredAt,
-            })),
-        },
-      };
-    } catch {
-      return { status: 'not_found' };
-    }
-  },
-
-  async sendAmaQuestion(slug: string, questionText: string): Promise<void> {
-    const cleanQ = questionText.trim();
-    if (cleanQ.length < 2) {
-      throw new Error('Please type a question first.');
-    }
-
-    if (supabase) {
-      const { error } = await supabase.rpc('send_ama_question', {
-        p_slug: slug.trim().toLowerCase(),
-        p_question_text: cleanQ,
-        p_sender_fingerprint: getClientFingerprint(),
-      });
-      if (error) throw new Error(error.message || 'Could not send question.');
-      return;
-    }
-
-    const raw = localStorage.getItem(LOCAL_AMA_KEY);
-    if (!raw) throw new Error('AMA Inbox not found.');
-    const parsed: AmaInboxCreatorData = JSON.parse(raw);
-    if (!parsed.isOpen) throw new Error('This inbox is currently closed.');
-
-    parsed.questions.unshift({
-      id: `ama_q_${Date.now()}`,
-      questionText: cleanQ,
-      answerText: '',
-      status: 'private',
-      createdAt: new Date().toISOString(),
-    });
-    localStorage.setItem(LOCAL_AMA_KEY, JSON.stringify(parsed));
-  },
-
-  async manageAmaQuestion(
-    questionId: string,
-    action: 'answer' | 'skip' | 'delete' | 'unpublish' | 'block_report',
-    answerText = '',
-    publish = false
-  ): Promise<void> {
-    const creatorToken = getCreatorToken();
-
-    if (supabase) {
-      const { error } = await supabase.rpc('manage_ama_question', {
-        p_creator_token: creatorToken,
-        p_question_id: questionId,
-        p_action: action,
-        p_answer_text: answerText,
-        p_publish: publish,
-      });
-      if (error) throw new Error(error.message || 'Could not update AMA question.');
-      return;
-    }
-
-    const raw = localStorage.getItem(LOCAL_AMA_KEY);
-    if (!raw) return;
-    const parsed: AmaInboxCreatorData = JSON.parse(raw);
-    if (action === 'delete' || action === 'block_report') {
-      parsed.questions = parsed.questions.filter((q) => q.id !== questionId);
-    } else {
-      parsed.questions = parsed.questions.map((q) => {
-        if (q.id !== questionId) return q;
-        if (action === 'skip') return { ...q, status: 'skipped' };
-        if (action === 'unpublish') return { ...q, status: 'private' };
-        return {
-          ...q,
-          answerText: answerText.trim(),
-          status: publish ? 'published' : 'private',
-          answeredAt: new Date().toISOString(),
-        };
-      });
-    }
-    localStorage.setItem(LOCAL_AMA_KEY, JSON.stringify(parsed));
-  },
-
-  /* ==========================================================================
-   * SITE-OWNER ADMIN PANEL API
-   * ========================================================================== */
   async adminGetDashboard(passkey: string): Promise<AdminDashboardData> {
     if (!supabase) {
       throw new Error('Admin Panel requires Supabase Cloud connection.');
