@@ -13,16 +13,11 @@ export type GameType =
 export const BRAND = {
   name: import.meta.env.VITE_APP_NAME || 'BFFquest',
   storagePrefix: 'bffquest_v4_',
-  contactEmail: import.meta.env.VITE_CONTACT_EMAIL || 'support@bffquest.com',
   limits: {
     minQuestions: 3,
     maxQuestions: 15,
   },
-  ads: {
-    enabled: import.meta.env.VITE_ENABLE_ADS === 'true',
-    sponsorText: 'Sponsored • Play & Share BFFquest with your squad!',
-    sponsorUrl: '',
-  },
+
 };
 
 export interface QuizOption {
@@ -630,8 +625,7 @@ export const COPY = {
     navProfile: 'Profile',
     navGuides: 'Guides',
     navDashboard: 'My Quizzes',
-    demoBanner:
-      'Local Demo Mode: Connect Supabase for cross-device cloud sharing.',
+    
     qaCreateTitle: 'Create a quiz',
     qaCreateSub: 'Write your own questions',
     qaPlayTitle: 'Play with friends',
@@ -640,7 +634,7 @@ export const COPY = {
     qaShareSub: 'Show off your score',
     howItWorksTitle: 'How it works',
     step1Title: 'Create your quiz',
-    step1Desc: 'Pick a template or write your own questions across 5 game modes.',
+    step1Desc: 'Pick a template or write your own questions across our interactive game modes.',
     step2Title: 'Share it with friends',
     step2Desc: 'Send one direct link anywhere your friends hang out.',
     step3Title: 'Discover your results',
@@ -719,7 +713,7 @@ export const COPY = {
     reportSubmitBtn: 'Submit Report',
     reportSuccess: 'Thank you! Your report has been recorded for review.',
     adminTitle: 'Site-Owner Admin Panel',
-    footerNote: 'Playful friendship games • Built with Liquid Glass.',
+    footerNote: 'Playful friendship games for friends.',
   },
   bn: {
     tagline: 'প্রিমিয়াম ফ্রেন্ডশিপ গেমস',
@@ -737,8 +731,7 @@ export const COPY = {
     navProfile: 'প্রোফাইল',
     navGuides: 'গাইড',
     navDashboard: 'আমার গেমস',
-    demoBanner:
-      'লোকাল ডেমো মোড: সব ডিভাইসে শেয়ার করার জন্য Supabase কানেক্ট করুন।',
+  
     qaCreateTitle: 'কুইজ তৈরি করুন',
     qaCreateSub: 'নিজের মতো প্রশ্ন সাজান',
     qaPlayTitle: 'বন্ধুদের সাথে খেলুন',
@@ -826,7 +819,7 @@ export const COPY = {
     reportSubmitBtn: 'অভিযোগ জমা দিন',
     reportSuccess: 'ধন্যবাদ! আপনার অভিযোগটি অ্যাডমিন রিভিউয়ের জন্য জমা হয়েছে।',
     adminTitle: 'সাইট অ্যাডমিন প্যানেল',
-    footerNote: 'ফ্রেন্ডশিপ গেমিং প্ল্যাটফর্ম • লিকুইড গ্লাস সংস্করণ।',
+    footerNote: 'ফ্রেন্ডশিপ গেমিং প্ল্যাটফর্ম ',
   },
 };
 
