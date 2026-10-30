@@ -20,12 +20,47 @@ export const isSupabaseConfigured = Boolean(
     !supabaseAnonKey.includes('placeholder')
 );
 
+const REMEMBER_ME_KEY = `${BRAND.storagePrefix}remember_me`;
+
+export function getRememberMePref(): boolean {
+  return localStorage.getItem(REMEMBER_ME_KEY) !== 'false';
+}
+
+export function setRememberMePref(remember: boolean) {
+  localStorage.setItem(REMEMBER_ME_KEY, remember ? 'true' : 'false');
+}
+
+/**
+ * Problem #11 Fix: Real storage routing based on "Remember me" preference.
+ * When Remember Me is ON -> persists in localStorage.
+ * When Remember Me is OFF -> persists only in sessionStorage for the current browser session.
+ */
+const customAuthStorage = {
+  getItem: (key: string): string | null => {
+    return localStorage.getItem(key) ?? sessionStorage.getItem(key);
+  },
+  setItem: (key: string, value: string): void => {
+    if (getRememberMePref()) {
+      localStorage.setItem(key, value);
+      sessionStorage.removeItem(key);
+    } else {
+      sessionStorage.setItem(key, value);
+      localStorage.removeItem(key);
+    }
+  },
+  removeItem: (key: string): void => {
+    localStorage.removeItem(key);
+    sessionStorage.removeItem(key);
+  },
+};
+
 export const supabase: SupabaseClient | null = isSupabaseConfigured
-  ? createClient(supabaseUrl, supabaseAnonKey, {
+  ? createClient(supabaseUrl!, supabaseAnonKey!, {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
+        storage: customAuthStorage,
       },
     })
   : null;
@@ -58,6 +93,7 @@ export interface QuestionResultDetail {
   questionText: string;
   options: { id: string; text: string; icon?: string; isCustom?: boolean }[];
   selectedOptionId: string;
+  customText?: string;
   correctOptionId: string;
   isCorrect: boolean;
 }
@@ -214,6 +250,13 @@ const SAMPLE_SLUGS = new Set([
   'sample-would-you-rather',
 ]);
 
+const DEFAULT_CUSTOM_PLACEHOLDERS = new Set([
+  'write your own answer...',
+  'নিজের মতো উত্তর লিখুন...',
+  'type your custom answer here...',
+  'এখানে আপনার উত্তরটি লিখুন...',
+]);
+
 export function getSavedLang(): Lang {
   const saved = localStorage.getItem(LANG_KEY);
   return saved === 'bn' ? 'bn' : 'en';
@@ -236,40 +279,49 @@ export function saveAdminKey(key: string) {
 }
 
 /**
- * Multi-layer clipboard helper with fallback for mobile & WebView browsers
+ * Problem #1 Fix: Synchronous user-gesture-first copy helper.
+ * Executes synchronous textarea + execCommand('copy') BEFORE any async await
+ * so Safari/WebView/popunder scripts never cause user-gesture expiration.
  */
 export async function copyTextSafely(
   text: string
 ): Promise<{ ok: boolean; method: 'clipboard' | 'fallback' | 'manual' }> {
   if (!text) return { ok: false, method: 'manual' };
 
-  if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
-    try {
-      await navigator.clipboard.writeText(text);
-      return { ok: true, method: 'clipboard' };
-    } catch {
-      // Fallback below
-    }
-  }
-
+  // 1. Run synchronous execCommand('copy') immediately while inside the click gesture
+  let syncCopied = false;
   try {
     const textArea = document.createElement('textarea');
     textArea.value = text;
     textArea.setAttribute('readonly', '');
     textArea.style.position = 'fixed';
-    textArea.style.top = '-9999px';
+    textArea.style.top = '0';
     textArea.style.left = '-9999px';
+    textArea.style.opacity = '0';
     document.body.appendChild(textArea);
-    textArea.focus();
+    textArea.focus({ preventScroll: true });
     textArea.select();
     textArea.setSelectionRange(0, text.length);
-    const successful = document.execCommand('copy');
+    syncCopied = document.execCommand('copy');
     document.body.removeChild(textArea);
-    if (successful) {
-      return { ok: true, method: 'fallback' };
-    }
   } catch {
-    // Manual fallback
+    syncCopied = false;
+  }
+
+  // 2. Also attempt modern Clipboard API if available
+  if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+    try {
+      await navigator.clipboard.writeText(text);
+      return { ok: true, method: 'clipboard' };
+    } catch {
+      if (syncCopied) {
+        return { ok: true, method: 'fallback' };
+      }
+    }
+  }
+
+  if (syncCopied) {
+    return { ok: true, method: 'fallback' };
   }
 
   return { ok: false, method: 'manual' };
@@ -296,10 +348,6 @@ function rotateGuestCreatorToken(): string {
   return next;
 }
 
-/**
- * Returns storage key scoped to the currently logged-in permanent user ID (or guest)
- * so two users on the same device never mix local cache.
- */
 function getScopedKey(baseKey: string): string {
   const activeUid = localStorage.getItem(ACTIVE_USER_ID_KEY) || 'guest';
   return `${baseKey}_${activeUid}`;
@@ -463,7 +511,6 @@ async function recordRealActivity(event: {
   act.unlockedBadges = Array.from(badges);
   saveLocalActivity(act);
 
-  // If authenticated in Supabase, persist quest dates & badges to cloud profile immediately
   if (supabase) {
     try {
       const { data: sessionData } = await supabase.auth.getSession();
@@ -481,7 +528,7 @@ async function recordRealActivity(event: {
 }
 
 /* ============================================================================
- * BUILT-IN SAMPLE GAMES (Excluded from Creator Dashboard)
+ * BUILT-IN SAMPLE GAMES FALLBACK (Excluded from Creator Dashboard)
  * ============================================================================ */
 function getSampleQuizBySlug(slug: string, lang: Lang = 'en'): PublicQuiz | null {
   const clean = slug.trim().toLowerCase();
@@ -578,7 +625,6 @@ export const api = {
     }
 
     const previousUid = localStorage.getItem(ACTIVE_USER_ID_KEY);
-    // Only claim guest creations if transitioning from guest ('') to this user
     const guestTokenToClaim = !previousUid ? localStorage.getItem(CREATOR_TOKEN_KEY) : null;
     const guestActRaw = !previousUid ? localStorage.getItem(`${ACTIVITY_KEY}_guest`) : null;
     let guestDates: string[] = [];
@@ -592,7 +638,6 @@ export const api = {
       } catch {}
     }
 
-    // Set active user scope to permanent UUID
     localStorage.setItem(ACTIVE_USER_ID_KEY, user.id);
 
     const userAct = getLocalActivity();
@@ -606,13 +651,13 @@ export const api = {
         p_local_badges: mergedLocalBadges,
       });
 
-      // Clear guest token & guest activity once claimed so another user on this device never inherits it
-      if (guestTokenToClaim) {
-        rotateGuestCreatorToken();
-        localStorage.removeItem(`${ACTIVITY_KEY}_guest`);
-      }
-
+      // Problem #4 Fix: Only rotate guest token if the cloud claim RPC succeeded without error!
       if (!error && syncData) {
+        if (guestTokenToClaim) {
+          rotateGuestCreatorToken();
+          localStorage.removeItem(`${ACTIVITY_KEY}_guest`);
+        }
+
         const cloudDates = Array.isArray(syncData.completedQuestDates)
           ? syncData.completedQuestDates
           : mergedLocalDates;
@@ -640,7 +685,7 @@ export const api = {
         };
       }
     } catch {
-      // Fallback to session metadata if RPC fails
+      // Do not rotate guest token if RPC threw an exception
     }
 
     return {
@@ -657,19 +702,29 @@ export const api = {
     };
   },
 
+  /**
+   * Problem #5 Fix: Defer async Supabase calls inside onAuthStateChange using setTimeout(..., 0)
+   * to prevent auth lock deadlocks.
+   */
   onAuthStateChange(callback: (user: AuthUser | null) => void) {
     if (!supabase) {
       callback(null);
       return () => {};
     }
 
-    const { data: listener } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: listener } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === 'SIGNED_OUT' || !session?.user) {
         localStorage.removeItem(ACTIVE_USER_ID_KEY);
         callback(null);
       } else {
-        const synced = await this.syncAuthenticatedUser();
-        callback(synced);
+        setTimeout(async () => {
+          try {
+            const synced = await this.syncAuthenticatedUser();
+            callback(synced);
+          } catch {
+            callback(null);
+          }
+        }, 0);
       }
     });
 
@@ -678,7 +733,11 @@ export const api = {
     };
   },
 
-  async signInWithEmail(email: string, password: string): Promise<AuthUser> {
+  async signInWithEmail(
+    email: string,
+    password: string,
+    rememberMe = true
+  ): Promise<AuthUser> {
     if (!supabase) {
       throw new Error('Authentication requires Supabase Cloud connection.');
     }
@@ -686,6 +745,8 @@ export const api = {
     if (!cleanEmail || !password) {
       throw new Error('Please enter both your email and password.');
     }
+
+    setRememberMePref(rememberMe);
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email: cleanEmail,
@@ -719,6 +780,8 @@ export const api = {
       throw new Error('Password must be at least 6 characters long.');
     }
 
+    setRememberMePref(true);
+
     const { data, error } = await supabase.auth.signUp({
       email: cleanEmail,
       password: params.password,
@@ -743,10 +806,12 @@ export const api = {
     return { user: null, needsEmailConfirmation: true };
   },
 
-  async signInWithSocial(provider: 'google' | 'facebook'): Promise<void> {
+  async signInWithSocial(provider: 'google' | 'facebook', rememberMe = true): Promise<void> {
     if (!supabase) {
       throw new Error('Social login requires Supabase Cloud connection.');
     }
+
+    setRememberMePref(rememberMe);
 
     const { error } = await supabase.auth.signInWithOAuth({
       provider,
@@ -801,7 +866,6 @@ export const api = {
 
   async signOut(): Promise<void> {
     localStorage.removeItem(ACTIVE_USER_ID_KEY);
-    // Rotate guest token on sign-out so the browser starts clean for any other user
     rotateGuestCreatorToken();
     if (supabase) {
       await supabase.auth.signOut();
@@ -854,6 +918,18 @@ export const api = {
         if (q.options.slice(0, 3).some((o) => !o.text.trim())) {
           throw new Error(`Please fill in the first 3 choices for Question ${i + 1}.`);
         }
+        // Problem #13 Fix: Require expected custom answer text if creator selects Option 4 as correct
+        if (q.correctOptionId === 'opt_4') {
+          const customExpected = (q.options[3]?.text || '').trim();
+          if (
+            !customExpected ||
+            DEFAULT_CUSTOM_PLACEHOLDERS.has(customExpected.toLowerCase())
+          ) {
+            throw new Error(
+              `Question ${i + 1}: Since you marked Option 4 (Write-in) as the correct answer, please type the expected answer word in Option 4.`
+            );
+          }
+        }
       }
     }
 
@@ -896,13 +972,14 @@ export const api = {
         };
       }
 
+      // Problem #3 Fix: Always use `opt_${idx + 1}` for Blind Ranking so deleted items never skew rank keys
       if (gameType === 'blind_ranking') {
         const totalSlots = params.questions.length;
         return {
           ...q,
           position: idx + 1,
           questionText: q.questionText.trim(),
-          correctOptionId: q.correctOptionId || `opt_${idx + 1}`,
+          correctOptionId: `opt_${idx + 1}`,
           options: Array.from({ length: totalSlots }, (_, sIdx) => ({
             id: `opt_${sIdx + 1}`,
             text: `Rank #${sIdx + 1}`,
@@ -980,7 +1057,7 @@ export const api = {
   },
 
   /* ==========================================================================
-   * 2. LOAD PUBLIC QUIZ / GAME BY SLUG
+   * 2. LOAD PUBLIC QUIZ / GAME BY SLUG (Problem #15 Fix: Global Sample Leaderboard)
    * ========================================================================== */
   async getPublicQuizBySlug(
     slug: string,
@@ -992,6 +1069,51 @@ export const api = {
   }> {
     const cleanSlug = slug.trim().toLowerCase();
 
+    // Problem #15 Fix: Query Supabase first even for sample games so everyone sees the global leaderboard!
+    if (supabase) {
+      const { data, error } = await supabase.rpc('get_public_quiz_by_slug', {
+        p_slug: cleanSlug,
+      });
+
+      if (!error && data) {
+        if (data.status === 'ok') {
+          const cloudQuiz = data.quiz as PublicQuiz;
+          // Localize sample game text if viewing in Bangla while preserving cloud IDs & global leaderboard
+          if (SAMPLE_SLUGS.has(cleanSlug) && lang === 'bn') {
+            const localizedSample = getSampleQuizBySlug(cleanSlug, 'bn');
+            if (localizedSample) {
+              return {
+                status: 'ok',
+                quiz: {
+                  ...cloudQuiz,
+                  title: localizedSample.title,
+                  description: localizedSample.description,
+                  questions: cloudQuiz.questions.map((cq, idx) => ({
+                    ...cq,
+                    questionText:
+                      localizedSample.questions[idx]?.questionText || cq.questionText,
+                    options: cq.options.map((co, oIdx) => ({
+                      ...co,
+                      text:
+                        localizedSample.questions[idx]?.options[oIdx]?.text || co.text,
+                    })),
+                  })),
+                },
+              };
+            }
+          }
+          return { status: 'ok', quiz: cloudQuiz };
+        }
+        if (data.status === 'unavailable') return { status: 'unavailable' };
+      } else if (error && !SAMPLE_SLUGS.has(cleanSlug)) {
+        return {
+          status: 'error',
+          errorMessage: error.message || 'Could not load game from cloud.',
+        };
+      }
+    }
+
+    // Fallback for sample games when in offline/demo mode
     if (SAMPLE_SLUGS.has(cleanSlug)) {
       const sample = getSampleQuizBySlug(cleanSlug, lang);
       if (!sample) return { status: 'not_found' };
@@ -1009,26 +1131,6 @@ export const api = {
           leaderboard: localSubs,
         },
       };
-    }
-
-    if (supabase) {
-      const { data, error } = await supabase.rpc('get_public_quiz_by_slug', {
-        p_slug: cleanSlug,
-      });
-
-      if (error) {
-        return {
-          status: 'error',
-          errorMessage: error.message || 'Could not load game from cloud.',
-        };
-      }
-
-      if (data) {
-        if (data.status === 'ok') return { status: 'ok', quiz: data.quiz };
-        if (data.status === 'not_found') return { status: 'not_found' };
-        return { status: 'unavailable' };
-      }
-      return { status: 'not_found' };
     }
 
     const all = getLocalCreatedQuizzes();
@@ -1052,7 +1154,7 @@ export const api = {
   },
 
   /* ==========================================================================
-   * 3. SUBMIT GAME ANSWERS & COMPUTE COMPARISON DETAILS
+   * 3. SUBMIT GAME ANSWERS (Problem #6, #13 & #15 Fixes)
    * ========================================================================== */
   async submitQuizAnswers(params: {
     slug: string;
@@ -1062,10 +1164,12 @@ export const api = {
     lang?: Lang;
   }): Promise<SubmissionResult> {
     const cleanSlug = params.slug.trim().toLowerCase();
-    const fingerprint = `${cleanSlug}:${getClientFingerprint()}:${Date.now()}`;
+    // Problem #6 Fix: Deterministic fingerprint per quiz + client (no Date.now() suffix!)
+    const fingerprint = `${cleanSlug}:${getClientFingerprint()}`;
     const customTexts = params.customTexts || {};
 
-    if (supabase && !SAMPLE_SLUGS.has(cleanSlug)) {
+    // Problem #15 Fix: Submit sample games to Supabase too so scores appear on global leaderboard
+    if (supabase) {
       const { data, error } = await supabase.rpc('submit_quiz_answers', {
         p_slug: cleanSlug,
         p_participant_nickname: params.participantNickname,
@@ -1095,6 +1199,15 @@ export const api = {
       throw new Error('This game is no longer accepting submissions.');
     }
 
+    const subs = getLocalSubmissions();
+    // Problem #6 Fix in local fallback mode
+    if (
+      !SAMPLE_SLUGS.has(cleanSlug) &&
+      subs.some((s) => s.clientFingerprint === fingerprint)
+    ) {
+      throw new Error('You have already submitted answers for this game.');
+    }
+
     let correctCount = 0;
     const customAnswersList: CustomAnswerItem[] = [];
     const detailsList: QuestionResultDetail[] = [];
@@ -1103,9 +1216,10 @@ export const api = {
       const selected = params.answers[q.id];
       if (!selected) throw new Error('Please complete all steps before submitting.');
 
+      const written = (customTexts[q.id] || '').trim();
       let isCorrect = false;
-      if (selected === 'opt_4' && quiz.gameType === 'quiz') {
-        const written = (customTexts[q.id] || '').trim();
+
+      if (selected === 'opt_4' && (quiz.gameType || 'quiz') === 'quiz') {
         if (!written) {
           throw new Error('Please write your custom answer or pick a choice.');
         }
@@ -1113,7 +1227,14 @@ export const api = {
           questionText: q.questionText,
           customAnswer: written,
         });
-        isCorrect = q.correctOptionId === 'opt_4';
+        // Problem #13 Fix: Compare written text against creator's expected answer
+        const expectedOpt = q.options.find((o) => o.id === (q.correctOptionId || 'opt_1'));
+        const expectedText = (expectedOpt?.text || '').trim();
+        isCorrect = Boolean(
+          expectedText &&
+            !DEFAULT_CUSTOM_PLACEHOLDERS.has(expectedText.toLowerCase()) &&
+            written.toLowerCase() === expectedText.toLowerCase()
+        );
       } else {
         isCorrect = selected === q.correctOptionId;
       }
@@ -1126,7 +1247,13 @@ export const api = {
         questionText: q.questionText,
         options: q.options,
         selectedOptionId: selected,
-        correctOptionId: q.correctOptionId || 'opt_1',
+        customText: written,
+        correctOptionId:
+          quiz.gameType && quiz.gameType !== 'quiz'
+            ? q.correctOptionId || 'opt_1'
+            : isCorrect
+            ? q.correctOptionId || 'opt_1'
+            : '',
         isCorrect,
       });
     }
@@ -1152,7 +1279,6 @@ export const api = {
       clientFingerprint: fingerprint,
     };
 
-    const subs = getLocalSubmissions();
     subs.unshift(result);
     localStorage.setItem(SUBS_KEY, JSON.stringify(subs));
 
@@ -1191,7 +1317,7 @@ export const api = {
   },
 
   /* ==========================================================================
-   * 4. CREATOR DASHBOARD (TIED TO PERMANENT USER ID WHEN LOGGED IN)
+   * 4. CREATOR DASHBOARD
    * ========================================================================== */
   async getCreatorDashboard(): Promise<CreatorQuizSummary[]> {
     const creatorToken = getCreatorToken();
@@ -1308,6 +1434,16 @@ export const api = {
       return { hasInbox: true, inbox: JSON.parse(raw) };
     } catch {
       return { hasInbox: false };
+    }
+  },
+
+  async getUnreadAmaCount(): Promise<number> {
+    try {
+      const res = await this.getCreatorAmaInbox();
+      if (!res.hasInbox || !res.inbox?.questions) return 0;
+      return res.inbox.questions.filter((q) => q.status === 'private').length;
+    } catch {
+      return 0;
     }
   },
 
@@ -1455,7 +1591,7 @@ export const api = {
   },
 
   /* ==========================================================================
-   * 6. BFFQUEST WRAPPED & DAILY QUEST STATUS (CLOUD + LOCAL PERSISTENCE)
+   * 6. BFFQUEST WRAPPED & DAILY QUEST STATUS
    * ========================================================================== */
   async hydrateCloudActivity(): Promise<LocalActivityRecord> {
     const localAct = getLocalActivity();
