@@ -55,8 +55,9 @@ import {
   getSavedLang,
   saveLang,
   getSavedAdminKey,
-  saveAdminKey,
+saveAdminKey,
   copyTextSafely,
+  getRememberMePref,
   AuthUser,
   PublicQuiz,
   SubmissionResult,
@@ -406,6 +407,10 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     saveLang(next);
   };
 
+  const [unreadAma, setUnreadAma] = useState(0);
+  useEffect(() => {
+    api.getUnreadAmaCount().then(setUnreadAma);
+  }, [path, user?.id]);
   const isHome = path === '/';
   const isExplore = path.startsWith('/explore') || path.startsWith('/daily');
   const isCreate = path.startsWith('/create');
@@ -502,8 +507,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             </span>
             <span style={{ color: '#fff' }}>{t.navCreate}</span>
           </Link>
-          <Link to="/inbox" className={`dock-item ${isInbox ? 'active' : ''}`}>
-            <span className="unread-dot" />
+         <Link to="/inbox" className={`dock-item ${isInbox ? 'active' : ''}`}>
+            {unreadAma > 0 && <span className="unread-dot" />}
             <Inbox size={20} />
             <span>{t.navInbox}</span>
           </Link>
@@ -606,7 +611,7 @@ const AuthPage: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
-  const [rememberMe, setRememberMe] = useState(true);
+  const [rememberMe, setRememberMe] = useState(() => getRememberMePref());
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
@@ -625,7 +630,7 @@ const AuthPage: React.FC = () => {
 
     try {
       if (mode === 'signin') {
-        await api.signInWithEmail(email, password);
+        await api.signInWithEmail(email, password, rememberMe);
         await refreshUser();
         navigate('/dashboard');
       } else if (mode === 'signup') {
@@ -672,7 +677,7 @@ const AuthPage: React.FC = () => {
     setErr(null);
     setBusy(true);
     try {
-      await api.signInWithSocial(provider);
+      await api.signInWithSocial(provider, rememberMe);
     } catch (error: any) {
       setErr(error.message || `Could not sign in with ${provider}.`);
       setBusy(false);
@@ -1445,8 +1450,13 @@ const CreateQuizPage: React.FC = () => {
     setHasEdited(false);
   };
 
+  const prevModeRef = useRef<GameType>(activeMode);
   useEffect(() => {
-    loadModeDefaults(activeMode, initialTpl);
+    const modeChanged = prevModeRef.current !== activeMode;
+    prevModeRef.current = activeMode;
+    if (modeChanged || !hasEdited) {
+      loadModeDefaults(activeMode, initialTpl);
+    }
   }, [activeMode, lang]);
 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -1719,7 +1729,18 @@ const CreateQuizPage: React.FC = () => {
                   className="b x btn-sm"
                   onClick={() => {
                     setHasEdited(true);
-                    setQuestions((prev) => prev.filter((_, idx) => idx !== qIdx));
+                    setQuestions((prev) =>
+                      prev
+                        .filter((_, idx) => idx !== qIdx)
+                        .map((item, idx) => ({
+                          ...item,
+                          position: idx + 1,
+                          correctOptionId:
+                            activeMode === 'blind_ranking'
+                              ? `opt_${idx + 1}`
+                              : item.correctOptionId,
+                        }))
+                    );
                   }}
                 >
                   <Trash2 size={14} />
@@ -1940,11 +1961,40 @@ const CreateQuizPage: React.FC = () => {
                           }}
                           style={{ width: 18, height: 18, accentColor: 'var(--primary)' }}
                         />
-                        <div style={{ fontSize: '0.8rem', color: 'var(--t2)' }}>
+                        <div style={{ fontSize: '0.8rem', color: 'var(--t2)', flex: 1 }}>
                           <strong style={{ color: 'var(--cy)', display: 'block' }}>
                             ✍️ {t.writeOwnLabel}
                           </strong>
-                          <span>{t.customSlotHint}</span>
+                          {isCustomSelected ? (
+                            <input
+                              className="form-input"
+                              style={{ marginTop: '0.35rem', minHeight: 36 }}
+                              placeholder="Type expected correct answer..."
+                              value={
+                                q.options[3]?.text === 'Write your own answer...' ||
+                                q.options[3]?.text === 'নিজের মতো উত্তর লিখুন...'
+                                  ? ''
+                                  : q.options[3]?.text || ''
+                              }
+                              onChange={(e) => {
+                                setHasEdited(true);
+                                setQuestions((prev) =>
+                                  prev.map((item, idx) =>
+                                    idx === qIdx
+                                      ? {
+                                          ...item,
+                                          options: item.options.map((o) =>
+                                            o.id === 'opt_4' ? { ...o, text: e.target.value } : o
+                                          ),
+                                        }
+                                      : item
+                                  )
+                                );
+                              }}
+                            />
+                          ) : (
+                            <span>{t.customSlotHint}</span>
+                          )}
                         </div>
                       </div>
                     );
@@ -2635,6 +2685,39 @@ const ResultPage: React.FC = () => {
           {result.score} of {result.totalQuestions} matched • {fb.subtitle}
         </p>
 
+       {details.length > 0 && gameType === 'quiz' && (
+          <div className="g" style={{ textAlign: 'left', marginBottom: '1.4rem' }}>
+            <span className="lab" style={{ display: 'block', marginBottom: '0.6rem' }}>
+              Question-by-Question Breakdown
+            </span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
+              {details.map((d, idx) => {
+                const chosenText =
+                  d.selectedOptionId === 'opt_4'
+                    ? d.customText || 'Custom Answer'
+                    : d.options.find((o) => o.id === d.selectedOptionId)?.text || '';
+                return (
+                  <div
+                    key={idx}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                    }}
+                  >
+                    <span>
+                      <strong>Q{idx + 1}:</strong> {chosenText}
+                    </span>
+                    <span className={`t ${d.isCorrect ? 'ok' : 'w'}`}>
+                      {d.isCorrect ? 'Correct ✓' : 'Wrong ✕'}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
         {details.length > 0 && gameType === 'guess_side' && (
           <div className="g" style={{ textAlign: 'left', marginBottom: '1.4rem' }}>
             <span className="lab" style={{ display: 'block', marginBottom: '0.6rem' }}>
@@ -2725,7 +2808,9 @@ const ResultPage: React.FC = () => {
           </div>
         )}
 
-        {details.length > 0 && gameType === 'would_you_rather' && (
+        {details.length > 0 &&
+          gameType === 'would_you_rather' &&
+          quizData?.settings?.groupVoting !== false && (
           <div className="g" style={{ textAlign: 'left', marginBottom: '1.4rem' }}>
             <span className="lab" style={{ display: 'block', marginBottom: '0.7rem' }}>
               Group Vote Comparison
@@ -2814,10 +2899,12 @@ const ResultPage: React.FC = () => {
             className="b o"
             onClick={async () => {
               const res = await copyTextSafely(quizUrl);
-              if (res.ok) {
-                setCopiedScore(true);
-                setTimeout(() => setCopiedScore(false), 2500);
-              }
+if (res.ok) {
+  setCopiedScore(true);
+  setTimeout(() => setCopiedScore(false), 2500);
+} else {
+  window.prompt('Copy your link:', quizUrl);
+}
             }}
           >
             {copiedScore ? <Check size={18} /> : <Copy size={18} />}
@@ -3104,6 +3191,7 @@ const AmaInboxPage: React.FC = () => {
                         type="button"
                         className="b btn-sm"
                         onClick={async () => {
+                          try {
                           await api.manageAmaQuestion({
                             questionId: q.id,
                             action: 'answer',
@@ -3112,6 +3200,9 @@ const AmaInboxPage: React.FC = () => {
                           });
                           setReplyingId(null);
                           await loadInbox();
+                            } catch (e: any) {
+      setErr(e.message || 'Action failed.');
+    }
                         }}
                       >
                         Save Answer
@@ -3143,11 +3234,15 @@ const AmaInboxPage: React.FC = () => {
                         type="button"
                         className="b o btn-sm"
                         onClick={async () => {
+                          try {
                           await api.manageAmaQuestion({
                             questionId: q.id,
                             action: 'unpublish',
                           });
                           await loadInbox();
+                            } catch (e: any) {
+      setErr(e.message || 'Action failed.');
+    }
                         }}
                       >
                         <EyeOff size={14} /> Make Private
@@ -3157,11 +3252,15 @@ const AmaInboxPage: React.FC = () => {
                       type="button"
                       className="b o btn-sm"
                       onClick={async () => {
+                        try {
                         await api.manageAmaQuestion({
                           questionId: q.id,
                           action: 'delete',
                         });
                         await loadInbox();
+                          } catch (e: any) {
+      setErr(e.message || 'Action failed.');
+    }
                       }}
                     >
                       Skip / Delete
@@ -3171,11 +3270,15 @@ const AmaInboxPage: React.FC = () => {
                       className="b x btn-sm"
                       onClick={async () => {
                         if (!window.confirm('Report and block this anonymous sender?')) return;
+                        try {
                         await api.manageAmaQuestion({
                           questionId: q.id,
                           action: 'block_report',
                         });
                         await loadInbox();
+                        } catch (e: any) {
+      setErr(e.message || 'Action failed.');
+    }
                       }}
                     >
                       <Flag size={14} /> Block & Report
@@ -3933,10 +4036,12 @@ const DashboardPage: React.FC = () => {
                       className="b btn-sm"
                       onClick={async () => {
                         const res = await copyTextSafely(fullUrl);
-                        if (res.ok) {
-                          setCopiedQuizId(q.id);
-                          setTimeout(() => setCopiedQuizId(null), 2500);
-                        }
+if (res.ok) {
+  setCopiedScore(true);
+  setTimeout(() => setCopiedScore(false), 2500);
+} else {
+  window.prompt('Copy link:', fullUrl);
+}
                       }}
                     >
                       {isCopied ? <Check size={15} /> : <Copy size={15} />}
@@ -4557,6 +4662,15 @@ export const App: React.FC = () => {
                   <SimpleInfoPage
                     title="Terms & Community Guidelines"
                     text="Games on BFFquest are playful social experiences. Harassment, bullying, or sharing private personal information is strictly prohibited."
+                  />
+                }
+              />
+              <Route
+                path="*"
+                element={
+                  <SimpleInfoPage
+                    title="404 — Page Not Found"
+                    text="The page or game link you are looking for does not exist."
                   />
                 }
               />
