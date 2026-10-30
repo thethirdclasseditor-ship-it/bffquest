@@ -532,7 +532,7 @@ async function recordRealActivity(event: {
  * ============================================================================ */
 function getSampleQuizBySlug(slug: string, lang: Lang = 'en'): PublicQuiz | null {
   const clean = slug.trim().toLowerCase();
-  const creator = lang === 'bn' ? 'আহাদ' : 'Ahad';
+  const creator = lang === 'bn' ? 'BFFquest টিম' : 'BFFquest Team';
 
   if (clean === 'sample-best-friend-quiz') {
     const tpl = TEMPLATES[lang][0];
@@ -871,6 +871,17 @@ export const api = {
       await supabase.auth.signOut();
     }
   },
+  async deleteMyAccountData(): Promise<void> {
+    if (supabase) {
+      const { error } = await supabase.rpc('delete_my_user_data');
+      if (error) throw new Error(error.message || 'Could not delete account data.');
+    }
+    localStorage.clear();
+    sessionStorage.clear();
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
+  },
 
   /* ==========================================================================
    * 1. CREATE & PUBLISH ANY GAME MODE
@@ -1123,13 +1134,12 @@ export const api = {
         .sort((a, b) => b.scorePercentage - a.scorePercentage)
         .slice(0, 25);
 
-      return {
-        status: 'ok',
-        quiz: {
-          ...sample,
-          totalParticipants: localSubs.length,
-          leaderboard: localSubs,
-        },
+      quiz: {
+        ...found,
+        questions: found.questions.map(({ correctOptionId, ...rest }) => rest),
+        totalParticipants: localSubs.length,
+        leaderboard: localSubs,
+      
       };
     }
 
@@ -1716,10 +1726,10 @@ export const api = {
         'Abuse reporting requires an active cloud connection (currently in Local Demo Mode).'
       );
     }
-    const { error } = await supabase.from('abuse_reports').insert({
-      quiz_slug: quizSlug.trim() || null,
-      reason,
-      details: details.trim().slice(0, 1000),
+    const { error } = await supabase.rpc('submit_abuse_report_safe', {
+      p_quiz_slug: quizSlug.trim() || '',
+      p_reason: reason,
+      p_details: details.trim().slice(0, 600),
     });
     if (error) throw new Error(error.message);
   },
