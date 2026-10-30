@@ -159,12 +159,27 @@ const DirectLinkBox: React.FC<{ url: string; shareTitle?: string }> = ({ url, sh
       </div>
 
       {copyState === 'manual' && (
-        <div style={{ marginTop: '0.5rem', fontSize: '0.85rem', color: 'var(--cy)', fontWeight: 600 }}>
+        <div
+          style={{
+            marginTop: '0.5rem',
+            fontSize: '0.85rem',
+            color: 'var(--cy)',
+            fontWeight: 600,
+          }}
+        >
           {t.copyManualHint}
         </div>
       )}
 
-      <div style={{ display: 'flex', justifyContent: 'center', flexWrap: 'wrap', gap: '0.7rem', marginTop: '1.1rem' }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'center',
+          flexWrap: 'wrap',
+          gap: '0.7rem',
+          marginTop: '1.1rem',
+        }}
+      >
         <a
           href={`https://wa.me/?text=${whatsappText}`}
           target="_blank"
@@ -209,7 +224,16 @@ const LeaderboardCard: React.FC<{
 
   return (
     <div className="g" style={{ marginTop: '1.5rem', textAlign: 'left' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.5rem', marginBottom: '0.35rem' }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '0.5rem',
+          marginBottom: '0.35rem',
+        }}
+      >
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
           <Trophy size={20} color="var(--lav)" />
           <h3 style={{ margin: 0, fontSize: '1.2rem' }}>{t.leaderboardTitle}</h3>
@@ -221,7 +245,16 @@ const LeaderboardCard: React.FC<{
       <p style={{ color: 'var(--t3)', fontSize: '0.84rem', marginTop: 0 }}>{t.leaderboardSub}</p>
 
       {entries.length === 0 ? (
-        <div style={{ padding: '1.4rem', borderRadius: '18px', background: 'rgba(255,255,255,0.03)', border: '1px dashed rgba(255,255,255,0.15)', textAlign: 'center', color: 'var(--t2)' }}>
+        <div
+          style={{
+            padding: '1.4rem',
+            borderRadius: '18px',
+            background: 'rgba(255,255,255,0.03)',
+            border: '1px dashed rgba(255,255,255,0.15)',
+            textAlign: 'center',
+            color: 'var(--t2)',
+          }}
+        >
           {t.leaderboardEmpty}
         </div>
       ) : (
@@ -231,7 +264,13 @@ const LeaderboardCard: React.FC<{
               <span style={{ fontSize: '1.1rem' }}>🥈 2</span>
               {second ? (
                 <>
-                  <small style={{ fontSize: '0.78rem', marginTop: '0.25rem', wordBreak: 'break-word' }}>
+                  <small
+                    style={{
+                      fontSize: '0.78rem',
+                      marginTop: '0.25rem',
+                      wordBreak: 'break-word',
+                    }}
+                  >
                     {second.participantNickname}
                   </small>
                   <small style={{ color: 'var(--cy)', fontSize: '0.75rem' }}>
@@ -247,7 +286,13 @@ const LeaderboardCard: React.FC<{
               <span style={{ fontSize: '1.25rem' }}>🥇 1</span>
               {first && (
                 <>
-                  <small style={{ fontSize: '0.84rem', marginTop: '0.25rem', wordBreak: 'break-word' }}>
+                  <small
+                    style={{
+                      fontSize: '0.84rem',
+                      marginTop: '0.25rem',
+                      wordBreak: 'break-word',
+                    }}
+                  >
                     {first.participantNickname}
                   </small>
                   <small style={{ color: '#fde68a', fontSize: '0.8rem' }}>
@@ -261,7 +306,13 @@ const LeaderboardCard: React.FC<{
               <span style={{ fontSize: '1.05rem' }}>🥉 3</span>
               {third ? (
                 <>
-                  <small style={{ fontSize: '0.76rem', marginTop: '0.2rem', wordBreak: 'break-word' }}>
+                  <small
+                    style={{
+                      fontSize: '0.76rem',
+                      marginTop: '0.2rem',
+                      wordBreak: 'break-word',
+                    }}
+                  >
                     {third.participantNickname}
                   </small>
                   <small style={{ color: 'var(--pk)', fontSize: '0.74rem' }}>
@@ -398,7 +449,14 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                     user.displayName.slice(0, 1).toUpperCase()
                   )}
                 </span>
-                <span style={{ maxWidth: 96, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <span
+                  style={{
+                    maxWidth: 96,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
                   {user.displayName}
                 </span>
               </Link>
@@ -442,9 +500,26 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         </nav>
       </div>
 
-      <footer style={{ borderTop: '1px solid rgba(255,255,255,0.08)', padding: '2.2rem 0 6rem', marginTop: 'auto', color: 'var(--t2)', fontSize: '0.86rem' }}>
+      <footer
+        style={{
+          borderTop: '1px solid rgba(255,255,255,0.08)',
+          padding: '2.2rem 0 6rem',
+          marginTop: 'auto',
+          color: 'var(--t2)',
+          fontSize: '0.86rem',
+        }}
+      >
         <div className="container">
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '0.8rem' }}>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '1rem',
+              marginBottom: '0.8rem',
+            }}
+          >
             <span className="brand-link" style={{ fontSize: '1rem' }}>
               <i className="brand-orb" style={{ width: 20, height: 20 }} />
               {BRAND.name}
@@ -457,13 +532,33 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               <Link to="/guides">{t.navGuides}</Link>
               <Link to="/privacy">Privacy</Link>
               <Link to="/terms">Terms</Link>
-              <Link to="/report" style={{ color: 'var(--danger)', display: 'inline-flex', alignItems: 'center', gap: '0.3rem', fontWeight: 600 }}>
+              <Link
+                to="/report"
+                style={{
+                  color: 'var(--danger)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '0.3rem',
+                  fontWeight: 600,
+                }}
+              >
                 <ShieldAlert size={14} /> Report
               </Link>
             </div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.5rem', color: 'var(--t3)', fontSize: '0.8rem' }}>
-            <span>© {new Date().getFullYear()} {BRAND.name}</span>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '0.5rem',
+              color: 'var(--t3)',
+              fontSize: '0.8rem',
+            }}
+          >
+            <span>
+              © {new Date().getFullYear()} {BRAND.name}
+            </span>
             <span>{t.footerNote}</span>
           </div>
         </div>
@@ -655,7 +750,11 @@ const AuthPage: React.FC = () => {
                   required
                   minLength={8}
                   className="auth-pill-input"
-                  placeholder={mode === 'update_password' ? 'New Password (min 8 chars)' : 'Password (min 8 chars)'}
+                  placeholder={
+                    mode === 'update_password'
+                      ? 'New Password (min 8 chars)'
+                      : 'Password (min 8 chars)'
+                  }
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                 />
@@ -672,7 +771,14 @@ const AuthPage: React.FC = () => {
 
             {mode === 'signin' && (
               <div className="auth-meta-row">
-                <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer' }}>
+                <label
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.4rem',
+                    cursor: 'pointer',
+                  }}
+                >
                   <input
                     type="checkbox"
                     checked={rememberMe}
@@ -723,10 +829,22 @@ const AuthPage: React.FC = () => {
                   onClick={() => handleSocialLogin('google')}
                 >
                   <svg width="18" height="18" viewBox="0 0 24 24">
-                    <path fill="#EA4335" d="M12 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.3 1.7 14.8 1 12 1 7.4 1 3.5 3.6 1.6 7.4l3.7 2.8C6.2 7.2 8.9 5 12 5z" />
-                    <path fill="#4285F4" d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.6l3.7 2.9c2.2-2 3.7-5 3.7-8.7z" />
-                    <path fill="#FBBC05" d="M5.3 14.8c-.2-.8-.4-1.6-.4-2.5s.2-1.7.4-2.5L1.6 7C.6 9 0 11.2 0 13.5s.6 4.5 1.6 6.5l3.7-2.9z" />
-                    <path fill="#34A853" d="M12 24c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3.1 0-5.8-2.1-6.7-5l-3.7 2.9C3.5 21.4 7.4 24 12 24z" />
+                    <path
+                      fill="#EA4335"
+                      d="M12 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.3 1.7 14.8 1 12 1 7.4 1 3.5 3.6 1.6 7.4l3.7 2.8C6.2 7.2 8.9 5 12 5z"
+                    />
+                    <path
+                      fill="#4285F4"
+                      d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.6l3.7 2.9c2.2-2 3.7-5 3.7-8.7z"
+                    />
+                    <path
+                      fill="#FBBC05"
+                      d="M5.3 14.8c-.2-.8-.4-1.6-.4-2.5s.2-1.7.4-2.5L1.6 7C.6 9 0 11.2 0 13.5s.6 4.5 1.6 6.5l3.7-2.9z"
+                    />
+                    <path
+                      fill="#34A853"
+                      d="M12 24c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3.1 0-5.8-2.1-6.7-5l-3.7 2.9C3.5 21.4 7.4 24 12 24z"
+                    />
                   </svg>
                   <span>Google</span>
                 </button>
@@ -805,17 +923,35 @@ const HomePage: React.FC = () => {
 
   return (
     <div className="container animate-in" style={{ paddingTop: '1.75rem' }}>
-      <section className="grid-2" style={{ alignItems: 'center', gap: '2rem', padding: '1rem 0 2.5rem' }}>
+      <section
+        className="grid-2"
+        style={{ alignItems: 'center', gap: '2rem', padding: '1rem 0 2.5rem' }}
+      >
         <div>
           <span className="t">
             <Sparkles size={13} /> {t.tagline}
           </span>
-          <h1 style={{ fontSize: 'clamp(2.35rem, 6.5vw, 4.1rem)', lineHeight: 1.03, letterSpacing: '-0.035em', fontWeight: 800, margin: '0.9rem 0' }}>
+          <h1
+            style={{
+              fontSize: 'clamp(2.35rem, 6.5vw, 4.1rem)',
+              lineHeight: 1.03,
+              letterSpacing: '-0.035em',
+              fontWeight: 800,
+              margin: '0.9rem 0',
+            }}
+          >
             {t.heroTitle1}
             <br />
             <span className="gr">{t.heroTitle2}</span>
           </h1>
-          <p style={{ fontSize: '1.05rem', color: 'var(--t2)', maxWidth: '460px', marginBottom: '1.6rem' }}>
+          <p
+            style={{
+              fontSize: '1.05rem',
+              color: 'var(--t2)',
+              maxWidth: '460px',
+              marginBottom: '1.6rem',
+            }}
+          >
             {t.heroSub}
           </p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.8rem' }}>
@@ -828,12 +964,39 @@ const HomePage: React.FC = () => {
           </div>
         </div>
 
-        <div style={{ position: 'relative', minHeight: '390px', display: 'grid', placeItems: 'center' }}>
-          <div style={{ position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', opacity: 0.9, pointerEvents: 'none' }}>
+        <div
+          style={{
+            position: 'relative',
+            minHeight: '390px',
+            display: 'grid',
+            placeItems: 'center',
+          }}
+        >
+          <div
+            style={{
+              position: 'absolute',
+              inset: 0,
+              display: 'grid',
+              placeItems: 'center',
+              opacity: 0.9,
+              pointerEvents: 'none',
+            }}
+          >
             <GlassArt name="hero2" size={380} />
           </div>
 
-          <div className="g card-elevated" style={{ position: 'relative', zIndex: 2, width: 'min(330px, 92%)', transform: 'rotate(-2deg)', display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
+          <div
+            className="g card-elevated"
+            style={{
+              position: 'relative',
+              zIndex: 2,
+              width: 'min(330px, 92%)',
+              transform: 'rotate(-2deg)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.65rem',
+            }}
+          >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <span className="lab">{t.questionLabel} 1 / 5</span>
               <span className="t">Preview</span>
@@ -847,7 +1010,11 @@ const HomePage: React.FC = () => {
             <div className="o">{sampleQ.options[0].text}</div>
             <div className="o on">{sampleQ.options[1].text}</div>
             <div className="o">{sampleQ.options[2].text}</div>
-            <Link to="/q/sample-best-friend-quiz" className="b btn-sm" style={{ marginTop: '0.25rem' }}>
+            <Link
+              to="/q/sample-best-friend-quiz"
+              className="b btn-sm"
+              style={{ marginTop: '0.25rem' }}
+            >
               {t.sampleBtn}
             </Link>
           </div>
@@ -855,7 +1022,11 @@ const HomePage: React.FC = () => {
       </section>
 
       <section className="grid-3" style={{ marginBottom: '2.75rem' }}>
-        <Link to="/create" className="g" style={{ display: 'flex', alignItems: 'center', gap: '0.9rem' }}>
+        <Link
+          to="/create"
+          className="g"
+          style={{ display: 'flex', alignItems: 'center', gap: '0.9rem' }}
+        >
           <GlassArt name="bubble" size={44} />
           <div>
             <h3 style={{ margin: 0, fontSize: '1.05rem' }}>{t.qaCreateTitle}</h3>
@@ -864,7 +1035,11 @@ const HomePage: React.FC = () => {
           <span style={{ marginLeft: 'auto', color: 'var(--t3)', fontSize: '1.3rem' }}>›</span>
         </Link>
 
-        <Link to="/explore" className="g" style={{ display: 'flex', alignItems: 'center', gap: '0.9rem' }}>
+        <Link
+          to="/explore"
+          className="g"
+          style={{ display: 'flex', alignItems: 'center', gap: '0.9rem' }}
+        >
           <GlassArt name="sun" size={44} />
           <div>
             <h3 style={{ margin: 0, fontSize: '1.05rem' }}>{t.qaPlayTitle}</h3>
@@ -873,7 +1048,11 @@ const HomePage: React.FC = () => {
           <span style={{ marginLeft: 'auto', color: 'var(--t3)', fontSize: '1.3rem' }}>›</span>
         </Link>
 
-        <Link to="/wrapped" className="g" style={{ display: 'flex', alignItems: 'center', gap: '0.9rem' }}>
+        <Link
+          to="/wrapped"
+          className="g"
+          style={{ display: 'flex', alignItems: 'center', gap: '0.9rem' }}
+        >
           <GlassArt name="spark" size={44} />
           <div>
             <h3 style={{ margin: 0, fontSize: '1.05rem' }}>{t.qaShareTitle}</h3>
@@ -892,7 +1071,19 @@ const HomePage: React.FC = () => {
             { num: '3', title: t.step3Title, desc: t.step3Desc },
           ].map((st) => (
             <div key={st.num} className="g">
-              <div style={{ width: 42, height: 42, borderRadius: 14, display: 'grid', placeItems: 'center', fontWeight: 800, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', marginBottom: '0.75rem' }}>
+              <div
+                style={{
+                  width: 42,
+                  height: 42,
+                  borderRadius: 14,
+                  display: 'grid',
+                  placeItems: 'center',
+                  fontWeight: 800,
+                  background: 'rgba(255,255,255,0.1)',
+                  border: '1px solid rgba(255,255,255,0.2)',
+                  marginBottom: '0.75rem',
+                }}
+              >
                 {st.num}
               </div>
               <h3 style={{ margin: '0 0 0.35rem' }}>{st.title}</h3>
@@ -906,15 +1097,33 @@ const HomePage: React.FC = () => {
         <h2 style={{ fontSize: '1.6rem', marginBottom: '1rem' }}>{t.featuredTemplatesTitle}</h2>
         <div className="grid-3">
           {featuredTemplates.map((tpl) => (
-            <div key={tpl.id} className="g" style={{ ['--a' as any]: tpl.accent, display: 'flex', flexDirection: 'column' }}>
-              <div style={{ height: 104, borderRadius: 18, display: 'grid', placeItems: 'center', marginBottom: '0.85rem', background: `radial-gradient(70% 90% at 50% 0%, ${tpl.accent}66, transparent), rgba(255,255,255,0.04)`, border: '1px solid rgba(255,255,255,0.1)' }}>
+            <div
+              key={tpl.id}
+              className="g"
+              style={{ ['--a' as any]: tpl.accent, display: 'flex', flexDirection: 'column' }}
+            >
+              <div
+                style={{
+                  height: 104,
+                  borderRadius: 18,
+                  display: 'grid',
+                  placeItems: 'center',
+                  marginBottom: '0.85rem',
+                  background: `radial-gradient(70% 90% at 50% 0%, ${tpl.accent}66, transparent), rgba(255,255,255,0.04)`,
+                  border: '1px solid rgba(255,255,255,0.1)',
+                }}
+              >
                 <GlassArt name={tpl.icon} size={58} />
               </div>
               <div>
                 <span className="t">{tpl.badge}</span>
               </div>
               <h3 style={{ margin: '0.55rem 0 0.9rem' }}>{tpl.name}</h3>
-              <Link to={`/create?type=quiz&tpl=${tpl.id}`} className="b o btn-sm" style={{ marginTop: 'auto' }}>
+              <Link
+                to={`/create?type=quiz&tpl=${tpl.id}`}
+                className="b o btn-sm"
+                style={{ marginTop: 'auto' }}
+              >
                 {t.useTemplateBtn}
               </Link>
             </div>
@@ -923,7 +1132,14 @@ const HomePage: React.FC = () => {
       </section>
 
       <section style={{ marginBottom: '2.75rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '1rem',
+          }}
+        >
           <h2 style={{ fontSize: '1.6rem', margin: 0 }}>{t.exploreGamesTitle}</h2>
           <Link to="/explore" className="b o btn-sm">
             {t.seeAllGamesBtn}
@@ -932,7 +1148,12 @@ const HomePage: React.FC = () => {
 
         <div className="grid-4">
           {GAME_MODES.map((gm) => (
-            <Link key={gm.id} to={gm.route} className="g game-card" style={{ ['--a' as any]: gm.accent }}>
+            <Link
+              key={gm.id}
+              to={gm.route}
+              className="g game-card"
+              style={{ ['--a' as any]: gm.accent }}
+            >
               <GlassArt name={gm.icon} size={44} />
               <div style={{ marginTop: '0.35rem' }}>
                 <span className="t" style={{ fontSize: '0.68rem', padding: '0.15rem 0.55rem' }}>
@@ -968,22 +1189,47 @@ const ExplorePage: React.FC = () => {
   return (
     <div className="container animate-in" style={{ paddingTop: '2rem', maxWidth: '900px' }}>
       <div className="game-stage">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.2rem' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '1rem',
+            marginBottom: '1.2rem',
+          }}
+        >
           <h1 style={{ margin: 0, fontSize: '1.9rem' }}>{t.exploreGamesTitle}</h1>
           <span className="t ok">{GAME_MODES.length} Interactive Modes</span>
         </div>
 
         <div className="seg" style={{ marginBottom: '1.4rem' }}>
-          <button type="button" className={filter === 'all' ? 'on' : ''} onClick={() => setFilter('all')}>
+          <button
+            type="button"
+            className={filter === 'all' ? 'on' : ''}
+            onClick={() => setFilter('all')}
+          >
             All ({GAME_MODES.length})
           </button>
-          <button type="button" className={filter === 'quiz' ? 'on' : ''} onClick={() => setFilter('quiz')}>
+          <button
+            type="button"
+            className={filter === 'quiz' ? 'on' : ''}
+            onClick={() => setFilter('quiz')}
+          >
             Quiz
           </button>
-          <button type="button" className={filter === 'party' ? 'on' : ''} onClick={() => setFilter('party')}>
+          <button
+            type="button"
+            className={filter === 'party' ? 'on' : ''}
+            onClick={() => setFilter('party')}
+          >
             Party
           </button>
-          <button type="button" className={filter === 'daily' ? 'on' : ''} onClick={() => setFilter('daily')}>
+          <button
+            type="button"
+            className={filter === 'daily' ? 'on' : ''}
+            onClick={() => setFilter('daily')}
+          >
             Daily & Recap
           </button>
         </div>
@@ -992,7 +1238,18 @@ const ExplorePage: React.FC = () => {
           {filtered.map((gm) => {
             const sampleUrl = sampleLinkMap[gm.id];
             return (
-              <div key={gm.id} className="g" style={{ ['--a' as any]: gm.accent, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+              <div
+                key={gm.id}
+                className="g"
+                style={{
+                  ['--a' as any]: gm.accent,
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: '1rem',
+                }}
+              >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                   <GlassArt name={gm.icon} size={50} />
                   <div>
@@ -1050,6 +1307,7 @@ const CreateQuizPage: React.FC = () => {
   const [description, setDescription] = useState('');
   const [groupVoting, setGroupVoting] = useState(true);
   const [lockPositions, setLockPositions] = useState(true);
+  const [hasEdited, setHasEdited] = useState(false);
   const [templateNotice, setTemplateNotice] = useState<string | null>(null);
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
 
@@ -1075,7 +1333,12 @@ const CreateQuizPage: React.FC = () => {
           options: q.options.map((o) => ({ ...o })),
         }))
       );
-    } else {
+    } else if (
+      mode === 'guess_side' ||
+      mode === 'two_truths' ||
+      mode === 'blind_ranking' ||
+      mode === 'would_you_rather'
+    ) {
       const preset = GAME_PRESETS[mode][lang];
       setTitle(preset.defaultTitle);
       setDescription(preset.description);
@@ -1088,13 +1351,14 @@ const CreateQuizPage: React.FC = () => {
         }))
       );
     }
+    setHasEdited(false);
   };
 
-  const prevModeRef = useRef<GameType>(activeMode);
+  const prevModeRef = useRef<GameType | null>(null);
   useEffect(() => {
     const modeChanged = prevModeRef.current !== activeMode;
     prevModeRef.current = activeMode;
-    if (modeChanged) {
+    if (modeChanged || !hasEdited) {
       loadModeDefaults(activeMode, initialTpl);
     }
   }, [activeMode, lang]);
@@ -1123,6 +1387,7 @@ const CreateQuizPage: React.FC = () => {
         options: q.options.map((o) => ({ ...o })),
       }))
     );
+    setHasEdited(false);
     setErrorMsg(null);
     setTemplateNotice(`${found.name} — ${t.templateLoadedMsg}`);
     setTimeout(() => setTemplateNotice(null), 3000);
@@ -1155,7 +1420,10 @@ const CreateQuizPage: React.FC = () => {
   if (publishedSlug) {
     return (
       <div className="container animate-in" style={{ paddingTop: '2.5rem', maxWidth: '660px' }}>
-        <div className="game-stage" style={{ ['--a' as any]: modeMeta.accent, textAlign: 'center' }}>
+        <div
+          className="game-stage"
+          style={{ ['--a' as any]: modeMeta.accent, textAlign: 'center' }}
+        >
           <span className="t ok" style={{ marginBottom: '0.75rem' }}>
             {t.publishedBadge} • {modeMeta.title[lang]}
           </span>
@@ -1164,7 +1432,15 @@ const CreateQuizPage: React.FC = () => {
 
           <DirectLinkBox url={shareUrl} shareTitle={title} />
 
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '0.75rem', marginTop: '1rem', flexWrap: 'wrap' }}>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: '0.75rem',
+              marginTop: '1rem',
+              flexWrap: 'wrap',
+            }}
+          >
             <Link to={`/q/${publishedSlug}`} className="b o">
               {t.openQuizBtn}
             </Link>
@@ -1186,7 +1462,12 @@ const CreateQuizPage: React.FC = () => {
         {creatableModes.map((mId) => {
           const meta = GAME_MODES.find((gm) => gm.id === mId)!;
           return (
-            <button key={mId} type="button" className={activeMode === mId ? 'on' : ''} onClick={() => handleSelectMode(mId)}>
+            <button
+              key={mId}
+              type="button"
+              className={activeMode === mId ? 'on' : ''}
+              onClick={() => handleSelectMode(mId)}
+            >
               {meta.title[lang]}
             </button>
           );
@@ -1200,7 +1481,12 @@ const CreateQuizPage: React.FC = () => {
           </strong>
           <div className="template-grid">
             {templates.map((tpl) => (
-              <button key={tpl.id} type="button" onClick={() => handleLoadQuizTemplate(tpl.id)} className={`template-pill ${selectedTemplateId === tpl.id ? 'active' : ''}`}>
+              <button
+                key={tpl.id}
+                type="button"
+                onClick={() => handleLoadQuizTemplate(tpl.id)}
+                className={`template-pill ${selectedTemplateId === tpl.id ? 'active' : ''}`}
+              >
                 <span>{tpl.name}</span>
                 <span className="t" style={{ fontSize: '0.68rem', padding: '0.15rem 0.5rem' }}>
                   {tpl.badge}
@@ -1230,39 +1516,127 @@ const CreateQuizPage: React.FC = () => {
         <div className="grid-2">
           <div className="form-group">
             <label className="form-label">{t.yourNameLabel}</label>
-            <input className="form-input" placeholder={t.yourNamePlaceholder} value={creatorName} onChange={(e) => setCreatorName(e.target.value)} />
+            <input
+              className="form-input"
+              placeholder={t.yourNamePlaceholder}
+              value={creatorName}
+              onChange={(e) => setCreatorName(e.target.value)}
+            />
           </div>
           <div className="form-group">
             <label className="form-label">{t.quizTitleLabel}</label>
-            <input className="form-input" value={title} onChange={(e) => setTitle(e.target.value)} />
+            <input
+              className="form-input"
+              value={title}
+              onChange={(e) => {
+                setTitle(e.target.value);
+                setHasEdited(true);
+              }}
+            />
           </div>
         </div>
 
-        <div className="form-group" style={{ marginBottom: activeMode === 'would_you_rather' || activeMode === 'blind_ranking' ? '1rem' : 0 }}>
+        <div
+          className="form-group"
+          style={{
+            marginBottom:
+              activeMode === 'would_you_rather' || activeMode === 'blind_ranking' ? '1rem' : 0,
+          }}
+        >
           <label className="form-label">{t.quizDescLabel}</label>
-          <input className="form-input" value={description} onChange={(e) => setDescription(e.target.value)} />
+          <input
+            className="form-input"
+            value={description}
+            onChange={(e) => {
+              setDescription(e.target.value);
+              setHasEdited(true);
+            }}
+          />
         </div>
+
+        {activeMode === 'would_you_rather' && (
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              paddingTop: '0.75rem',
+              borderTop: '1px solid rgba(255,255,255,0.1)',
+            }}
+          >
+            <div>
+              <strong>Enable Live Group Vote Percentages</strong>
+              <div style={{ fontSize: '0.82rem', color: 'var(--t2)' }}>
+                Show % split between Scenario A and Scenario B on the result screen
+              </div>
+            </div>
+            <button
+              type="button"
+              className={`tg ${groupVoting ? 'on' : ''}`}
+              onClick={() => setGroupVoting((v) => !v)}
+              aria-label="Toggle Group Voting"
+            />
+          </div>
+        )}
+
+        {activeMode === 'blind_ranking' && (
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              paddingTop: '0.75rem',
+              borderTop: '1px solid rgba(255,255,255,0.1)',
+            }}
+          >
+            <div>
+              <strong>Strict Blind Lock Rule (#1 to #{questions.length})</strong>
+              <div style={{ fontSize: '0.82rem', color: 'var(--t2)' }}>
+                Once a player places an item into a rank slot, it cannot be moved
+              </div>
+            </div>
+            <button
+              type="button"
+              className={`tg ${lockPositions ? 'on' : ''}`}
+              onClick={() => setLockPositions((v) => !v)}
+              aria-label="Toggle Blind Lock"
+            />
+          </div>
+        )}
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
         {questions.map((q, qIdx) => (
           <div key={q.id} className="g">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '0.75rem',
+              }}
+            >
               <span className="t">
-                {activeMode === 'blind_ranking' ? `Creator's True Rank #${qIdx + 1}` : `${t.questionLabel} ${qIdx + 1} / ${questions.length}`}
+                {activeMode === 'blind_ranking'
+                  ? `Creator's True Rank #${qIdx + 1}`
+                  : `${t.questionLabel} ${qIdx + 1} / ${questions.length}`}
               </span>
               {questions.length > BRAND.limits.minQuestions && (
                 <button
                   type="button"
                   className="b x btn-sm"
                   onClick={() => {
+                    setHasEdited(true);
                     setQuestions((prev) =>
                       prev
                         .filter((_, idx) => idx !== qIdx)
                         .map((item, idx) => ({
                           ...item,
                           position: idx + 1,
-                          correctOptionId: activeMode === 'blind_ranking' ? `opt_${idx + 1}` : item.correctOptionId,
+                          correctOptionId:
+                            activeMode === 'blind_ranking'
+                              ? `opt_${idx + 1}`
+                              : item.correctOptionId,
                         }))
                     );
                   }}
@@ -1274,14 +1648,23 @@ const CreateQuizPage: React.FC = () => {
 
             <div className="form-group">
               <label className="form-label">
-                {activeMode === 'blind_ranking' ? `Item for Rank #${qIdx + 1}` : activeMode === 'two_truths' ? 'Round Topic / Prompt' : `${t.questionLabel} ${qIdx + 1}`}
+                {activeMode === 'blind_ranking'
+                  ? `Item for Rank #${qIdx + 1}`
+                  : activeMode === 'two_truths'
+                  ? 'Round Topic / Prompt'
+                  : `${t.questionLabel} ${qIdx + 1}`}
               </label>
               <input
                 className="form-input"
                 value={q.questionText}
                 onChange={(e) => {
                   const val = e.target.value;
-                  setQuestions((prev) => prev.map((item, idx) => idx === qIdx ? { ...item, questionText: val } : item));
+                  setHasEdited(true);
+                  setQuestions((prev) =>
+                    prev.map((item, idx) =>
+                      idx === qIdx ? { ...item, questionText: val } : item
+                    )
+                  );
                 }}
               />
             </div>
@@ -1293,13 +1676,22 @@ const CreateQuizPage: React.FC = () => {
                   const opt = q.options[optIdx] || { id: optId, text: '' };
                   const isSelected = q.correctOptionId === optId;
                   return (
-                    <div key={optId} className={`o ${isSelected ? 'on' : ''}`} style={{ padding: '0.55rem 0.85rem' }}>
+                    <div
+                      key={optId}
+                      className={`o ${isSelected ? 'on' : ''}`}
+                      style={{ padding: '0.55rem 0.85rem' }}
+                    >
                       <input
                         type="radio"
                         name={`correct_${q.id}`}
                         checked={isSelected}
                         onChange={() => {
-                          setQuestions((prev) => prev.map((item, idx) => idx === qIdx ? { ...item, correctOptionId: optId } : item));
+                          setHasEdited(true);
+                          setQuestions((prev) =>
+                            prev.map((item, idx) =>
+                              idx === qIdx ? { ...item, correctOptionId: optId } : item
+                            )
+                          );
                         }}
                         style={{ width: 18, height: 18, accentColor: 'var(--primary)' }}
                       />
@@ -1310,12 +1702,15 @@ const CreateQuizPage: React.FC = () => {
                         value={opt.text}
                         onChange={(e) => {
                           const val = e.target.value;
+                          setHasEdited(true);
                           setQuestions((prev) =>
                             prev.map((item, idx) =>
                               idx === qIdx
                                 ? {
                                     ...item,
-                                    options: item.options.map((o, oI) => oI === optIdx ? { ...o, text: val } : o),
+                                    options: item.options.map((o, oI) =>
+                                      oI === optIdx ? { ...o, text: val } : o
+                                    ),
                                   }
                                 : item
                             )
@@ -1335,13 +1730,22 @@ const CreateQuizPage: React.FC = () => {
                   const opt = q.options[optIdx] || { id: optId, text: '' };
                   const isLie = q.correctOptionId === optId;
                   return (
-                    <div key={optId} className={`o ${isLie ? 'bad' : 'good'}`} style={{ padding: '0.5rem 0.85rem' }}>
+                    <div
+                      key={optId}
+                      className={`o ${isLie ? 'bad' : 'good'}`}
+                      style={{ padding: '0.5rem 0.85rem' }}
+                    >
                       <input
                         type="radio"
                         name={`lie_${q.id}`}
                         checked={isLie}
                         onChange={() => {
-                          setQuestions((prev) => prev.map((item, idx) => idx === qIdx ? { ...item, correctOptionId: optId } : item));
+                          setHasEdited(true);
+                          setQuestions((prev) =>
+                            prev.map((item, idx) =>
+                              idx === qIdx ? { ...item, correctOptionId: optId } : item
+                            )
+                          );
                         }}
                         style={{ width: 18, height: 18, accentColor: '#f87171' }}
                       />
@@ -1355,12 +1759,15 @@ const CreateQuizPage: React.FC = () => {
                         value={opt.text}
                         onChange={(e) => {
                           const val = e.target.value;
+                          setHasEdited(true);
                           setQuestions((prev) =>
                             prev.map((item, idx) =>
                               idx === qIdx
                                 ? {
                                     ...item,
-                                    options: item.options.map((o, oI) => oI === optIdx ? { ...o, text: val } : o),
+                                    options: item.options.map((o, oI) =>
+                                      oI === optIdx ? { ...o, text: val } : o
+                                    ),
                                   }
                                 : item
                             )
@@ -1378,13 +1785,22 @@ const CreateQuizPage: React.FC = () => {
                 {q.options.slice(0, 3).map((opt) => {
                   const isSelected = q.correctOptionId === opt.id;
                   return (
-                    <div key={opt.id} className={`o ${isSelected ? 'on' : ''}`} style={{ padding: '0.4rem 0.75rem' }}>
+                    <div
+                      key={opt.id}
+                      className={`o ${isSelected ? 'on' : ''}`}
+                      style={{ padding: '0.4rem 0.75rem' }}
+                    >
                       <input
                         type="radio"
                         name={`correct_${q.id}`}
                         checked={isSelected}
                         onChange={() => {
-                          setQuestions((prev) => prev.map((item, idx) => idx === qIdx ? { ...item, correctOptionId: opt.id } : item));
+                          setHasEdited(true);
+                          setQuestions((prev) =>
+                            prev.map((item, idx) =>
+                              idx === qIdx ? { ...item, correctOptionId: opt.id } : item
+                            )
+                          );
                         }}
                         style={{ width: 18, height: 18, accentColor: 'var(--primary)' }}
                       />
@@ -1395,12 +1811,15 @@ const CreateQuizPage: React.FC = () => {
                         value={opt.text}
                         onChange={(e) => {
                           const val = e.target.value;
+                          setHasEdited(true);
                           setQuestions((prev) =>
                             prev.map((item, idx) =>
                               idx === qIdx
                                 ? {
                                     ...item,
-                                    options: item.options.map((o) => o.id === opt.id ? { ...o, text: val } : o),
+                                    options: item.options.map((o) =>
+                                      o.id === opt.id ? { ...o, text: val } : o
+                                    ),
                                   }
                                 : item
                             )
@@ -1414,32 +1833,53 @@ const CreateQuizPage: React.FC = () => {
                 {(() => {
                   const isCustomSelected = q.correctOptionId === 'opt_4';
                   return (
-                    <div className={`o ${isCustomSelected ? 'on' : ''}`} style={{ padding: '0.55rem 0.85rem', borderStyle: isCustomSelected ? 'solid' : 'dashed' }}>
+                    <div
+                      className={`o ${isCustomSelected ? 'on' : ''}`}
+                      style={{
+                        padding: '0.55rem 0.85rem',
+                        borderStyle: isCustomSelected ? 'solid' : 'dashed',
+                      }}
+                    >
                       <input
                         type="radio"
                         name={`correct_${q.id}`}
                         checked={isCustomSelected}
                         onChange={() => {
-                          setQuestions((prev) => prev.map((item, idx) => idx === qIdx ? { ...item, correctOptionId: 'opt_4' } : item));
+                          setHasEdited(true);
+                          setQuestions((prev) =>
+                            prev.map((item, idx) =>
+                              idx === qIdx ? { ...item, correctOptionId: 'opt_4' } : item
+                            )
+                          );
                         }}
                         style={{ width: 18, height: 18, accentColor: 'var(--primary)' }}
                       />
                       <div style={{ fontSize: '0.8rem', color: 'var(--t2)', flex: 1 }}>
-                        <strong style={{ color: 'var(--cy)', display: 'block' }}>✍️ Write-in Correct Answer</strong>
+                        <strong style={{ color: 'var(--cy)', display: 'block' }}>
+                          ✍️ {t.writeOwnLabel}
+                        </strong>
                         {isCustomSelected ? (
                           <input
                             className="form-input"
                             style={{ marginTop: '0.35rem', minHeight: 36 }}
                             placeholder="Type expected correct answer..."
-                            value={q.options[3]?.text === 'Write your own answer...' || q.options[3]?.text === 'নিজের মতো উত্তর লিখুন...' ? '' : q.options[3]?.text || ''}
+                            value={
+                              q.options[3]?.text === 'Write your own answer...' ||
+                              q.options[3]?.text === 'নিজের মতো উত্তর লিখুন...'
+                                ? ''
+                                : q.options[3]?.text || ''
+                            }
                             onChange={(e) => {
                               const val = e.target.value;
+                              setHasEdited(true);
                               setQuestions((prev) =>
                                 prev.map((item, idx) =>
                                   idx === qIdx
                                     ? {
                                         ...item,
-                                        options: item.options.map((o) => o.id === 'opt_4' ? { ...o, text: val } : o),
+                                        options: item.options.map((o) =>
+                                          o.id === 'opt_4' ? { ...o, text: val } : o
+                                        ),
                                       }
                                     : item
                                 )
@@ -1447,7 +1887,7 @@ const CreateQuizPage: React.FC = () => {
                             }}
                           />
                         ) : (
-                          <span>Option 4 (Player writes their own answer)</span>
+                          <span>{t.customSlotHint}</span>
                         )}
                       </div>
                     </div>
@@ -1459,13 +1899,22 @@ const CreateQuizPage: React.FC = () => {
         ))}
       </div>
 
-      <div style={{ marginTop: '1.5rem', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '0.75rem' }}>
+      <div
+        style={{
+          marginTop: '1.5rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '0.75rem',
+        }}
+      >
         <button
           type="button"
           className="b o"
           onClick={() => {
             if (questions.length >= BRAND.limits.maxQuestions) return;
             const nextPos = questions.length + 1;
+            setHasEdited(true);
             setQuestions((prev) => [
               ...prev,
               {
@@ -1511,12 +1960,15 @@ const PublicQuizPage: React.FC = () => {
   const { slug = '' } = useParams<{ slug: string }>();
   const { lang, t } = useLang();
   const [quiz, setQuiz] = useState<PublicQuiz | null>(null);
-  const [status, setStatus] = useState<'loading' | 'ok' | 'unavailable' | 'not_found' | 'error'>('loading');
+  const [status, setStatus] = useState<'loading' | 'ok' | 'unavailable' | 'not_found' | 'error'>(
+    'loading'
+  );
   const [errMsg, setErrMsg] = useState<string>('');
 
   useEffect(() => {
     setStatus('loading');
-    api.getPublicQuizBySlug(slug, lang)
+    api
+      .getPublicQuizBySlug(slug, lang)
       .then((res) => {
         setStatus(res.status);
         if (res.quiz) setQuiz(res.quiz);
@@ -1529,7 +1981,11 @@ const PublicQuizPage: React.FC = () => {
   }, [slug, lang]);
 
   if (status === 'loading') {
-    return <div className="container" style={{ paddingTop: '4rem', textAlign: 'center' }}>Loading...</div>;
+    return (
+      <div className="container" style={{ paddingTop: '4rem', textAlign: 'center' }}>
+        Loading...
+      </div>
+    );
   }
 
   if (status !== 'ok' || !quiz) {
@@ -1537,8 +1993,12 @@ const PublicQuizPage: React.FC = () => {
       <div className="container animate-in" style={{ paddingTop: '3.5rem', maxWidth: '540px' }}>
         <div className="g" style={{ textAlign: 'center' }}>
           <h1 style={{ marginTop: 0 }}>Game Unavailable</h1>
-          <p style={{ color: 'var(--t2)' }}>{errMsg || 'This game link may have been paused or deleted.'}</p>
-          <Link to="/explore" className="b">{t.exploreBtn}</Link>
+          <p style={{ color: 'var(--t2)' }}>
+            {errMsg || 'This game link may have been paused or deleted.'}
+          </p>
+          <Link to="/explore" className="b">
+            {t.exploreBtn}
+          </Link>
         </div>
       </div>
     );
@@ -1548,7 +2008,10 @@ const PublicQuizPage: React.FC = () => {
 
   return (
     <div className="container animate-in" style={{ paddingTop: '2.2rem', maxWidth: '660px' }}>
-      <div className="game-stage" style={{ ['--a' as any]: modeMeta.accent, textAlign: 'center' }}>
+      <div
+        className="game-stage"
+        style={{ ['--a' as any]: modeMeta.accent, textAlign: 'center' }}
+      >
         <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '0.75rem' }}>
           <GlassArt name={modeMeta.icon} size={64} />
         </div>
@@ -1556,7 +2019,9 @@ const PublicQuizPage: React.FC = () => {
           {modeMeta.title[lang]} • {t.invitedBy} {quiz.creatorDisplayName}
         </span>
         <h1 style={{ marginTop: 0, marginBottom: '0.5rem' }}>{quiz.title}</h1>
-        {quiz.description && <p style={{ color: 'var(--t2)', marginBottom: '1.25rem' }}>{quiz.description}</p>}
+        {quiz.description && (
+          <p style={{ color: 'var(--t2)', marginBottom: '1.25rem' }}>{quiz.description}</p>
+        )}
         <p style={{ fontWeight: 600, color: 'var(--lav)', marginBottom: '1.5rem' }}>
           {quiz.questions.length} {t.questionsCount} • {t.noAccountNeeded}
         </p>
@@ -1578,7 +2043,9 @@ const PlayQuizPage: React.FC = () => {
   const { user } = useAuth();
 
   const [quiz, setQuiz] = useState<PublicQuiz | null>(null);
-  const [loadStatus, setLoadStatus] = useState<'loading' | 'ok' | 'unavailable' | 'not_found' | 'error'>('loading');
+  const [loadStatus, setLoadStatus] = useState<
+    'loading' | 'ok' | 'unavailable' | 'not_found' | 'error'
+  >('loading');
   const [nickname, setNickname] = useState(user?.displayName || '');
   const [currentIdx, setCurrentIdx] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
@@ -1592,7 +2059,8 @@ const PlayQuizPage: React.FC = () => {
 
   useEffect(() => {
     setLoadStatus('loading');
-    api.getPublicQuizBySlug(slug, lang)
+    api
+      .getPublicQuizBySlug(slug, lang)
       .then((res) => {
         setLoadStatus(res.status);
         if (res.status === 'ok' && res.quiz) setQuiz(res.quiz);
@@ -1601,7 +2069,11 @@ const PlayQuizPage: React.FC = () => {
   }, [slug, lang]);
 
   if (loadStatus === 'loading') {
-    return <div className="container" style={{ paddingTop: '4rem', textAlign: 'center' }}>Loading game...</div>;
+    return (
+      <div className="container" style={{ paddingTop: '4rem', textAlign: 'center' }}>
+        Loading game...
+      </div>
+    );
   }
 
   if (loadStatus !== 'ok' || !quiz) {
@@ -1609,7 +2081,9 @@ const PlayQuizPage: React.FC = () => {
       <div className="container animate-in" style={{ paddingTop: '3.5rem', maxWidth: '540px' }}>
         <div className="g" style={{ textAlign: 'center' }}>
           <h1 style={{ marginTop: 0 }}>Game Unavailable</h1>
-          <Link to="/explore" className="b">{t.exploreBtn}</Link>
+          <Link to="/explore" className="b">
+            {t.exploreBtn}
+          </Link>
         </div>
       </div>
     );
@@ -1675,13 +2149,32 @@ const PlayQuizPage: React.FC = () => {
     <div className="container animate-in" style={{ paddingTop: '1.75rem', maxWidth: '640px' }}>
       <div className="game-stage" style={{ ['--a' as any]: modeMeta.accent }}>
         {currentIdx === 0 && (
-          <div className="form-group" style={{ paddingBottom: '1rem', marginBottom: '1.1rem', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+          <div
+            className="form-group"
+            style={{
+              paddingBottom: '1rem',
+              marginBottom: '1.1rem',
+              borderBottom: '1px solid rgba(255,255,255,0.1)',
+            }}
+          >
             <label className="form-label">{t.nicknameLabel}</label>
-            <input className="form-input" placeholder={t.nicknamePlaceholder} value={nickname} onChange={(e) => setNickname(e.target.value)} />
+            <input
+              className="form-input"
+              placeholder={t.nicknamePlaceholder}
+              value={nickname}
+              onChange={(e) => setNickname(e.target.value)}
+            />
           </div>
         )}
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '0.5rem',
+          }}
+        >
           <span className="t">{modeMeta.title[lang]}</span>
           <span style={{ fontSize: '0.84rem', color: 'var(--t2)', fontWeight: 600 }}>
             {currentIdx + 1} / {quiz.questions.length}
@@ -1695,17 +2188,38 @@ const PlayQuizPage: React.FC = () => {
 
         {(gameType === 'guess_side' || gameType === 'would_you_rather') && (
           <div style={{ marginBottom: '1.5rem' }}>
-            <h2 style={{ textAlign: 'center', fontSize: '1.3rem', marginTop: 0, marginBottom: '1.1rem' }}>
+            <h2
+              style={{
+                textAlign: 'center',
+                fontSize: '1.3rem',
+                marginTop: 0,
+                marginBottom: '1.1rem',
+              }}
+            >
               {question.questionText}
             </h2>
-            <button type="button" onClick={() => { setErrorMsg(null); setAnswers((prev) => ({ ...prev, [question.id]: 'opt_1' })); }} className={`o big ${selectedId === 'opt_1' ? 'on' : ''}`}>
+            <button
+              type="button"
+              onClick={() => {
+                setErrorMsg(null);
+                setAnswers((prev) => ({ ...prev, [question.id]: 'opt_1' }));
+              }}
+              className={`o big ${selectedId === 'opt_1' ? 'on' : ''}`}
+            >
               <GlassArt name={question.options[0]?.icon || 'coffee'} size={62} />
               <span style={{ marginTop: '0.4rem' }}>{question.options[0]?.text}</span>
             </button>
 
             <div className="orb vs">{gameType === 'guess_side' ? 'VS' : 'OR'}</div>
 
-            <button type="button" onClick={() => { setErrorMsg(null); setAnswers((prev) => ({ ...prev, [question.id]: 'opt_2' })); }} className={`o big ${selectedId === 'opt_2' ? 'on' : ''}`}>
+            <button
+              type="button"
+              onClick={() => {
+                setErrorMsg(null);
+                setAnswers((prev) => ({ ...prev, [question.id]: 'opt_2' }));
+              }}
+              className={`o big ${selectedId === 'opt_2' ? 'on' : ''}`}
+            >
               <GlassArt name={question.options[1]?.icon || 'tea'} size={62} />
               <span style={{ marginTop: '0.4rem' }}>{question.options[1]?.text}</span>
             </button>
@@ -1720,14 +2234,30 @@ const PlayQuizPage: React.FC = () => {
                 Two are true. One is a lie. Spot the lie!
               </span>
             </div>
-            <h2 style={{ textAlign: 'center', fontSize: '1.22rem', marginTop: '0.4rem', marginBottom: '1.1rem' }}>
+            <h2
+              style={{
+                textAlign: 'center',
+                fontSize: '1.22rem',
+                marginTop: '0.4rem',
+                marginBottom: '1.1rem',
+              }}
+            >
               {question.questionText}
             </h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem' }}>
               {question.options.slice(0, 3).map((opt, idx) => {
                 const isSelected = selectedId === opt.id;
                 return (
-                  <button key={opt.id} type="button" onClick={() => { setErrorMsg(null); setAnswers((prev) => ({ ...prev, [question.id]: opt.id })); }} className={`o ${isSelected ? 'on' : ''}`} style={{ justifyContent: 'flex-start' }}>
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => {
+                      setErrorMsg(null);
+                      setAnswers((prev) => ({ ...prev, [question.id]: opt.id }));
+                    }}
+                    className={`o ${isSelected ? 'on' : ''}`}
+                    style={{ justifyContent: 'flex-start' }}
+                  >
                     <span className={`n ${isSelected ? 'on' : ''}`}>{idx + 1}</span>
                     <span>{opt.text}</span>
                   </button>
@@ -1771,13 +2301,20 @@ const PlayQuizPage: React.FC = () => {
                       }
                     }}
                     className={`o ${isCurrentItemSlot || isLockedByPrevious ? 'on' : ''}`}
-                    style={{ justifyContent: 'flex-start', opacity: isLockedByPrevious ? 0.65 : 1 }}
+                    style={{
+                      justifyContent: 'flex-start',
+                      opacity: isLockedByPrevious ? 0.65 : 1,
+                    }}
                   >
                     <span className={`n ${isCurrentItemSlot || isLockedByPrevious ? 'on' : ''}`}>
                       {sIdx + 1}
                     </span>
                     <span>
-                      {occupiedBy ? <strong>{occupiedBy}</strong> : <span style={{ color: 'var(--t3)' }}>Tap to lock in Rank #{sIdx + 1}</span>}
+                      {occupiedBy ? (
+                        <strong>{occupiedBy}</strong>
+                      ) : (
+                        <span style={{ color: 'var(--t3)' }}>Tap to lock in Rank #{sIdx + 1}</span>
+                      )}
                     </span>
                   </button>
                 );
@@ -1795,7 +2332,15 @@ const PlayQuizPage: React.FC = () => {
               {question.options.slice(0, 3).map((opt) => {
                 const isSelected = selectedId === opt.id;
                 return (
-                  <button key={opt.id} type="button" onClick={() => { setErrorMsg(null); setAnswers((prev) => ({ ...prev, [question.id]: opt.id })); }} className={`o ${isSelected ? 'on' : ''}`}>
+                  <button
+                    key={opt.id}
+                    type="button"
+                    onClick={() => {
+                      setErrorMsg(null);
+                      setAnswers((prev) => ({ ...prev, [question.id]: opt.id }));
+                    }}
+                    className={`o ${isSelected ? 'on' : ''}`}
+                  >
                     <span>{opt.text}</span>
                     {isSelected && <CheckCircle2 size={19} color="var(--cy)" />}
                   </button>
@@ -1803,11 +2348,27 @@ const PlayQuizPage: React.FC = () => {
               })}
 
               <div
-                onClick={() => { setErrorMsg(null); setAnswers((prev) => ({ ...prev, [question.id]: 'opt_4' })); }}
+                onClick={() => {
+                  setErrorMsg(null);
+                  setAnswers((prev) => ({ ...prev, [question.id]: 'opt_4' }));
+                }}
                 className={`o ${selectedId === 'opt_4' ? 'on' : ''}`}
-                style={{ flexDirection: 'column', alignItems: 'stretch', borderStyle: selectedId === 'opt_4' ? 'solid' : 'dashed' }}
+                style={{
+                  flexDirection: 'column',
+                  alignItems: 'stretch',
+                  borderStyle: selectedId === 'opt_4' ? 'solid' : 'dashed',
+                }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontWeight: 600, fontSize: '0.9rem', color: 'var(--cy)' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    fontWeight: 600,
+                    fontSize: '0.9rem',
+                    color: 'var(--cy)',
+                  }}
+                >
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}>
                     <Edit3 size={16} /> {t.writeOwnLabel}
                   </span>
@@ -1818,7 +2379,10 @@ const PlayQuizPage: React.FC = () => {
                   className="form-input"
                   placeholder={t.writeOwnPlaceholder}
                   value={customVal}
-                  onFocus={() => { setErrorMsg(null); setAnswers((prev) => ({ ...prev, [question.id]: 'opt_4' })); }}
+                  onFocus={() => {
+                    setErrorMsg(null);
+                    setAnswers((prev) => ({ ...prev, [question.id]: 'opt_4' }));
+                  }}
                   onChange={(e) => {
                     setErrorMsg(null);
                     setAnswers((prev) => ({ ...prev, [question.id]: 'opt_4' }));
@@ -1834,8 +2398,14 @@ const PlayQuizPage: React.FC = () => {
           <button
             type="button"
             className="b o"
-            disabled={currentIdx === 0 || (gameType === 'blind_ranking' && quiz.settings?.lockPositions !== false)}
-            onClick={() => { setErrorMsg(null); setCurrentIdx((i) => i - 1); }}
+            disabled={
+              currentIdx === 0 ||
+              (gameType === 'blind_ranking' && quiz.settings?.lockPositions !== false)
+            }
+            onClick={() => {
+              setErrorMsg(null);
+              setCurrentIdx((i) => i - 1);
+            }}
           >
             {t.backBtn}
           </button>
@@ -1850,10 +2420,19 @@ const PlayQuizPage: React.FC = () => {
                 setCurrentIdx((i) => i + 1);
               }}
             >
-              {gameType === 'two_truths' ? 'That’s the Lie ›' : gameType === 'guess_side' ? 'Lock In ›' : t.nextBtn}
+              {gameType === 'two_truths'
+                ? 'That’s the Lie ›'
+                : gameType === 'guess_side'
+                ? 'Lock In ›'
+                : t.nextBtn}
             </button>
           ) : (
-            <button type="button" disabled={submitting} className="b" onClick={() => handleFinish()}>
+            <button
+              type="button"
+              disabled={submitting}
+              className="b"
+              onClick={() => handleFinish()}
+            >
               {submitting ? 'Submitting...' : t.finishBtn}
             </button>
           )}
@@ -1870,7 +2449,9 @@ const ResultPage: React.FC = () => {
   const { lang, t } = useLang();
   const token = searchParams.get('token') || '';
 
-  const [result, setResult] = useState<SubmissionResult | null>((location.state as any)?.result || null);
+  const [result, setResult] = useState<SubmissionResult | null>(
+    (location.state as any)?.result || null
+  );
   const [quizData, setQuizData] = useState<PublicQuiz | null>(null);
   const [copiedScore, setCopiedScore] = useState(false);
 
@@ -1893,7 +2474,9 @@ const ResultPage: React.FC = () => {
       <div className="container" style={{ paddingTop: '3.5rem', textAlign: 'center' }}>
         <div className="g">
           <h1>Result Protected</h1>
-          <Link to="/explore" className="b">{t.exploreBtn}</Link>
+          <Link to="/explore" className="b">
+            {t.exploreBtn}
+          </Link>
         </div>
       </div>
     );
@@ -1930,7 +2513,11 @@ const ResultPage: React.FC = () => {
 
     ctx.fillStyle = '#FFFFFF';
     ctx.font = 'bold 72px sans-serif';
-    ctx.fillText(`${result.score}/${result.totalQuestions} (${result.scorePercentage}%)`, 64, 195);
+    ctx.fillText(
+      `${result.score}/${result.totalQuestions} (${result.scorePercentage}%)`,
+      64,
+      195
+    );
 
     ctx.fillStyle = '#4FD1E8';
     ctx.font = 'bold 30px sans-serif';
@@ -1938,7 +2525,11 @@ const ResultPage: React.FC = () => {
 
     ctx.fillStyle = '#A7B1C5';
     ctx.font = '23px sans-serif';
-    ctx.fillText(`Player: ${result.participantNickname}  |  By: ${result.creatorDisplayName}`, 64, 325);
+    ctx.fillText(
+      `Player: ${result.participantNickname}  |  By: ${result.creatorDisplayName}`,
+      64,
+      325
+    );
 
     ctx.font = '18px sans-serif';
     ctx.fillStyle = '#78859D';
@@ -1952,7 +2543,10 @@ const ResultPage: React.FC = () => {
 
   return (
     <div className="container animate-in" style={{ paddingTop: '2rem', maxWidth: '680px' }}>
-      <div className="game-stage" style={{ ['--a' as any]: modeMeta.accent, textAlign: 'center' }}>
+      <div
+        className="game-stage"
+        style={{ ['--a' as any]: modeMeta.accent, textAlign: 'center' }}
+      >
         <span className="t ok">{t.scoreRevealBadge}</span>
         <p style={{ color: 'var(--t2)', margin: '0.45rem 0 0.25rem' }}>
           {result.quizTitle} • by {result.creatorDisplayName}
@@ -1979,8 +2573,18 @@ const ResultPage: React.FC = () => {
                     ? d.customText || 'Custom Answer'
                     : d.options.find((o) => o.id === d.selectedOptionId)?.text || '';
                 return (
-                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
-                    <span><strong>Q{idx + 1}:</strong> {chosenText}</span>
+                  <div
+                    key={idx}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                    }}
+                  >
+                    <span>
+                      <strong>Q{idx + 1}:</strong> {chosenText}
+                    </span>
                     <span className={`t ${d.isCorrect ? 'ok' : 'w'}`}>
                       {d.isCorrect ? 'Correct ✓' : 'Wrong ✕'}
                     </span>
@@ -2000,8 +2604,18 @@ const ResultPage: React.FC = () => {
               {details.map((d, idx) => {
                 const chosen = d.options.find((o) => o.id === d.selectedOptionId)?.text || '';
                 return (
-                  <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '0.5rem' }}>
-                    <span><strong>{d.questionText}:</strong> {chosen}</span>
+                  <div
+                    key={idx}
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      gap: '0.5rem',
+                    }}
+                  >
+                    <span>
+                      <strong>{d.questionText}:</strong> {chosen}
+                    </span>
                     <span className={`t ${d.isCorrect ? 'ok' : 'w'}`}>
                       {d.isCorrect ? 'Match ✓' : 'Miss ✕'}
                     </span>
@@ -2051,10 +2665,18 @@ const ResultPage: React.FC = () => {
                   <div className="o" style={{ justifyContent: 'center', padding: '0.5rem' }}>
                     {userRank} · {d.questionText}
                   </div>
-                  <span style={{ fontWeight: 800, color: d.isCorrect ? 'var(--green)' : 'var(--red)' }}>
+                  <span
+                    style={{
+                      fontWeight: 800,
+                      color: d.isCorrect ? 'var(--green)' : 'var(--red)',
+                    }}
+                  >
                     {d.isCorrect ? '=' : '≠'}
                   </span>
-                  <div className={`o ${d.isCorrect ? 'good' : 'bad'}`} style={{ justifyContent: 'center', padding: '0.5rem' }}>
+                  <div
+                    className={`o ${d.isCorrect ? 'good' : 'bad'}`}
+                    style={{ justifyContent: 'center', padding: '0.5rem' }}
+                  >
                     {creatorRank} · {d.questionText}
                   </div>
                 </div>
@@ -2063,50 +2685,58 @@ const ResultPage: React.FC = () => {
           </div>
         )}
 
-        {details.length > 0 && gameType === 'would_you_rather' && quizData?.settings?.groupVoting !== false && (
-          <div className="g" style={{ textAlign: 'left', marginBottom: '1.4rem' }}>
-            <span className="lab" style={{ display: 'block', marginBottom: '0.7rem' }}>
-              Group Vote Comparison
-            </span>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
-              {details.map((d, idx) => {
-                const stat = quizData?.voteStats?.[d.questionId] || {
-                  opt_1: d.selectedOptionId === 'opt_1' ? 1 : 0,
-                  opt_2: d.selectedOptionId === 'opt_2' ? 1 : 0,
-                  total: 1,
-                };
-                const total = Math.max(stat.total, 1);
-                const pct1 = Math.round((stat.opt_1 / total) * 100);
-                const pct2 = 100 - pct1;
-                return (
-                  <div key={idx}>
-                    <strong style={{ display: 'block', marginBottom: '0.35rem' }}>
-                      {d.questionText}
-                    </strong>
-                    <div style={{ fontSize: '0.84rem', marginBottom: '0.25rem' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span>A: {d.options[0]?.text} {d.selectedOptionId === 'opt_1' && <strong>(Your Pick)</strong>}</span>
-                        <b>{pct1}%</b>
+        {details.length > 0 &&
+          gameType === 'would_you_rather' &&
+          quizData?.settings?.groupVoting !== false && (
+            <div className="g" style={{ textAlign: 'left', marginBottom: '1.4rem' }}>
+              <span className="lab" style={{ display: 'block', marginBottom: '0.7rem' }}>
+                Group Vote Comparison
+              </span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
+                {details.map((d, idx) => {
+                  const stat = quizData?.voteStats?.[d.questionId] || {
+                    opt_1: d.selectedOptionId === 'opt_1' ? 1 : 0,
+                    opt_2: d.selectedOptionId === 'opt_2' ? 1 : 0,
+                    total: 1,
+                  };
+                  const total = Math.max(stat.total, 1);
+                  const pct1 = Math.round((stat.opt_1 / total) * 100);
+                  const pct2 = 100 - pct1;
+                  return (
+                    <div key={idx}>
+                      <strong style={{ display: 'block', marginBottom: '0.35rem' }}>
+                        {d.questionText}
+                      </strong>
+                      <div style={{ fontSize: '0.84rem', marginBottom: '0.25rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span>
+                            A: {d.options[0]?.text}{' '}
+                            {d.selectedOptionId === 'opt_1' && <strong>(Your Pick)</strong>}
+                          </span>
+                          <b>{pct1}%</b>
+                        </div>
+                        <div className="bar">
+                          <i style={{ width: `${pct1}%` }} />
+                        </div>
                       </div>
-                      <div className="bar">
-                        <i style={{ width: `${pct1}%` }} />
+                      <div style={{ fontSize: '0.84rem', marginTop: '0.45rem' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                          <span>
+                            B: {d.options[1]?.text}{' '}
+                            {d.selectedOptionId === 'opt_2' && <strong>(Your Pick)</strong>}
+                          </span>
+                          <b>{pct2}%</b>
+                        </div>
+                        <div className="bar">
+                          <i style={{ width: `${pct2}%` }} />
+                        </div>
                       </div>
                     </div>
-                    <div style={{ fontSize: '0.84rem', marginTop: '0.45rem' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span>B: {d.options[1]?.text} {d.selectedOptionId === 'opt_2' && <strong>(Your Pick)</strong>}</span>
-                        <b>{pct2}%</b>
-                      </div>
-                      <div className="bar">
-                        <i style={{ width: `${pct2}%` }} />
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
         {result.customAnswers && result.customAnswers.length > 0 && (
           <div className="g" style={{ textAlign: 'left', marginBottom: '1.4rem' }}>
@@ -2122,8 +2752,21 @@ const ResultPage: React.FC = () => {
           </div>
         )}
 
-        <div style={{ display: 'flex', justifyContent: 'center', gap: '0.7rem', flexWrap: 'wrap', marginBottom: '1.5rem' }}>
-          <a href={`https://wa.me/?text=${encodeURIComponent(shareText)}`} target="_blank" rel="noopener noreferrer" className="b btn-whatsapp">
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: '0.7rem',
+            flexWrap: 'wrap',
+            marginBottom: '1.5rem',
+          }}
+        >
+          <a
+            href={`https://wa.me/?text=${encodeURIComponent(shareText)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="b btn-whatsapp"
+          >
             <MessageCircle size={18} />
             <span>{t.whatsappShareBtn}</span>
           </a>
@@ -2160,7 +2803,10 @@ const ResultPage: React.FC = () => {
         </div>
       </div>
 
-      <LeaderboardCard entries={quizData?.leaderboard} totalParticipants={quizData?.totalParticipants} />
+      <LeaderboardCard
+        entries={quizData?.leaderboard}
+        totalParticipants={quizData?.totalParticipants}
+      />
     </div>
   );
 };
@@ -2217,14 +2863,25 @@ const AmaInboxPage: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="container" style={{ paddingTop: '4rem', textAlign: 'center' }}>Loading AMA Inbox...</div>;
+    return (
+      <div className="container" style={{ paddingTop: '4rem', textAlign: 'center' }}>
+        Loading AMA Inbox...
+      </div>
+    );
   }
 
   if (!inbox) {
     return (
       <div className="container animate-in" style={{ paddingTop: '2.2rem', maxWidth: '600px' }}>
         <div className="game-stage" style={{ ['--a' as any]: '#5B9BFA' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', marginBottom: '1rem' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.85rem',
+              marginBottom: '1rem',
+            }}
+          >
             <GlassArt name="bubble" size={56} />
             <div>
               <span className="t">01 · Ask Me Anything</span>
@@ -2240,11 +2897,20 @@ const AmaInboxPage: React.FC = () => {
           {err && <div className="alert-error">{err}</div>}
           <div className="form-group">
             <label className="form-label">Your Display Name *</label>
-            <input className="form-input" placeholder="e.g., Alex" value={creatorName} onChange={(e) => setCreatorName(e.target.value)} />
+            <input
+              className="form-input"
+              placeholder="e.g., Alex"
+              value={creatorName}
+              onChange={(e) => setCreatorName(e.target.value)}
+            />
           </div>
           <div className="form-group">
             <label className="form-label">Inbox Prompt for Friends</label>
-            <input className="form-input" value={promptText} onChange={(e) => setPromptText(e.target.value)} />
+            <input
+              className="form-input"
+              value={promptText}
+              onChange={(e) => setPromptText(e.target.value)}
+            />
           </div>
           <button type="button" className="b" onClick={() => handleSaveInbox(true)}>
             Create My AMA Link
@@ -2263,7 +2929,16 @@ const AmaInboxPage: React.FC = () => {
   return (
     <div className="container animate-in" style={{ paddingTop: '2rem', maxWidth: '720px' }}>
       <div className="game-stage" style={{ ['--a' as any]: '#5B9BFA' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '0.75rem',
+            marginBottom: '1rem',
+          }}
+        >
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
             <GlassArt name="bubble" size={46} />
             <div>
@@ -2276,7 +2951,12 @@ const AmaInboxPage: React.FC = () => {
             <span className={`t ${inbox.isOpen ? 'ok' : 'w'}`}>
               {inbox.isOpen ? 'Inbox Open' : 'Inbox Closed'}
             </span>
-            <button type="button" className={`tg ${inbox.isOpen ? 'on' : ''}`} onClick={() => handleSaveInbox(!inbox.isOpen)} title="Toggle Inbox Open/Closed" />
+            <button
+              type="button"
+              className={`tg ${inbox.isOpen ? 'on' : ''}`}
+              onClick={() => handleSaveInbox(!inbox.isOpen)}
+              title="Toggle Inbox Open/Closed"
+            />
           </div>
         </div>
 
@@ -2285,24 +2965,49 @@ const AmaInboxPage: React.FC = () => {
         {err && <div className="alert-error">{err}</div>}
 
         <div className="seg" style={{ margin: '1.25rem 0' }}>
-          <button type="button" className={tab === 'private' ? 'on' : ''} onClick={() => setTab('private')}>
+          <button
+            type="button"
+            className={tab === 'private' ? 'on' : ''}
+            onClick={() => setTab('private')}
+          >
             Private Inbox ({privateList.length})
           </button>
-          <button type="button" className={tab === 'published' ? 'on' : ''} onClick={() => setTab('published')}>
+          <button
+            type="button"
+            className={tab === 'published' ? 'on' : ''}
+            onClick={() => setTab('published')}
+          >
             Published Answers ({publishedList.length})
           </button>
         </div>
 
         {shownList.length === 0 ? (
           <div className="g" style={{ textAlign: 'center', color: 'var(--t2)' }}>
-            {tab === 'private' ? 'No new private questions yet.' : 'You have not published any answers yet.'}
+            {tab === 'private'
+              ? 'No new private questions yet.'
+              : 'You have not published any answers yet.'}
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.9rem' }}>
             {shownList.map((q) => (
               <div key={q.id} className="g">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', fontSize: '0.82rem', color: 'var(--t2)' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '0.5rem',
+                  }}
+                >
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '0.4rem',
+                      fontSize: '0.82rem',
+                      color: 'var(--t2)',
+                    }}
+                  >
                     <GlassArt name="mask" size={20} /> Anonymous
                   </span>
                   <span className={`t ${q.status === 'published' ? 'ok' : ''}`}>
@@ -2315,18 +3020,44 @@ const AmaInboxPage: React.FC = () => {
                 </p>
 
                 {q.answerText && replyingId !== q.id && (
-                  <div style={{ padding: '0.75rem', borderRadius: '14px', background: 'rgba(255,255,255,0.05)', marginBottom: '0.8rem' }}>
-                    <span className="lab" style={{ display: 'block' }}>Your Reply</span>
+                  <div
+                    style={{
+                      padding: '0.75rem',
+                      borderRadius: '14px',
+                      background: 'rgba(255,255,255,0.05)',
+                      marginBottom: '0.8rem',
+                    }}
+                  >
+                    <span className="lab" style={{ display: 'block' }}>
+                      Your Reply
+                    </span>
                     <div>{q.answerText}</div>
                   </div>
                 )}
 
                 {replyingId === q.id ? (
                   <div style={{ marginTop: '0.75rem' }}>
-                    <textarea className="form-textarea" rows={3} placeholder="Write your answer..." value={answerDraft} onChange={(e) => setAnswerDraft(e.target.value)} />
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '0.75rem 0' }}>
+                    <textarea
+                      className="form-textarea"
+                      rows={3}
+                      placeholder="Write your answer..."
+                      value={answerDraft}
+                      onChange={(e) => setAnswerDraft(e.target.value)}
+                    />
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        margin: '0.75rem 0',
+                      }}
+                    >
                       <span>Publish to my public page</span>
-                      <button type="button" className={`tg ${publishToggle ? 'on' : ''}`} onClick={() => setPublishToggle((v) => !v)} />
+                      <button
+                        type="button"
+                        className={`tg ${publishToggle ? 'on' : ''}`}
+                        onClick={() => setPublishToggle((v) => !v)}
+                      />
                     </div>
                     <div style={{ display: 'flex', gap: '0.5rem' }}>
                       <button
@@ -2335,7 +3066,12 @@ const AmaInboxPage: React.FC = () => {
                         onClick={async () => {
                           try {
                             setErr(null);
-                            await api.manageAmaQuestion({ questionId: q.id, action: 'answer', answerText: answerDraft, publish: publishToggle });
+                            await api.manageAmaQuestion({
+                              questionId: q.id,
+                              action: 'answer',
+                              answerText: answerDraft,
+                              publish: publishToggle,
+                            });
                             setReplyingId(null);
                             await loadInbox();
                           } catch (e: any) {
@@ -2345,12 +3081,26 @@ const AmaInboxPage: React.FC = () => {
                       >
                         Save Answer
                       </button>
-                      <button type="button" className="b o btn-sm" onClick={() => setReplyingId(null)}>Cancel</button>
+                      <button
+                        type="button"
+                        className="b o btn-sm"
+                        onClick={() => setReplyingId(null)}
+                      >
+                        Cancel
+                      </button>
                     </div>
                   </div>
                 ) : (
                   <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-                    <button type="button" className="b o btn-sm" onClick={() => { setReplyingId(q.id); setAnswerDraft(q.answerText || ''); setPublishToggle(true); }}>
+                    <button
+                      type="button"
+                      className="b o btn-sm"
+                      onClick={() => {
+                        setReplyingId(q.id);
+                        setAnswerDraft(q.answerText || '');
+                        setPublishToggle(true);
+                      }}
+                    >
                       Reply
                     </button>
                     {q.status === 'published' && (
@@ -2360,7 +3110,10 @@ const AmaInboxPage: React.FC = () => {
                         onClick={async () => {
                           try {
                             setErr(null);
-                            await api.manageAmaQuestion({ questionId: q.id, action: 'unpublish' });
+                            await api.manageAmaQuestion({
+                              questionId: q.id,
+                              action: 'unpublish',
+                            });
                             await loadInbox();
                           } catch (e: any) {
                             setErr(e.message || 'Action failed.');
@@ -2376,7 +3129,10 @@ const AmaInboxPage: React.FC = () => {
                       onClick={async () => {
                         try {
                           setErr(null);
-                          await api.manageAmaQuestion({ questionId: q.id, action: 'delete' });
+                          await api.manageAmaQuestion({
+                            questionId: q.id,
+                            action: 'delete',
+                          });
                           await loadInbox();
                         } catch (e: any) {
                           setErr(e.message || 'Action failed.');
@@ -2392,7 +3148,10 @@ const AmaInboxPage: React.FC = () => {
                         if (!window.confirm('Report and block this anonymous sender?')) return;
                         try {
                           setErr(null);
-                          await api.manageAmaQuestion({ questionId: q.id, action: 'block_report' });
+                          await api.manageAmaQuestion({
+                            questionId: q.id,
+                            action: 'block_report',
+                          });
                           await loadInbox();
                         } catch (e: any) {
                           setErr(e.message || 'Action failed.');
@@ -2427,10 +3186,16 @@ const PublicAmaPage: React.FC = () => {
     });
   };
 
-  useEffect(() => { load(); }, [slug]);
+  useEffect(() => {
+    load();
+  }, [slug]);
 
   if (status === 'loading') {
-    return <div className="container" style={{ paddingTop: '4rem', textAlign: 'center' }}>Loading AMA...</div>;
+    return (
+      <div className="container" style={{ paddingTop: '4rem', textAlign: 'center' }}>
+        Loading AMA...
+      </div>
+    );
   }
 
   if (status !== 'ok' || !inbox) {
@@ -2438,7 +3203,9 @@ const PublicAmaPage: React.FC = () => {
       <div className="container animate-in" style={{ paddingTop: '3.5rem', maxWidth: '540px' }}>
         <div className="g" style={{ textAlign: 'center' }}>
           <h1>AMA Inbox Not Found</h1>
-          <Link to="/inbox" className="b">Create Your Own AMA Inbox</Link>
+          <Link to="/inbox" className="b">
+            Create Your Own AMA Inbox
+          </Link>
         </div>
       </div>
     );
@@ -2456,12 +3223,21 @@ const PublicAmaPage: React.FC = () => {
         </div>
 
         {!inbox.isOpen ? (
-          <div className="alert-error">{inbox.creatorDisplayName} has temporarily paused new questions.</div>
+          <div className="alert-error">
+            {inbox.creatorDisplayName} has temporarily paused new questions.
+          </div>
         ) : sent ? (
           <div className="alert-success">
             Your anonymous question was sent privately!
             <div style={{ marginTop: '0.6rem' }}>
-              <button type="button" className="b o btn-sm" onClick={() => { setQuestionText(''); setSent(false); }}>
+              <button
+                type="button"
+                className="b o btn-sm"
+                onClick={() => {
+                  setQuestionText('');
+                  setSent(false);
+                }}
+              >
                 Send Another Question
               </button>
             </div>
@@ -2469,9 +3245,24 @@ const PublicAmaPage: React.FC = () => {
         ) : (
           <div>
             {err && <div className="alert-error">{err}</div>}
-            <textarea className="form-textarea" rows={4} placeholder="Send an anonymous question or confession..." value={questionText} onChange={(e) => setQuestionText(e.target.value)} />
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '0.75rem' }}>
-              <span style={{ fontSize: '0.8rem', color: 'var(--t2)' }}>🔒 Sender name hidden • Private until answered</span>
+            <textarea
+              className="form-textarea"
+              rows={4}
+              placeholder="Send an anonymous question or confession..."
+              value={questionText}
+              onChange={(e) => setQuestionText(e.target.value)}
+            />
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginTop: '0.75rem',
+              }}
+            >
+              <span style={{ fontSize: '0.8rem', color: 'var(--t2)' }}>
+                🔒 Sender name hidden • Private until answered
+              </span>
               <button
                 type="button"
                 className="b"
@@ -2501,7 +3292,14 @@ const PublicAmaPage: React.FC = () => {
                 <div key={q.id} className="g">
                   <div style={{ fontSize: '0.82rem', color: 'var(--t2)' }}>Anonymous asked:</div>
                   <p style={{ fontWeight: 700, margin: '0.2rem 0 0.65rem' }}>“{q.questionText}”</p>
-                  <div style={{ padding: '0.65rem 0.9rem', borderRadius: '14px', background: 'rgba(91,155,250,0.14)', border: '1px solid rgba(91,155,250,0.3)' }}>
+                  <div
+                    style={{
+                      padding: '0.65rem 0.9rem',
+                      borderRadius: '14px',
+                      background: 'rgba(91,155,250,0.14)',
+                      border: '1px solid rgba(91,155,250,0.3)',
+                    }}
+                  >
                     <strong>{inbox.creatorDisplayName}:</strong> {q.answerText}
                   </div>
                 </div>
@@ -2524,7 +3322,11 @@ const WrappedPage: React.FC = () => {
   }, [user?.id]);
 
   if (!recap) {
-    return <div className="container" style={{ paddingTop: '4rem', textAlign: 'center' }}>Loading Wrapped...</div>;
+    return (
+      <div className="container" style={{ paddingTop: '4rem', textAlign: 'center' }}>
+        Loading Wrapped...
+      </div>
+    );
   }
 
   const downloadWrappedCard = () => {
@@ -2577,12 +3379,25 @@ const WrappedPage: React.FC = () => {
     <div className="container animate-in" style={{ paddingTop: '2rem', maxWidth: '560px' }}>
       <div className="game-stage" style={{ ['--a' as any]: '#D58BF5' }}>
         <div style={{ display: 'flex', gap: '6px', marginBottom: '1.2rem' }}>
-          <div className="bar" style={{ flex: 1 }}><i style={{ width: '100%' }} /></div>
-          <div className="bar" style={{ flex: 1 }}><i style={{ width: slide === 'card' ? '100%' : '35%' }} /></div>
+          <div className="bar" style={{ flex: 1 }}>
+            <i style={{ width: '100%' }} />
+          </div>
+          <div className="bar" style={{ flex: 1 }}>
+            <i style={{ width: slide === 'card' ? '100%' : '35%' }} />
+          </div>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-          <h1 className="gr" style={{ margin: 0, fontSize: '1.8rem' }}>BFFQuest Wrapped</h1>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '1rem',
+          }}
+        >
+          <h1 className="gr" style={{ margin: 0, fontSize: '1.8rem' }}>
+            BFFQuest Wrapped
+          </h1>
           <GlassArt name="spark" size={42} />
         </div>
 
@@ -2591,26 +3406,51 @@ const WrappedPage: React.FC = () => {
             <p className="lab">Your Year in Quizzes</p>
             <h2 style={{ margin: '0.5rem 0' }}>No Gameplay History Yet</h2>
             <p style={{ color: 'var(--t2)', marginBottom: '1.5rem' }}>
-              Real totals appear once your play history exists. Play or create at least 1 game to unlock your personalized BFFQuest Wrapped!
+              Real totals appear once your play history exists. Play or create at least 1 game to
+              unlock your personalized BFFQuest Wrapped!
             </p>
-            <Link to="/explore" className="b">Play Your First Game</Link>
+            <Link to="/explore" className="b">
+              Play Your First Game
+            </Link>
           </div>
         ) : (
           <>
             <div className="seg" style={{ marginBottom: '1.25rem' }}>
-              <button type="button" className={slide === 'recap' ? 'on' : ''} onClick={() => setSlide('recap')}>1 · Recap Slide</button>
-              <button type="button" className={slide === 'card' ? 'on' : ''} onClick={() => setSlide('card')}>2 · Share Card</button>
+              <button
+                type="button"
+                className={slide === 'recap' ? 'on' : ''}
+                onClick={() => setSlide('recap')}
+              >
+                1 · Recap Slide
+              </button>
+              <button
+                type="button"
+                className={slide === 'card' ? 'on' : ''}
+                onClick={() => setSlide('card')}
+              >
+                2 · Share Card
+              </button>
             </div>
 
             {slide === 'recap' ? (
               <div style={{ textAlign: 'center', padding: '1rem 0' }}>
                 <span className="lab">Your Real Activity Recap</span>
-                <div className="gr" style={{ fontSize: '5.2rem', fontWeight: 800, lineHeight: 1.05 }}>
+                <div
+                  className="gr"
+                  style={{ fontSize: '5.2rem', fontWeight: 800, lineHeight: 1.05 }}
+                >
                   {recap.totalPlayed + recap.totalCreated}
                 </div>
                 <h2 style={{ margin: '0.3rem 0 0.5rem' }}>Total Moments Played & Created</h2>
-                <p style={{ color: 'var(--t2)' }}>Top Game: <strong>{recap.topGameTitle}</strong></p>
-                <button type="button" className="b" style={{ marginTop: '1rem', width: '100%' }} onClick={() => setSlide('card')}>
+                <p style={{ color: 'var(--t2)' }}>
+                  Top Game: <strong>{recap.topGameTitle}</strong>
+                </p>
+                <button
+                  type="button"
+                  className="b"
+                  style={{ marginTop: '1rem', width: '100%' }}
+                  onClick={() => setSlide('card')}
+                >
                   View Shareable Card ›
                 </button>
               </div>
@@ -2618,7 +3458,9 @@ const WrappedPage: React.FC = () => {
               <div>
                 <div className="grid-2" style={{ marginBottom: '1.25rem' }}>
                   <div className="g">
-                    <div style={{ fontSize: '1.75rem', fontWeight: 800 }}>{recap.bestScorePct}%</div>
+                    <div style={{ fontSize: '1.75rem', fontWeight: 800 }}>
+                      {recap.bestScorePct}%
+                    </div>
                     <span style={{ fontSize: '0.82rem', color: 'var(--t2)' }}>Best Score</span>
                   </div>
                   <div className="g">
@@ -2626,16 +3468,27 @@ const WrappedPage: React.FC = () => {
                     <span style={{ fontSize: '0.82rem', color: 'var(--t2)' }}>Games Played</span>
                   </div>
                   <div className="g">
-                    <div style={{ fontSize: '1.75rem', fontWeight: 800 }}>{recap.totalFriendsReached}</div>
-                    <span style={{ fontSize: '0.82rem', color: 'var(--t2)' }}>Friends Reached</span>
+                    <div style={{ fontSize: '1.75rem', fontWeight: 800 }}>
+                      {recap.totalFriendsReached}
+                    </div>
+                    <span style={{ fontSize: '0.82rem', color: 'var(--t2)' }}>
+                      Friends Reached
+                    </span>
                   </div>
                   <div className="g">
-                    <div style={{ fontSize: '1.75rem', fontWeight: 800 }}>{recap.currentStreak} 🔥</div>
+                    <div style={{ fontSize: '1.75rem', fontWeight: 800 }}>
+                      {recap.currentStreak} 🔥
+                    </div>
                     <span style={{ fontSize: '0.82rem', color: 'var(--t2)' }}>Daily Streak</span>
                   </div>
                 </div>
 
-                <button type="button" className="b" style={{ width: '100%' }} onClick={downloadWrappedCard}>
+                <button
+                  type="button"
+                  className="b"
+                  style={{ width: '100%' }}
+                  onClick={downloadWrappedCard}
+                >
                   <Download size={18} /> Download Wrapped Card (PNG)
                 </button>
               </div>
@@ -2662,28 +3515,43 @@ const DailyQuestPage: React.FC = () => {
   const last28Days = Array.from({ length: 28 }, (_, idx) => {
     const d = new Date();
     d.setDate(d.getDate() - (27 - idx));
-    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(
+      d.getDate()
+    ).padStart(2, '0')}`;
     return { dayNum: d.getDate(), key, done: completedSet.has(key) };
   });
 
-  const targetRoute = status.quest.taskType === 'create_any' ? '/create' : '/q/sample-best-friend-quiz';
+  const targetRoute =
+    status.quest.taskType === 'create_any' ? '/create' : '/q/sample-best-friend-quiz';
 
   return (
     <div className="container animate-in" style={{ paddingTop: '2rem', maxWidth: '640px' }}>
       <div className="game-stage" style={{ ['--a' as any]: '#3FD08A' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '1rem',
+          }}
+        >
           <h1 style={{ margin: 0, fontSize: '1.7rem' }}>Daily Quest</h1>
           <span className="t ok">🔥 {status.currentStreak} Day Streak</span>
         </div>
 
-        <div className="g" style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.4rem' }}>
+        <div
+          className="g"
+          style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '1.4rem' }}
+        >
           <GlassArt name="flame" size={60} />
           <div style={{ flex: 1 }}>
             <span className={`t ${status.isCompletedToday ? 'ok' : 'w'}`}>
               {status.isCompletedToday ? 'Completed Today ✓' : 'Today’s Challenge'}
             </span>
             <h3 style={{ margin: '0.35rem 0 0.2rem' }}>{status.quest.title[lang]}</h3>
-            <p style={{ margin: 0, color: 'var(--t2)', fontSize: '0.88rem' }}>{status.quest.description[lang]}</p>
+            <p style={{ margin: 0, color: 'var(--t2)', fontSize: '0.88rem' }}>
+              {status.quest.description[lang]}
+            </p>
           </div>
         </div>
 
@@ -2694,12 +3562,16 @@ const DailyQuestPage: React.FC = () => {
         )}
 
         <div className="g" style={{ marginBottom: '1.4rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.6rem' }}>
+          <div
+            style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.6rem' }}
+          >
             <span className="lab">28-Day Activity Calendar</span>
             <span style={{ fontSize: '0.8rem', color: 'var(--t2)' }}>{status.todayKey}</span>
           </div>
           <div className="wk">
-            {daysOfWeek.map((d, i) => (<span key={i}>{d}</span>))}
+            {daysOfWeek.map((d, i) => (
+              <span key={i}>{d}</span>
+            ))}
           </div>
           <div className="cal">
             {last28Days.map((item) => (
@@ -2718,10 +3590,24 @@ const DailyQuestPage: React.FC = () => {
             {BADGES.map((b) => {
               const unlocked = status.unlockedBadges.includes(b.id);
               return (
-                <div key={b.id} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', padding: '0.65rem', borderRadius: '16px', background: 'rgba(255,255,255,0.04)', opacity: unlocked ? 1 : 0.4, filter: unlocked ? 'none' : 'grayscale(1)' }}>
+                <div
+                  key={b.id}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.75rem',
+                    padding: '0.65rem',
+                    borderRadius: '16px',
+                    background: 'rgba(255,255,255,0.04)',
+                    opacity: unlocked ? 1 : 0.4,
+                    filter: unlocked ? 'none' : 'grayscale(1)',
+                  }}
+                >
                   <GlassArt name="badge" size={38} />
                   <div>
-                    <strong style={{ display: 'block', fontSize: '0.9rem' }}>{b.title[lang]}</strong>
+                    <strong style={{ display: 'block', fontSize: '0.9rem' }}>
+                      {b.title[lang]}
+                    </strong>
                     <span style={{ fontSize: '0.78rem', color: 'var(--t2)' }}>{b.desc[lang]}</span>
                   </div>
                 </div>
@@ -2758,11 +3644,14 @@ const DashboardPage: React.FC = () => {
     }
   };
 
-  useEffect(() => { load(); }, [user?.id]);
+  useEffect(() => {
+    load();
+  }, [user?.id]);
 
   const totalSubs = quizzes.reduce((acc, q) => acc + q.submissionCount, 0);
   const totalWeightedSum = quizzes.reduce(
-    (acc, q) => acc + q.submissions.reduce((sAcc, sub) => sAcc + Number(sub.scorePercentage || 0), 0),
+    (acc, q) =>
+      acc + q.submissions.reduce((sAcc, sub) => sAcc + Number(sub.scorePercentage || 0), 0),
     0
   );
   const weightedAvg = totalSubs > 0 ? Math.round(totalWeightedSum / totalSubs) : 0;
@@ -2771,24 +3660,66 @@ const DashboardPage: React.FC = () => {
 
   return (
     <div className="container animate-in" style={{ paddingTop: '2rem' }}>
-      <div className="g card-elevated" style={{ marginBottom: '1.6rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+      <div
+        className="g card-elevated"
+        style={{
+          marginBottom: '1.6rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '1rem',
+        }}
+      >
         {user ? (
           <>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.95rem', flexWrap: 'wrap' }}>
-              <div className="user-avatar-badge" style={{ width: 52, height: 52, fontSize: '1.25rem' }}>
-                {user.avatarUrl ? <img src={user.avatarUrl} alt={user.displayName} /> : user.displayName.slice(0, 1).toUpperCase()}
+              <div
+                className="user-avatar-badge"
+                style={{ width: 52, height: 52, fontSize: '1.25rem' }}
+              >
+                {user.avatarUrl ? (
+                  <img src={user.avatarUrl} alt={user.displayName} />
+                ) : (
+                  user.displayName.slice(0, 1).toUpperCase()
+                )}
               </div>
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                <div
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}
+                >
                   {editingName ? (
                     <div style={{ display: 'inline-flex', gap: '0.4rem', alignItems: 'center' }}>
-                      <input className="form-input" style={{ minHeight: 34, padding: '0.25rem 0.65rem', width: 170 }} value={nameDraft} onChange={(e) => setNameDraft(e.target.value)} />
-                      <button type="button" className="b btn-sm" onClick={async () => { await api.updateProfileName(nameDraft); await refreshUser(); setEditingName(false); }}>Save</button>
+                      <input
+                        className="form-input"
+                        style={{ minHeight: 34, padding: '0.25rem 0.65rem', width: 170 }}
+                        value={nameDraft}
+                        onChange={(e) => setNameDraft(e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        className="b btn-sm"
+                        onClick={async () => {
+                          await api.updateProfileName(nameDraft);
+                          await refreshUser();
+                          setEditingName(false);
+                        }}
+                      >
+                        Save
+                      </button>
                     </div>
                   ) : (
                     <>
                       <h2 style={{ margin: 0, fontSize: '1.3rem' }}>{user.displayName}</h2>
-                      <button type="button" className="b o btn-sm" style={{ minHeight: 28, padding: '0.15rem 0.55rem', fontSize: '0.74rem' }} onClick={() => { setNameDraft(user.displayName); setEditingName(true); }}>
+                      <button
+                        type="button"
+                        className="b o btn-sm"
+                        style={{ minHeight: 28, padding: '0.15rem 0.55rem', fontSize: '0.74rem' }}
+                        onClick={() => {
+                          setNameDraft(user.displayName);
+                          setEditingName(true);
+                        }}
+                      >
                         <Edit3 size={12} /> Edit
                       </button>
                     </>
@@ -2796,13 +3727,22 @@ const DashboardPage: React.FC = () => {
                   <span className="t ok">Cloud Synced ({user.provider})</span>
                 </div>
                 <div style={{ fontSize: '0.84rem', color: 'var(--t2)', marginTop: '0.15rem' }}>
-                  {user.email} • Permanent ID: <code style={{ color: 'var(--cy)' }}>{user.id.slice(0, 8)}...</code>
+                  {user.email} • Permanent ID:{' '}
+                  <code style={{ color: 'var(--cy)' }}>{user.id.slice(0, 8)}...</code>
                 </div>
               </div>
             </div>
 
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
-              <button type="button" className="b o btn-sm" onClick={async () => { await api.signOut(); await refreshUser(); await load(); }}>
+              <button
+                type="button"
+                className="b o btn-sm"
+                onClick={async () => {
+                  await api.signOut();
+                  await refreshUser();
+                  await load();
+                }}
+              >
                 <LogOut size={15} />
                 <span>{lang === 'bn' ? 'লগআউট' : 'Sign Out'}</span>
               </button>
@@ -2811,7 +3751,12 @@ const DashboardPage: React.FC = () => {
                 type="button"
                 className="b x btn-sm"
                 onClick={async () => {
-                  if (!window.confirm('Permanently delete your profile, created games, AMA inbox, and all cloud data?')) return;
+                  if (
+                    !window.confirm(
+                      'Permanently delete your profile, created games, AMA inbox, and all cloud data?'
+                    )
+                  )
+                    return;
                   try {
                     await api.deleteMyAccountData();
                     await refreshUser();
@@ -2833,10 +3778,14 @@ const DashboardPage: React.FC = () => {
               <div>
                 <span className="t w">Guest Session</span>
                 <h3 style={{ margin: '0.2rem 0 0.1rem' }}>
-                  {lang === 'bn' ? 'আপনার সব গেম ও স্কোর আজীবন সংরক্ষিত রাখতে লগইন করুন' : 'Save Your Quizzes, Inbox & Streaks Forever'}
+                  {lang === 'bn'
+                    ? 'আপনার সব গেম ও স্কোর আজীবন সংরক্ষিত রাখতে লগইন করুন'
+                    : 'Save Your Quizzes, Inbox & Streaks Forever'}
                 </h3>
                 <p style={{ margin: 0, fontSize: '0.86rem', color: 'var(--t2)' }}>
-                  {lang === 'bn' ? 'Google, Facebook বা ইমেইল দিয়ে লগইন করলে যেকোনো ডিভাইস থেকে আপনার সব ডাটা ফিরে পাবেন।' : 'Sign in with Google, Facebook, or Email so your data stays tied to your permanent Cloud ID.'}
+                  {lang === 'bn'
+                    ? 'Google, Facebook বা ইমেইল দিয়ে লগইন করলে যেকোনো ডিভাইস থেকে আপনার সব ডাটা ফিরে পাবেন।'
+                    : 'Sign in with Google, Facebook, or Email so your data stays tied to your permanent Cloud ID.'}
                 </p>
               </div>
             </div>
@@ -2853,13 +3802,30 @@ const DashboardPage: React.FC = () => {
         )}
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '0.5rem' }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '1rem',
+          marginBottom: '0.5rem',
+        }}
+      >
         <h1 style={{ margin: 0 }}>{t.dashboardTitle}</h1>
         <div style={{ display: 'flex', gap: '0.55rem', flexWrap: 'wrap' }}>
-          <Link to="/wrapped" className="b o btn-sm">✨ Wrapped</Link>
-          <Link to="/daily" className="b o btn-sm">🔥 Daily Quest</Link>
-          <button type="button" className="b o btn-sm" onClick={load}><RefreshCw size={15} /></button>
-          <Link to="/create" className="b btn-sm">+ {t.navCreate}</Link>
+          <Link to="/wrapped" className="b o btn-sm">
+            ✨ Wrapped
+          </Link>
+          <Link to="/daily" className="b o btn-sm">
+            🔥 Daily Quest
+          </Link>
+          <button type="button" className="b o btn-sm" onClick={load}>
+            <RefreshCw size={15} />
+          </button>
+          <Link to="/create" className="b btn-sm">
+            + {t.navCreate}
+          </Link>
         </div>
       </div>
       <p style={{ color: 'var(--t2)', marginTop: 0, marginBottom: '1.5rem' }}>{t.dashboardSub}</p>
@@ -2877,22 +3843,46 @@ const DashboardPage: React.FC = () => {
         </div>
         <div className="g">
           <span className="lab">{t.avgScore}</span>
-          <strong className="gr" style={{ display: 'block', fontSize: '2rem' }}>{weightedAvg}%</strong>
+          <strong className="gr" style={{ display: 'block', fontSize: '2rem' }}>
+            {weightedAvg}%
+          </strong>
         </div>
       </div>
 
       <div className="seg" style={{ marginBottom: '1.25rem', maxWidth: '420px' }}>
-        <button type="button" className={filter === 'all' ? 'on' : ''} onClick={() => setFilter('all')}>All ({quizzes.length})</button>
-        <button type="button" className={filter === 'published' ? 'on' : ''} onClick={() => setFilter('published')}>Live</button>
-        <button type="button" className={filter === 'disabled' ? 'on' : ''} onClick={() => setFilter('disabled')}>Paused</button>
+        <button
+          type="button"
+          className={filter === 'all' ? 'on' : ''}
+          onClick={() => setFilter('all')}
+        >
+          All ({quizzes.length})
+        </button>
+        <button
+          type="button"
+          className={filter === 'published' ? 'on' : ''}
+          onClick={() => setFilter('published')}
+        >
+          Live
+        </button>
+        <button
+          type="button"
+          className={filter === 'disabled' ? 'on' : ''}
+          onClick={() => setFilter('disabled')}
+        >
+          Paused
+        </button>
       </div>
 
       {loading ? (
-        <div className="g" style={{ textAlign: 'center' }}>Loading your games...</div>
+        <div className="g" style={{ textAlign: 'center' }}>
+          Loading your games...
+        </div>
       ) : shownQuizzes.length === 0 ? (
         <div className="g" style={{ textAlign: 'center', padding: '2.5rem 1.5rem' }}>
           <p style={{ color: 'var(--t2)', marginBottom: '1.25rem' }}>{t.noQuizzesYet}</p>
-          <Link to="/create" className="b">{t.createBtn}</Link>
+          <Link to="/create" className="b">
+            {t.createBtn}
+          </Link>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
@@ -2903,15 +3893,26 @@ const DashboardPage: React.FC = () => {
 
             return (
               <div key={q.id} className="g">
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                    gap: '0.75rem',
+                  }}
+                >
                   <div>
                     <div style={{ display: 'flex', gap: '0.45rem', alignItems: 'center' }}>
-                      <span className={`t ${q.status === 'published' ? 'ok' : 'w'}`}>{q.status.toUpperCase()}</span>
+                      <span className={`t ${q.status === 'published' ? 'ok' : 'w'}`}>
+                        {q.status.toUpperCase()}
+                      </span>
                       <span className="t">{modeMeta.title[lang]}</span>
                     </div>
                     <h3 style={{ margin: '0.4rem 0 0.15rem' }}>{q.title}</h3>
                     <span style={{ fontSize: '0.86rem', color: 'var(--t2)' }}>
-                      {q.questionCount} {t.questionsCount} • {q.submissionCount} {t.participantsCount}
+                      {q.questionCount} {t.questionsCount} • {q.submissionCount}{' '}
+                      {t.participantsCount}
                     </span>
                   </div>
 
@@ -2933,26 +3934,76 @@ const DashboardPage: React.FC = () => {
                       <span>{isCopied ? t.copiedBtn : t.copyLinkBtn}</span>
                     </button>
 
-                    <Link to={`/q/${q.slug}`} className="b o btn-sm"><Eye size={15} /> {t.openQuizBtn}</Link>
-                    <button type="button" className="b o btn-sm" onClick={async () => { try { await api.toggleQuizStatus(q.id, q.status); await load(); } catch (e: any) { setErr(e.message); } }}>
+                    <Link to={`/q/${q.slug}`} className="b o btn-sm">
+                      <Eye size={15} /> {t.openQuizBtn}
+                    </Link>
+                    <button
+                      type="button"
+                      className="b o btn-sm"
+                      onClick={async () => {
+                        try {
+                          await api.toggleQuizStatus(q.id, q.status);
+                          await load();
+                        } catch (e: any) {
+                          setErr(e.message);
+                        }
+                      }}
+                    >
                       {q.status === 'published' ? t.pauseBtn : t.activateBtn}
                     </button>
-                    <button type="button" className="b x btn-sm" onClick={async () => { if (!window.confirm(t.confirmDeleteQuiz)) return; try { await api.deleteQuiz(q.id); await load(); } catch (e: any) { setErr(e.message); } }}>
+                    <button
+                      type="button"
+                      className="b x btn-sm"
+                      onClick={async () => {
+                        if (!window.confirm(t.confirmDeleteQuiz)) return;
+                        try {
+                          await api.deleteQuiz(q.id);
+                          await load();
+                        } catch (e: any) {
+                          setErr(e.message);
+                        }
+                      }}
+                    >
                       {t.deleteBtn}
                     </button>
                   </div>
                 </div>
 
                 {q.submissions.length > 0 && (
-                  <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                    <strong style={{ display: 'block', fontSize: '0.86rem', marginBottom: '0.6rem' }}>{t.recentSubmissions}</strong>
+                  <div
+                    style={{
+                      marginTop: '1rem',
+                      paddingTop: '1rem',
+                      borderTop: '1px solid rgba(255,255,255,0.1)',
+                    }}
+                  >
+                    <strong
+                      style={{ display: 'block', fontSize: '0.86rem', marginBottom: '0.6rem' }}
+                    >
+                      {t.recentSubmissions}
+                    </strong>
                     <div className="grid-2">
                       {q.submissions.map((s) => (
-                        <div key={s.submissionId} style={{ padding: '0.75rem', borderRadius: '14px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.09)' }}>
-                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div
+                          key={s.submissionId}
+                          style={{
+                            padding: '0.75rem',
+                            borderRadius: '14px',
+                            background: 'rgba(255,255,255,0.04)',
+                            border: '1px solid rgba(255,255,255,0.09)',
+                          }}
+                        >
+                          <div
+                            style={{
+                              display: 'flex',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                            }}
+                          >
                             <strong>{s.participantNickname}</strong>
                             <span style={{ color: 'var(--cy)', fontWeight: 700 }}>
-                              {s.score}/{s.totalQuestions} ({Math.round(Number(s.scorePercentage))}%)
+                              {s.score}/{s.totalQuestions} ({Math.round(Number(s.scorePercentage))}
+                              %)
                             </span>
                           </div>
                         </div>
@@ -3003,18 +4054,38 @@ const AdminPage: React.FC = () => {
     return (
       <div className="container animate-in" style={{ paddingTop: '3rem', maxWidth: '460px' }}>
         <div className="game-stage">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', marginBottom: '0.5rem' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.6rem',
+              marginBottom: '0.5rem',
+            }}
+          >
             <KeyRound size={22} color="var(--cy)" />
             <h1 style={{ margin: 0, fontSize: '1.5rem' }}>{t.adminTitle}</h1>
           </div>
           <p style={{ color: 'var(--t2)', fontSize: '0.9rem' }}>
-            Enter your server-verified Admin Passkey to moderate all games, submissions, AMA inboxes, and abuse reports.
+            Enter your server-verified Admin Passkey to moderate all games, submissions, AMA
+            inboxes, and abuse reports.
           </p>
           {err && <div className="alert-error">{err}</div>}
-          <form onSubmit={(e) => { e.preventDefault(); loadAdmin(passkey); }}>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              loadAdmin(passkey);
+            }}
+          >
             <div className="form-group">
               <label className="form-label">Admin Passkey *</label>
-              <input type="password" className="form-input" placeholder="Enter Admin Passkey" required value={passkey} onChange={(e) => setPasskey(e.target.value)} />
+              <input
+                type="password"
+                className="form-input"
+                placeholder="Enter Admin Passkey"
+                required
+                value={passkey}
+                onChange={(e) => setPasskey(e.target.value)}
+              />
             </div>
             <button type="submit" disabled={loading} className="b" style={{ width: '100%' }}>
               {loading ? 'Verifying...' : 'Unlock Admin Panel'}
@@ -3036,14 +4107,36 @@ const AdminPage: React.FC = () => {
 
   return (
     <div className="container animate-in" style={{ paddingTop: '2rem' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '1rem',
+          marginBottom: '1.5rem',
+        }}
+      >
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
           <GlassArt name="badge" size={42} />
           <h1 style={{ margin: 0, fontSize: '1.75rem' }}>{t.adminTitle}</h1>
         </div>
         <div style={{ display: 'flex', gap: '0.6rem' }}>
-          <button type="button" className="b o btn-sm" onClick={() => loadAdmin(passkey)}><RefreshCw size={15} /> Refresh</button>
-          <button type="button" className="b x btn-sm" onClick={() => { saveAdminKey(''); setPasskey(''); setUnlocked(false); setData(null); }}>Lock Admin</button>
+          <button type="button" className="b o btn-sm" onClick={() => loadAdmin(passkey)}>
+            <RefreshCw size={15} /> Refresh
+          </button>
+          <button
+            type="button"
+            className="b x btn-sm"
+            onClick={() => {
+              saveAdminKey('');
+              setPasskey('');
+              setUnlocked(false);
+              setData(null);
+            }}
+          >
+            Lock Admin
+          </button>
         </div>
       </div>
 
@@ -3056,15 +4149,25 @@ const AdminPage: React.FC = () => {
         </div>
         <div className="g">
           <span className="lab">Friend Plays</span>
-          <strong className="gr" style={{ display: 'block', fontSize: '2.1rem' }}>{data.totalSubmissions}</strong>
+          <strong className="gr" style={{ display: 'block', fontSize: '2.1rem' }}>
+            {data.totalSubmissions}
+          </strong>
         </div>
         <div className="g">
           <span className="lab">AMA Questions</span>
-          <strong style={{ display: 'block', fontSize: '2.1rem' }}>{data.totalAmaQuestions ?? 0}</strong>
+          <strong style={{ display: 'block', fontSize: '2.1rem' }}>
+            {data.totalAmaQuestions ?? 0}
+          </strong>
         </div>
         <div className="g">
           <span className="lab">Open Reports</span>
-          <strong style={{ display: 'block', fontSize: '2.1rem', color: data.openReports > 0 ? 'var(--red)' : 'var(--green)' }}>
+          <strong
+            style={{
+              display: 'block',
+              fontSize: '2.1rem',
+              color: data.openReports > 0 ? 'var(--red)' : 'var(--green)',
+            }}
+          >
             {data.openReports}
           </strong>
         </div>
@@ -3077,20 +4180,51 @@ const AdminPage: React.FC = () => {
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
             {data.reports.map((r) => (
-              <div key={r.id} style={{ padding: '0.9rem', borderRadius: '16px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+              <div
+                key={r.id}
+                style={{
+                  padding: '0.9rem',
+                  borderRadius: '16px',
+                  background: 'rgba(255,255,255,0.04)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: '0.75rem',
+                }}
+              >
                 <div>
-                  <span className={`t ${r.status === 'resolved' ? 'ok' : 'w'}`}>{r.status.toUpperCase()}</span>{' '}
+                  <span className={`t ${r.status === 'resolved' ? 'ok' : 'w'}`}>
+                    {r.status.toUpperCase()}
+                  </span>{' '}
                   <strong>{r.reason}</strong>
-                  {r.quizSlug && <span style={{ marginLeft: '0.5rem', color: 'var(--cy)' }}>({r.quizSlug})</span>}
+                  {r.quizSlug && (
+                    <span style={{ marginLeft: '0.5rem', color: 'var(--cy)' }}>({r.quizSlug})</span>
+                  )}
                   <p style={{ margin: '0.35rem 0 0', color: 'var(--t2)' }}>{r.details}</p>
                 </div>
                 <div style={{ display: 'flex', gap: '0.45rem' }}>
                   {r.status !== 'resolved' && (
-                    <button type="button" className="b o btn-sm" onClick={async () => { await api.adminResolveReport(passkey, r.id, 'resolved'); await loadAdmin(passkey); }}>
+                    <button
+                      type="button"
+                      className="b o btn-sm"
+                      onClick={async () => {
+                        await api.adminResolveReport(passkey, r.id, 'resolved');
+                        await loadAdmin(passkey);
+                      }}
+                    >
                       Mark Resolved
                     </button>
                   )}
-                  <button type="button" className="b x btn-sm" onClick={async () => { await api.adminResolveReport(passkey, r.id, 'delete'); await loadAdmin(passkey); }}>
+                  <button
+                    type="button"
+                    className="b x btn-sm"
+                    onClick={async () => {
+                      await api.adminResolveReport(passkey, r.id, 'delete');
+                      await loadAdmin(passkey);
+                    }}
+                  >
                     Delete
                   </button>
                 </div>
@@ -3101,10 +4235,26 @@ const AdminPage: React.FC = () => {
       </div>
 
       <div className="g">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem' }}>
-          <h2 style={{ margin: 0, fontSize: '1.25rem' }}>All Cloud Games ({filteredQuizzes.length})</h2>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '0.75rem',
+            marginBottom: '1rem',
+          }}
+        >
+          <h2 style={{ margin: 0, fontSize: '1.25rem' }}>
+            All Cloud Games ({filteredQuizzes.length})
+          </h2>
           <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
-            <select className="form-select" style={{ width: 'auto', minHeight: 40 }} value={modeFilter} onChange={(e) => setModeFilter(e.target.value)}>
+            <select
+              className="form-select"
+              style={{ width: 'auto', minHeight: 40 }}
+              value={modeFilter}
+              onChange={(e) => setModeFilter(e.target.value)}
+            >
               <option value="all">All Modes</option>
               <option value="quiz">Friendship Quiz</option>
               <option value="guess_side">Guess My Side</option>
@@ -3112,27 +4262,66 @@ const AdminPage: React.FC = () => {
               <option value="blind_ranking">Blind Ranking</option>
               <option value="would_you_rather">Would You Rather</option>
             </select>
-            <input className="form-input" style={{ width: 240, minHeight: 40 }} placeholder="Search title, creator, slug..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+            <input
+              className="form-input"
+              style={{ width: 240, minHeight: 40 }}
+              placeholder="Search title, creator, slug..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
           </div>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.7rem' }}>
           {filteredQuizzes.map((q) => (
-            <div key={q.id} style={{ padding: '0.85rem 1rem', borderRadius: '16px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem' }}>
+            <div
+              key={q.id}
+              style={{
+                padding: '0.85rem 1rem',
+                borderRadius: '16px',
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.1)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '0.75rem',
+              }}
+            >
               <div>
-                <span className={`t ${q.status === 'published' ? 'ok' : 'w'}`}>{q.status.toUpperCase()}</span>{' '}
-                <span className="t">{q.gameType || 'quiz'}</span>{' '}
-                <strong>{q.title}</strong>
+                <span className={`t ${q.status === 'published' ? 'ok' : 'w'}`}>
+                  {q.status.toUpperCase()}
+                </span>{' '}
+                <span className="t">{q.gameType || 'quiz'}</span> <strong>{q.title}</strong>
                 <div style={{ fontSize: '0.83rem', color: 'var(--t2)', marginTop: '0.2rem' }}>
-                  By: {q.creatorDisplayName} • Slug: <code>/q/{q.slug}</code> • Plays: {q.submissionCount}
+                  By: {q.creatorDisplayName} • Slug: <code>/q/{q.slug}</code> • Plays:{' '}
+                  {q.submissionCount}
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '0.45rem', flexWrap: 'wrap' }}>
-                <Link to={`/q/${q.slug}`} className="b o btn-sm">View</Link>
-                <button type="button" className="b o btn-sm" onClick={async () => { const nextAction = q.status === 'published' ? 'disable' : 'publish'; await api.adminManageQuiz(passkey, q.id, nextAction); await loadAdmin(passkey); }}>
+                <Link to={`/q/${q.slug}`} className="b o btn-sm">
+                  View
+                </Link>
+                <button
+                  type="button"
+                  className="b o btn-sm"
+                  onClick={async () => {
+                    const nextAction = q.status === 'published' ? 'disable' : 'publish';
+                    await api.adminManageQuiz(passkey, q.id, nextAction);
+                    await loadAdmin(passkey);
+                  }}
+                >
                   {q.status === 'published' ? 'Pause' : 'Publish'}
                 </button>
-                <button type="button" className="b x btn-sm" onClick={async () => { if (!window.confirm('Delete this game permanently?')) return; await api.adminManageQuiz(passkey, q.id, 'delete'); await loadAdmin(passkey); }}>
+                <button
+                  type="button"
+                  className="b x btn-sm"
+                  onClick={async () => {
+                    if (!window.confirm('Delete this game permanently?')) return;
+                    await api.adminManageQuiz(passkey, q.id, 'delete');
+                    await loadAdmin(passkey);
+                  }}
+                >
                   Delete
                 </button>
               </div>
@@ -3148,23 +4337,31 @@ const GuidesPage: React.FC = () => {
   const { lang } = useLang();
   return (
     <div className="container animate-in" style={{ paddingTop: '2.2rem', maxWidth: '820px' }}>
-      <h1>{lang === 'bn' ? 'ফ্রেন্ডশিপ গাইড এবং ৮টি গেম খেলার নিয়ম' : 'Friendship Guides & How to Play All 8 Games'}</h1>
+      <h1>
+        {lang === 'bn'
+          ? 'ফ্রেন্ডশিপ গাইড এবং গেম খেলার নিয়ম'
+          : 'Friendship Guides & How to Play'}
+      </h1>
       <div className="g" style={{ marginBottom: '1.1rem' }}>
         <h3>1. Ask Me Anything (AMA) & Friendship Quizzes</h3>
         <p style={{ color: 'var(--t2)', margin: 0 }}>
-          Open your private AMA inbox to receive anonymous questions that stay hidden until you publish a reply, or build a 5-question Friendship Quiz with custom write-in answers.
+          Open your private AMA inbox to receive anonymous questions that stay hidden until you
+          publish a reply, or build a custom Friendship Quiz with write-in answers.
         </p>
       </div>
       <div className="g" style={{ marginBottom: '1.1rem' }}>
         <h3>2. Guess My Side, Two Truths & Blind Ranking</h3>
         <p style={{ color: 'var(--t2)', margin: 0 }}>
-          Test your friends’ intuition with 50/50 This-or-That dilemmas, challenge them to spot your hidden lie, or watch them lock items #1 to #5 in Blind Ranking without seeing what comes next!
+          Test your friends’ intuition with 50/50 This-or-That dilemmas, challenge them to spot your
+          hidden lie, or watch them lock items #1 to #5 in Blind Ranking without seeing what comes
+          next!
         </p>
       </div>
       <div className="g">
         <h3>3. Would You Rather, Daily Quests & Wrapped</h3>
         <p style={{ color: 'var(--t2)', margin: 0 }}>
-          Vote on tough dilemmas with live group percentages, complete daily challenges to build your streak, and export your BFFQuest Wrapped share card anytime.
+          Vote on tough dilemmas with live group percentages, complete daily challenges to build
+          your streak, and export your BFFQuest Wrapped share card anytime.
         </p>
       </div>
     </div>
@@ -3188,24 +4385,35 @@ const ReportAbusePage: React.FC = () => {
         {done ? (
           <div className="alert-success">{t.reportSuccess}</div>
         ) : (
-          <form onSubmit={async (e) => {
-            e.preventDefault();
-            setErr(null);
-            try {
-              await api.submitAbuseReport(slug, reason, details);
-              setDone(true);
-            } catch (error: any) {
-              setErr(error.message);
-            }
-          }}>
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              setErr(null);
+              try {
+                await api.submitAbuseReport(slug, reason, details);
+                setDone(true);
+              } catch (error: any) {
+                setErr(error.message);
+              }
+            }}
+          >
             {err && <div className="alert-error">{err}</div>}
             <div className="form-group">
               <label className="form-label">{t.reportSlugLabel}</label>
-              <input className="form-input" placeholder="e.g., /q/ahad-bff-xyz or /ama/ahad" value={slug} onChange={(e) => setSlug(e.target.value)} />
+              <input
+                className="form-input"
+                placeholder="e.g., /q/alex-bff-xyz or /ama/alex"
+                value={slug}
+                onChange={(e) => setSlug(e.target.value)}
+              />
             </div>
             <div className="form-group">
               <label className="form-label">{t.reportReasonLabel}</label>
-              <select className="form-select" value={reason} onChange={(e) => setReason(e.target.value)}>
+              <select
+                className="form-select"
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+              >
                 <option value="harassment">Harassment or Bullying</option>
                 <option value="privacy">Private Information Exposed</option>
                 <option value="inappropriate">Inappropriate Content</option>
@@ -3215,9 +4423,17 @@ const ReportAbusePage: React.FC = () => {
             </div>
             <div className="form-group">
               <label className="form-label">{t.reportDetailsLabel}</label>
-              <textarea className="form-textarea" rows={4} required value={details} onChange={(e) => setDetails(e.target.value)} />
+              <textarea
+                className="form-textarea"
+                rows={4}
+                required
+                value={details}
+                onChange={(e) => setDetails(e.target.value)}
+              />
             </div>
-            <button type="submit" className="b">{t.reportSubmitBtn}</button>
+            <button type="submit" className="b">
+              {t.reportSubmitBtn}
+            </button>
           </form>
         )}
       </div>
@@ -3278,10 +4494,42 @@ export const App: React.FC = () => {
               <Route path="/admin" element={<AdminPage />} />
               <Route path="/guides" element={<GuidesPage />} />
               <Route path="/report" element={<ReportAbusePage />} />
-              <Route path="/about" element={<SimpleInfoPage title={`About ${BRAND.name}`} text={`${BRAND.name} is an interactive friendship gaming platform supporting multiple game modes in English and Bangla with permanent cloud accounts.`} />} />
-              <Route path="/privacy" element={<SimpleInfoPage title="Privacy Policy" text="We store your profile, published games, AMA questions, and scores in Supabase Cloud. Browser identifiers are used to prevent spam and duplicate voting, and public pages may display third-party ads (Monetag). Signed-in users can permanently delete all their cloud data anytime from their Profile." />} />
-              <Route path="/terms" element={<SimpleInfoPage title="Terms & Community Guidelines" text="Games on BFFquest are playful social experiences. Harassment, bullying, or sharing private personal information is strictly prohibited." />} />
-              <Route path="*" element={<SimpleInfoPage title="404 — Page Not Found" text="The page or game link you are looking for does not exist." />} />
+              <Route
+                path="/about"
+                element={
+                  <SimpleInfoPage
+                    title={`About ${BRAND.name}`}
+                    text={`${BRAND.name} is an interactive friendship gaming platform supporting multiple game modes in English and Bangla with permanent cloud accounts.`}
+                  />
+                }
+              />
+              <Route
+                path="/privacy"
+                element={
+                  <SimpleInfoPage
+                    title="Privacy Policy"
+                    text="We store your profile, published games, AMA questions, and scores in Supabase Cloud. Browser identifiers are used to prevent spam and duplicate voting, and public pages may display third-party ads (Monetag). Signed-in users can permanently delete all their cloud data anytime from their Profile."
+                  />
+                }
+              />
+              <Route
+                path="/terms"
+                element={
+                  <SimpleInfoPage
+                    title="Terms & Community Guidelines"
+                    text="Games on BFFquest are playful social experiences. Harassment, bullying, or sharing private personal information is strictly prohibited."
+                  />
+                }
+              />
+              <Route
+                path="*"
+                element={
+                  <SimpleInfoPage
+                    title="404 — Page Not Found"
+                    text="The page or game link you are looking for does not exist."
+                  />
+                }
+              />
             </Routes>
           </Layout>
         </BrowserRouter>
