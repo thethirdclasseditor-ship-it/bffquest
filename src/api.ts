@@ -10,8 +10,8 @@ import {
   DailyQuestItem,
 } from './config';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
 
 export const isSupabaseConfigured = Boolean(
   supabaseUrl &&
@@ -30,11 +30,6 @@ export function setRememberMePref(remember: boolean) {
   localStorage.setItem(REMEMBER_ME_KEY, remember ? 'true' : 'false');
 }
 
-/**
- * Problem #11 Fix: Real storage routing based on "Remember me" preference.
- * When Remember Me is ON -> persists in localStorage.
- * When Remember Me is OFF -> persists only in sessionStorage for the current browser session.
- */
 const customAuthStorage = {
   getItem: (key: string): string | null => {
     return localStorage.getItem(key) ?? sessionStorage.getItem(key);
@@ -55,7 +50,7 @@ const customAuthStorage = {
 };
 
 export const supabase: SupabaseClient | null = isSupabaseConfigured
-  ? createClient(supabaseUrl!, supabaseAnonKey!, {
+  ? createClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
@@ -278,17 +273,11 @@ export function saveAdminKey(key: string) {
   }
 }
 
-/**
- * Problem #1 Fix: Synchronous user-gesture-first copy helper.
- * Executes synchronous textarea + execCommand('copy') BEFORE any async await
- * so Safari/WebView/popunder scripts never cause user-gesture expiration.
- */
 export async function copyTextSafely(
   text: string
 ): Promise<{ ok: boolean; method: 'clipboard' | 'fallback' | 'manual' }> {
   if (!text) return { ok: false, method: 'manual' };
 
-  // 1. Run synchronous execCommand('copy') immediately while inside the click gesture
   let syncCopied = false;
   try {
     const textArea = document.createElement('textarea');
@@ -308,7 +297,6 @@ export async function copyTextSafely(
     syncCopied = false;
   }
 
-  // 2. Also attempt modern Clipboard API if available
   if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
     try {
       await navigator.clipboard.writeText(text);
@@ -382,9 +370,6 @@ function getClientFingerprint(): string {
   return fp;
 }
 
-/* ============================================================================
- * REAL GAMEPLAY ACTIVITY, STREAK & CLOUD WRAPPED ENGINE
- * ============================================================================ */
 function getTodayDateString(): string {
   const now = new Date();
   const yyyy = now.getFullYear();
@@ -522,14 +507,11 @@ async function recordRealActivity(event: {
         });
       }
     } catch {
-      // Non-blocking background sync
+      // Non-blocking sync
     }
   }
 }
 
-/* ============================================================================
- * BUILT-IN SAMPLE GAMES FALLBACK (Excluded from Creator Dashboard)
- * ============================================================================ */
 function getSampleQuizBySlug(slug: string, lang: Lang = 'en'): PublicQuiz | null {
   const clean = slug.trim().toLowerCase();
   const creator = lang === 'bn' ? 'BFFquest টিম' : 'BFFquest Team';
@@ -610,9 +592,6 @@ function getLocalSubmissions(): SubmissionResult[] {
 export const api = {
   isDemoMode: !isSupabaseConfigured,
 
-  /* ==========================================================================
-   * 0. REAL AUTHENTICATION & PERMANENT USER CLOUD SYNC
-   * ========================================================================== */
   async syncAuthenticatedUser(): Promise<AuthUser | null> {
     if (!supabase) return null;
 
@@ -651,7 +630,6 @@ export const api = {
         p_local_badges: mergedLocalBadges,
       });
 
-      // Problem #4 Fix: Only rotate guest token if the cloud claim RPC succeeded without error!
       if (!error && syncData) {
         if (guestTokenToClaim) {
           rotateGuestCreatorToken();
@@ -685,7 +663,7 @@ export const api = {
         };
       }
     } catch {
-      // Do not rotate guest token if RPC threw an exception
+      // Keep guest token intact if RPC fails
     }
 
     return {
@@ -702,10 +680,6 @@ export const api = {
     };
   },
 
-  /**
-   * Problem #5 Fix: Defer async Supabase calls inside onAuthStateChange using setTimeout(..., 0)
-   * to prevent auth lock deadlocks.
-   */
   onAuthStateChange(callback: (user: AuthUser | null) => void) {
     if (!supabase) {
       callback(null);
@@ -776,8 +750,8 @@ export const api = {
     if (!cleanName) {
       throw new Error('Please enter your display name.');
     }
-    if (!cleanEmail || params.password.length < 6) {
-      throw new Error('Password must be at least 6 characters long.');
+    if (!cleanEmail || params.password.length < 8) {
+      throw new Error('Password must be at least 8 characters long.');
     }
 
     setRememberMePref(true);
@@ -845,8 +819,8 @@ export const api = {
 
   async updateNewPassword(newPassword: string): Promise<void> {
     if (!supabase) throw new Error('Supabase not configured.');
-    if (!newPassword || newPassword.length < 6) {
-      throw new Error('New password must be at least 6 characters.');
+    if (!newPassword || newPassword.length < 8) {
+      throw new Error('New password must be at least 8 characters.');
     }
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     if (error) throw new Error(error.message || 'Could not update password.');
@@ -871,6 +845,7 @@ export const api = {
       await supabase.auth.signOut();
     }
   },
+
   async deleteMyAccountData(): Promise<void> {
     if (supabase) {
       const { error } = await supabase.rpc('delete_my_user_data');
@@ -883,9 +858,6 @@ export const api = {
     }
   },
 
-  /* ==========================================================================
-   * 1. CREATE & PUBLISH ANY GAME MODE
-   * ========================================================================== */
   async publishQuiz(params: {
     creatorDisplayName: string;
     title: string;
@@ -929,7 +901,6 @@ export const api = {
         if (q.options.slice(0, 3).some((o) => !o.text.trim())) {
           throw new Error(`Please fill in the first 3 choices for Question ${i + 1}.`);
         }
-        // Problem #13 Fix: Require expected custom answer text if creator selects Option 4 as correct
         if (q.correctOptionId === 'opt_4') {
           const customExpected = (q.options[3]?.text || '').trim();
           if (
@@ -983,7 +954,6 @@ export const api = {
         };
       }
 
-      // Problem #3 Fix: Always use `opt_${idx + 1}` for Blind Ranking so deleted items never skew rank keys
       if (gameType === 'blind_ranking') {
         const totalSlots = params.questions.length;
         return {
@@ -1067,9 +1037,6 @@ export const api = {
     return { slug: finalSlug, gameType };
   },
 
-  /* ==========================================================================
-   * 2. LOAD PUBLIC QUIZ / GAME BY SLUG (Problem #15 Fix: Global Sample Leaderboard)
-   * ========================================================================== */
   async getPublicQuizBySlug(
     slug: string,
     lang: Lang = 'en'
@@ -1080,7 +1047,6 @@ export const api = {
   }> {
     const cleanSlug = slug.trim().toLowerCase();
 
-    // Problem #15 Fix: Query Supabase first even for sample games so everyone sees the global leaderboard!
     if (supabase) {
       const { data, error } = await supabase.rpc('get_public_quiz_by_slug', {
         p_slug: cleanSlug,
@@ -1089,7 +1055,6 @@ export const api = {
       if (!error && data) {
         if (data.status === 'ok') {
           const cloudQuiz = data.quiz as PublicQuiz;
-          // Localize sample game text if viewing in Bangla while preserving cloud IDs & global leaderboard
           if (SAMPLE_SLUGS.has(cleanSlug) && lang === 'bn') {
             const localizedSample = getSampleQuizBySlug(cleanSlug, 'bn');
             if (localizedSample) {
@@ -1124,7 +1089,6 @@ export const api = {
       }
     }
 
-    // Fallback for sample games when in offline/demo mode
     if (SAMPLE_SLUGS.has(cleanSlug)) {
       const sample = getSampleQuizBySlug(cleanSlug, lang);
       if (!sample) return { status: 'not_found' };
@@ -1134,12 +1098,14 @@ export const api = {
         .sort((a, b) => b.scorePercentage - a.scorePercentage)
         .slice(0, 25);
 
-      quiz: {
-        ...found,
-        questions: found.questions.map(({ correctOptionId, ...rest }) => rest),
-        totalParticipants: localSubs.length,
-        leaderboard: localSubs,
-      
+      return {
+        status: 'ok',
+        quiz: {
+          ...sample,
+          questions: sample.questions.map((q) => ({ ...q, correctOptionId: '' })),
+          totalParticipants: localSubs.length,
+          leaderboard: localSubs,
+        },
       };
     }
 
@@ -1157,15 +1123,13 @@ export const api = {
       status: 'ok',
       quiz: {
         ...found,
+        questions: found.questions.map((q) => ({ ...q, correctOptionId: '' })),
         totalParticipants: localSubs.length,
         leaderboard: localSubs,
       },
     };
   },
 
-  /* ==========================================================================
-   * 3. SUBMIT GAME ANSWERS (Problem #6, #13 & #15 Fixes)
-   * ========================================================================== */
   async submitQuizAnswers(params: {
     slug: string;
     participantNickname: string;
@@ -1174,11 +1138,9 @@ export const api = {
     lang?: Lang;
   }): Promise<SubmissionResult> {
     const cleanSlug = params.slug.trim().toLowerCase();
-    // Problem #6 Fix: Deterministic fingerprint per quiz + client (no Date.now() suffix!)
     const fingerprint = `${cleanSlug}:${getClientFingerprint()}`;
     const customTexts = params.customTexts || {};
 
-    // Problem #15 Fix: Submit sample games to Supabase too so scores appear on global leaderboard
     if (supabase) {
       const { data, error } = await supabase.rpc('submit_quiz_answers', {
         p_slug: cleanSlug,
@@ -1210,7 +1172,6 @@ export const api = {
     }
 
     const subs = getLocalSubmissions();
-    // Problem #6 Fix in local fallback mode
     if (
       !SAMPLE_SLUGS.has(cleanSlug) &&
       subs.some((s) => s.clientFingerprint === fingerprint)
@@ -1237,7 +1198,6 @@ export const api = {
           questionText: q.questionText,
           customAnswer: written,
         });
-        // Problem #13 Fix: Compare written text against creator's expected answer
         const expectedOpt = q.options.find((o) => o.id === (q.correctOptionId || 'opt_1'));
         const expectedText = (expectedOpt?.text || '').trim();
         isCorrect = Boolean(
@@ -1326,9 +1286,6 @@ export const api = {
     return null;
   },
 
-  /* ==========================================================================
-   * 4. CREATOR DASHBOARD
-   * ========================================================================== */
   async getCreatorDashboard(): Promise<CreatorQuizSummary[]> {
     const creatorToken = getCreatorToken();
 
@@ -1421,9 +1378,6 @@ export const api = {
     saveLocalCreatedQuizzes(list);
   },
 
-  /* ==========================================================================
-   * 5. ASK ME ANYTHING (AMA) PRIVATE INBOX & PUBLIC QUESTION API
-   * ========================================================================== */
   async getCreatorAmaInbox(): Promise<{ hasInbox: boolean; inbox?: AmaInboxData }> {
     const creatorToken = getCreatorToken();
 
@@ -1600,9 +1554,6 @@ export const api = {
     localStorage.setItem(getScopedKey(AMA_KEY), JSON.stringify(local.inbox));
   },
 
-  /* ==========================================================================
-   * 6. BFFQUEST WRAPPED & DAILY QUEST STATUS
-   * ========================================================================== */
   async hydrateCloudActivity(): Promise<LocalActivityRecord> {
     const localAct = getLocalActivity();
     if (!supabase) return localAct;
@@ -1714,9 +1665,6 @@ export const api = {
     return this.getDailyQuestStatus();
   },
 
-  /* ==========================================================================
-   * 7. ABUSE REPORT & SITE-OWNER ADMIN PANEL API
-   * ========================================================================== */
   async submitAbuseReport(quizSlug: string, reason: string, details: string) {
     if (!details.trim() || details.trim().length < 5) {
       throw new Error('Please write a brief description of the issue.');
