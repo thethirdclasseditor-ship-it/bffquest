@@ -33,6 +33,10 @@ import {
   Flag,
   Eye,
   EyeOff,
+  Mail,
+  LogOut,
+  LogIn,
+  KeyRound,
 } from 'lucide-react';
 import {
   BRAND,
@@ -53,6 +57,7 @@ import {
   getSavedAdminKey,
   saveAdminKey,
   copyTextSafely,
+  AuthUser,
   PublicQuiz,
   SubmissionResult,
   CreatorQuizSummary,
@@ -77,8 +82,22 @@ const LangContext = createContext<LangContextType>({
 
 const useLang = () => useContext(LangContext);
 
+interface AuthContextType {
+  user: AuthUser | null;
+  authLoading: boolean;
+  refreshUser: () => Promise<void>;
+}
+
+const AuthContext = createContext<AuthContextType>({
+  user: null,
+  authLoading: true,
+  refreshUser: async () => {},
+});
+
+const useAuth = () => useContext(AuthContext);
+
 /* ============================================================================
- * LIQUID GLASS VECTOR ART HELPER (Uses <symbol> defs from index.html)
+ * LIQUID GLASS VECTOR ART HELPER
  * ============================================================================ */
 const GlassArt: React.FC<{ name: string; size?: number; className?: string }> = ({
   name,
@@ -276,7 +295,6 @@ const LeaderboardCard: React.FC<{
         </div>
       ) : (
         <>
-          {/* Concept Board 2-1-3 Podium Bars */}
           <div className="pod">
             <div className="a2">
               <span style={{ fontSize: '1.1rem' }}>🥈 2</span>
@@ -375,6 +393,7 @@ const LeaderboardCard: React.FC<{
  * ============================================================================ */
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { lang, setLang, t } = useLang();
+  const { user } = useAuth();
   const location = useLocation();
   const path = location.pathname;
 
@@ -391,7 +410,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const isExplore = path.startsWith('/explore') || path.startsWith('/daily');
   const isCreate = path.startsWith('/create');
   const isInbox = path.startsWith('/inbox') || path.startsWith('/ama');
-  const isProfile = path.startsWith('/dashboard') || path.startsWith('/wrapped');
+  const isProfile =
+    path.startsWith('/dashboard') || path.startsWith('/wrapped') || path.startsWith('/auth');
 
   return (
     <div className="liquid-shell">
@@ -422,7 +442,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             </Link>
           </nav>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.55rem' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
             <div className="lang-switch" role="group" aria-label="Language Switcher">
               <button
                 type="button"
@@ -439,6 +459,26 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 বাংলা
               </button>
             </div>
+
+            {user ? (
+              <Link to="/dashboard" className="user-nav-chip" title={user.email}>
+                <span className="user-avatar-badge">
+                  {user.avatarUrl ? (
+                    <img src={user.avatarUrl} alt={user.displayName} />
+                  ) : (
+                    user.displayName.slice(0, 1).toUpperCase()
+                  )}
+                </span>
+                <span style={{ maxWidth: 96, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {user.displayName}
+                </span>
+              </Link>
+            ) : (
+              <Link to="/auth" className="b o btn-sm">
+                <LogIn size={15} />
+                <span>{lang === 'bn' ? 'লগইন' : 'Sign in'}</span>
+              </Link>
+            )}
           </div>
         </div>
       </header>
@@ -469,7 +509,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           </Link>
           <Link to="/dashboard" className={`dock-item ${isProfile ? 'active' : ''}`}>
             <User size={20} />
-            <span>{t.navProfile}</span>
+            <span>{user ? user.displayName.slice(0, 8) : t.navProfile}</span>
           </Link>
         </nav>
       </div>
@@ -502,6 +542,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               <Link to="/explore">{t.navExplore}</Link>
               <Link to="/daily">Daily Quest</Link>
               <Link to="/wrapped">Wrapped</Link>
+              <Link to="/auth">{lang === 'bn' ? 'অ্যাকাউন্ট' : 'Account'}</Link>
               <Link to="/guides">{t.navGuides}</Link>
               <Link to="/privacy">Privacy</Link>
               <Link to="/terms">Terms</Link>
@@ -544,7 +585,356 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 };
 
 /* ============================================================================
- * 2. LIQUID GLASS HOMEPAGE (Inspired by Concept Board)
+ * 2. CLOUD-WAVE LOGIN & ACCOUNT PAGE (/auth) — Inspired by Reference Images
+ * ============================================================================ */
+const AuthPage: React.FC = () => {
+  const { lang } = useLang();
+  const { user, refreshUser } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const initialMode = searchParams.get('mode');
+
+  const [mode, setMode] = useState<'signin' | 'signup' | 'forgot' | 'update_password'>(
+    initialMode === 'signup'
+      ? 'signup'
+      : initialMode === 'update_password'
+      ? 'update_password'
+      : 'signin'
+  );
+
+  const [displayName, setDisplayName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPass, setShowPass] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (user && mode !== 'update_password') {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, mode, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErr(null);
+    setInfo(null);
+    setBusy(true);
+
+    try {
+      if (mode === 'signin') {
+        await api.signInWithEmail(email, password);
+        await refreshUser();
+        navigate('/dashboard');
+      } else if (mode === 'signup') {
+        const res = await api.signUpWithEmail({
+          email,
+          password,
+          displayName,
+        });
+        if (res.needsEmailConfirmation) {
+          setInfo(
+            lang === 'bn'
+              ? 'আপনার ইমেইলে একটি ভেরিফিকেশন লিংক পাঠানো হয়েছে! ইমেইল কনফার্ম করে সাইন-ইন করুন।'
+              : 'Account created! Please check your email inbox to confirm your address, then sign in.'
+          );
+          setMode('signin');
+        } else {
+          await refreshUser();
+          navigate('/dashboard');
+        }
+      } else if (mode === 'forgot') {
+        await api.sendPasswordReset(email);
+        setInfo(
+          lang === 'bn'
+            ? 'পাসওয়ার্ড রিসেট করার লিংক আপনার ইমেইলে পাঠানো হয়েছে!'
+            : 'Password reset link sent! Please check your email inbox.'
+        );
+      } else if (mode === 'update_password') {
+        await api.updateNewPassword(password);
+        setInfo(
+          lang === 'bn'
+            ? 'পাসওয়ার্ড সফলভাবে আপডেট হয়েছে!'
+            : 'Your password has been updated successfully!'
+        );
+        setTimeout(() => navigate('/dashboard'), 1200);
+      }
+    } catch (error: any) {
+      setErr(error.message || 'Authentication error.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleSocialLogin = async (provider: 'google' | 'facebook') => {
+    setErr(null);
+    setBusy(true);
+    try {
+      await api.signInWithSocial(provider);
+    } catch (error: any) {
+      setErr(error.message || `Could not sign in with ${provider}.`);
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="container auth-page-wrap animate-in">
+      <div className="auth-cloud-card">
+        {/* Top Cloud Wave Header on Mobile */}
+        <div className="auth-mobile-top-cloud" aria-hidden="true">
+          <svg viewBox="0 0 500 90" preserveAspectRatio="none">
+            <path
+              d="M0,45 C75,85 155,5 245,48 C335,88 415,15 500,52 L500,90 L0,90 Z"
+              fill="#ffffff"
+            />
+          </svg>
+        </div>
+
+        {/* Left Form Side */}
+        <div className="auth-form-side">
+          <div>
+            <h1 className="auth-hello-title">
+              <span>
+                {mode === 'signup'
+                  ? lang === 'bn'
+                    ? 'স্বাগতম!'
+                    : 'Join Us!'
+                  : mode === 'forgot'
+                  ? lang === 'bn'
+                    ? 'রিসেট!'
+                    : 'Reset!'
+                  : 'Hello!'}
+              </span>
+              <span className="auth-hello-spark">✦</span>
+            </h1>
+            <p className="auth-hello-sub">
+              {mode === 'signup'
+                ? lang === 'bn'
+                  ? 'আপনার স্থায়ী ক্লাউড অ্যাকাউন্ট তৈরি করুন'
+                  : 'Create your permanent cloud account'
+                : mode === 'forgot'
+                ? lang === 'bn'
+                  ? 'আপনার ইমেইলে পাসওয়ার্ড রিসেট লিংক নিন'
+                  : 'Recover access to your account'
+                : mode === 'update_password'
+                ? 'Set your new account password'
+                : lang === 'bn'
+                ? 'আপনার অ্যাকাউন্টে সাইন-ইন করুন'
+                : 'Sign in to your account'}
+            </p>
+            <div className="auth-accent-dash">
+              <span />
+              <span />
+            </div>
+          </div>
+
+          {err && <div className="alert-error">{err}</div>}
+          {info && <div className="alert-success">{info}</div>}
+
+          <form onSubmit={handleSubmit}>
+            {mode === 'signup' && (
+              <div className="auth-pill-field">
+                <span className="auth-icon-box">
+                  <User size={19} />
+                </span>
+                <input
+                  type="text"
+                  required
+                  className="auth-pill-input"
+                  placeholder={lang === 'bn' ? 'আপনার নাম (যেমন: আহাদ)' : 'Your Display Name'}
+                  value={displayName}
+                  onChange={(e) => setDisplayName(e.target.value)}
+                />
+              </div>
+            )}
+
+            {mode !== 'update_password' && (
+              <div className="auth-pill-field">
+                <span className="auth-icon-box">
+                  <Mail size={19} />
+                </span>
+                <input
+                  type="email"
+                  required
+                  className="auth-pill-input"
+                  placeholder="E-mail"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+            )}
+
+            {mode !== 'forgot' && (
+              <div className="auth-pill-field">
+                <span className="auth-icon-box">
+                  <Lock size={19} />
+                </span>
+                <input
+                  type={showPass ? 'text' : 'password'}
+                  required
+                  minLength={6}
+                  className="auth-pill-input"
+                  placeholder={mode === 'update_password' ? 'New Password (min 6 chars)' : 'Password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <button
+                  type="button"
+                  className="auth-eye-btn"
+                  onClick={() => setShowPass((v) => !v)}
+                  aria-label="Toggle Password Visibility"
+                >
+                  {showPass ? <EyeOff size={19} /> : <Eye size={19} />}
+                </button>
+              </div>
+            )}
+
+            {mode === 'signin' && (
+              <div className="auth-meta-row">
+                <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem', cursor: 'pointer' }}>
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    onChange={(e) => setRememberMe(e.target.checked)}
+                    style={{ accentColor: '#6d28d9', width: 15, height: 15 }}
+                  />
+                  <span>Remember me</span>
+                </label>
+
+                <button
+                  type="button"
+                  className="auth-forgot-btn"
+                  onClick={() => {
+                    setErr(null);
+                    setInfo(null);
+                    setMode('forgot');
+                  }}
+                >
+                  Forgot password?
+                </button>
+              </div>
+            )}
+
+            <button type="submit" disabled={busy} className="auth-submit-btn">
+              {busy
+                ? 'Please wait...'
+                : mode === 'signup'
+                ? 'CREATE ACCOUNT'
+                : mode === 'forgot'
+                ? 'SEND RESET LINK'
+                : mode === 'update_password'
+                ? 'SAVE NEW PASSWORD'
+                : 'SIGN IN'}
+            </button>
+          </form>
+
+          {(mode === 'signin' || mode === 'signup') && (
+            <>
+              <div className="auth-divider">
+                <span>{lang === 'bn' ? 'অথবা ১-ক্লিকে লগইন করুন' : 'or continue with'}</span>
+              </div>
+
+              <div className="auth-social-grid">
+                <button
+                  type="button"
+                  disabled={busy}
+                  className="auth-social-btn"
+                  onClick={() => handleSocialLogin('google')}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24">
+                    <path
+                      fill="#EA4335"
+                      d="M12 5c1.6 0 3 .6 4.1 1.7l3.1-3.1C17.3 1.7 14.8 1 12 1 7.4 1 3.5 3.6 1.6 7.4l3.7 2.8C6.2 7.2 8.9 5 12 5z"
+                    />
+                    <path
+                      fill="#4285F4"
+                      d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.6l3.7 2.9c2.2-2 3.7-5 3.7-8.7z"
+                    />
+                    <path
+                      fill="#FBBC05"
+                      d="M5.3 14.8c-.2-.8-.4-1.6-.4-2.5s.2-1.7.4-2.5L1.6 7C.6 9 0 11.2 0 13.5s.6 4.5 1.6 6.5l3.7-2.9z"
+                    />
+                    <path
+                      fill="#34A853"
+                      d="M12 24c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3.1 0-5.8-2.1-6.7-5l-3.7 2.9C3.5 21.4 7.4 24 12 24z"
+                    />
+                  </svg>
+                  <span>Google</span>
+                </button>
+
+                <button
+                  type="button"
+                  disabled={busy}
+                  className="auth-social-btn"
+                  onClick={() => handleSocialLogin('facebook')}
+                  title="Sign in with Facebook or connected Instagram (Meta) account"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="#1877F2">
+                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                  </svg>
+                  <span>Facebook / IG</span>
+                </button>
+              </div>
+            </>
+          )}
+
+          <div className="auth-switch-prompt">
+            {mode === 'signin' ? (
+              <>
+                Don’t have an account?
+                <button
+                  type="button"
+                  onClick={() => {
+                    setErr(null);
+                    setInfo(null);
+                    setMode('signup');
+                  }}
+                >
+                  Create
+                </button>
+              </>
+            ) : (
+              <>
+                Already have an account?
+                <button
+                  type="button"
+                  onClick={() => {
+                    setErr(null);
+                    setInfo(null);
+                    setMode('signin');
+                  }}
+                >
+                  Sign In
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+
+        {/* Right / Bottom "Welcome Back!" Cloud Wave Companion Panel */}
+        <div className="auth-welcome-side">
+          <div className="auth-welcome-cloud-card">
+            <h2>{lang === 'bn' ? 'স্বাগতম!' : 'Welcome Back!'}</h2>
+            <div className="auth-accent-dash" style={{ marginBottom: '0.85rem' }}>
+              <span />
+              <span />
+            </div>
+            <p>
+              {lang === 'bn'
+                ? 'আপনার প্রতিটি কুইজ, প্রাইভেট AMA ইনবক্স, বন্ধুদের স্কোর, ডেইলি স্ট্রিক এবং Wrapped রিক্যাপ আপনার স্থায়ী ক্লাউড আইডিতে আজীবন সংরক্ষিত থাকে। যেকোনো ফোন থেকে লগইন করলেই সব ডাটা ফিরে পাবেন।'
+                : 'Your quizzes, private AMA inbox, friend leaderboards, daily streaks, and Wrapped recaps are permanently tied to your unique Cloud ID. Log in from any device, anytime—nothing is ever lost.'}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+/* ============================================================================
+ * 3. LIQUID GLASS HOMEPAGE
  * ============================================================================ */
 const HomePage: React.FC = () => {
   const { lang, t } = useLang();
@@ -553,7 +943,6 @@ const HomePage: React.FC = () => {
 
   return (
     <div className="container animate-in" style={{ paddingTop: '1.75rem' }}>
-      {/* Hero Section */}
       <section
         className="grid-2"
         style={{ alignItems: 'center', gap: '2rem', padding: '1rem 0 2.5rem' }}
@@ -595,7 +984,6 @@ const HomePage: React.FC = () => {
           </div>
         </div>
 
-        {/* Hero Visual Orbit & Floating Glass Preview Card */}
         <div
           style={{
             position: 'relative',
@@ -693,7 +1081,6 @@ const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* Quick Actions Trio */}
       <section className="grid-3" style={{ marginBottom: '2.75rem' }}>
         <Link
           to="/create"
@@ -735,7 +1122,6 @@ const HomePage: React.FC = () => {
         </Link>
       </section>
 
-      {/* How It Works */}
       <section style={{ marginBottom: '2.75rem' }}>
         <h2 style={{ fontSize: '1.6rem', marginBottom: '1rem' }}>{t.howItWorksTitle}</h2>
         <div className="grid-3">
@@ -767,7 +1153,6 @@ const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* Featured Templates */}
       <section style={{ marginBottom: '2.75rem' }}>
         <h2 style={{ fontSize: '1.6rem', marginBottom: '1rem' }}>{t.featuredTemplatesTitle}</h2>
         <div className="grid-3">
@@ -806,7 +1191,6 @@ const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* Explore All 7+1 Games Grid */}
       <section style={{ marginBottom: '2.75rem' }}>
         <div
           style={{
@@ -845,7 +1229,6 @@ const HomePage: React.FC = () => {
         </div>
       </section>
 
-      {/* Bottom CTA Glass Card */}
       <section style={{ marginBottom: '1.5rem' }}>
         <div
           className="g card-elevated"
@@ -873,7 +1256,7 @@ const HomePage: React.FC = () => {
 };
 
 /* ============================================================================
- * 3. EXPLORE GAMES PAGE (/explore) WITH SEGMENTED FILTER & SAMPLES
+ * 4. EXPLORE GAMES PAGE (/explore)
  * ============================================================================ */
 const ExplorePage: React.FC = () => {
   const { lang, t } = useLang();
@@ -986,10 +1369,11 @@ const ExplorePage: React.FC = () => {
 };
 
 /* ============================================================================
- * 4. UNIVERSAL MULTI-GAME CREATOR (/create)
+ * 5. UNIVERSAL MULTI-GAME CREATOR (/create)
  * ============================================================================ */
 const CreateQuizPage: React.FC = () => {
   const { lang, t } = useLang();
+  const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const initialType = (searchParams.get('type') as GameType) || 'quiz';
   const initialTpl = searchParams.get('tpl') || '';
@@ -1009,7 +1393,7 @@ const CreateQuizPage: React.FC = () => {
       ? initialTpl
       : templates[0].id
   );
-  const [creatorName, setCreatorName] = useState('');
+  const [creatorName, setCreatorName] = useState(user?.displayName || '');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [groupVoting, setGroupVoting] = useState(true);
@@ -1017,6 +1401,12 @@ const CreateQuizPage: React.FC = () => {
   const [hasEdited, setHasEdited] = useState(false);
   const [templateNotice, setTemplateNotice] = useState<string | null>(null);
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
+
+  useEffect(() => {
+    if (user?.displayName && !creatorName) {
+      setCreatorName(user.displayName);
+    }
+  }, [user]);
 
   const loadModeDefaults = (mode: GameType, tplId?: string) => {
     if (mode === 'quiz') {
@@ -1128,7 +1518,15 @@ const CreateQuizPage: React.FC = () => {
 
           <DirectLinkBox url={shareUrl} shareTitle={title} />
 
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '0.75rem', marginTop: '1rem' }}>
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: '0.75rem',
+              marginTop: '1rem',
+              flexWrap: 'wrap',
+            }}
+          >
             <Link to={`/q/${publishedSlug}`} className="b o">
               {t.openQuizBtn}
             </Link>
@@ -1152,7 +1550,6 @@ const CreateQuizPage: React.FC = () => {
       <h1 style={{ marginBottom: '0.3rem' }}>{t.builderHeading}</h1>
       <p style={{ color: 'var(--t2)', marginTop: 0, marginBottom: '1.25rem' }}>{t.builderSub}</p>
 
-      {/* Game Mode Selector Bar */}
       <div className="seg" style={{ marginBottom: '1.5rem' }}>
         {creatableModes.map((mId) => {
           const meta = GAME_MODES.find((gm) => gm.id === mId)!;
@@ -1169,7 +1566,6 @@ const CreateQuizPage: React.FC = () => {
         })}
       </div>
 
-      {/* Template Grid for Classic Quiz */}
       {activeMode === 'quiz' && (
         <div className="g" style={{ marginBottom: '1.4rem' }}>
           <strong style={{ display: 'block', fontSize: '0.92rem', marginBottom: '0.4rem' }}>
@@ -1200,7 +1596,6 @@ const CreateQuizPage: React.FC = () => {
 
       {errorMsg && <div className="alert-error">{errorMsg}</div>}
 
-      {/* Creator & Game Details */}
       <div className="g" style={{ marginBottom: '1.4rem', ['--a' as any]: modeMeta.accent }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
           <GlassArt name={modeMeta.icon} size={38} />
@@ -1233,7 +1628,13 @@ const CreateQuizPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="form-group" style={{ marginBottom: activeMode === 'would_you_rather' || activeMode === 'blind_ranking' ? '1rem' : 0 }}>
+        <div
+          className="form-group"
+          style={{
+            marginBottom:
+              activeMode === 'would_you_rather' || activeMode === 'blind_ranking' ? '1rem' : 0,
+          }}
+        >
           <label className="form-label">{t.quizDescLabel}</label>
           <input
             className="form-input"
@@ -1296,7 +1697,6 @@ const CreateQuizPage: React.FC = () => {
         )}
       </div>
 
-      {/* Mode-Specific Question / Round Editors */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
         {questions.map((q, qIdx) => (
           <div key={q.id} className="g">
@@ -1330,7 +1730,7 @@ const CreateQuizPage: React.FC = () => {
             <div className="form-group">
               <label className="form-label">
                 {activeMode === 'blind_ranking'
-                  ? `Item for Rank #${qIdx + 1} (Players will see items in shuffled order)`
+                  ? `Item for Rank #${qIdx + 1}`
                   : activeMode === 'two_truths'
                   ? 'Round Topic / Prompt'
                   : `${t.questionLabel} ${qIdx + 1}`}
@@ -1349,13 +1749,12 @@ const CreateQuizPage: React.FC = () => {
               />
             </div>
 
-            {/* MODE A: Guess My Side OR Would You Rather (2 Big Choices) */}
             {(activeMode === 'guess_side' || activeMode === 'would_you_rather') && (
               <>
                 <div className="form-label" style={{ marginBottom: '0.45rem' }}>
                   {activeMode === 'guess_side'
                     ? 'Enter 2 Sides & Tap the Circle for YOUR Side *'
-                    : 'Enter Scenario A & Scenario B (Tap your own preferred pick) *'}
+                    : 'Enter Scenario A & Scenario B (Tap your preferred pick) *'}
                 </div>
                 <div className="grid-2">
                   {[0, 1].map((optIdx) => {
@@ -1408,7 +1807,6 @@ const CreateQuizPage: React.FC = () => {
               </>
             )}
 
-            {/* MODE B: Two Truths & One Lie (3 Statements, radio selects THE LIE) */}
             {activeMode === 'two_truths' && (
               <>
                 <div className="form-label" style={{ marginBottom: '0.45rem', color: '#fcd34d' }}>
@@ -1468,7 +1866,6 @@ const CreateQuizPage: React.FC = () => {
               </>
             )}
 
-            {/* MODE C: Classic Friendship Quiz (3 Fixed + 1 Write-in Slot) */}
             {activeMode === 'quiz' && (
               <>
                 <div className="form-label" style={{ marginBottom: '0.45rem' }}>
@@ -1520,7 +1917,6 @@ const CreateQuizPage: React.FC = () => {
                     );
                   })}
 
-                  {/* 4th Write-in Slot */}
                   {(() => {
                     const isCustomSelected = q.correctOptionId === 'opt_4';
                     return (
@@ -1617,7 +2013,7 @@ const CreateQuizPage: React.FC = () => {
 };
 
 /* ============================================================================
- * 5. PUBLIC GAME LANDING & MULTI-MODE PLAYER (/q/:slug & /q/:slug/play)
+ * 6. PUBLIC GAME LANDING & MULTI-MODE PLAYER (/q/:slug & /q/:slug/play)
  * ============================================================================ */
 const PublicQuizPage: React.FC = () => {
   const { slug = '' } = useParams<{ slug: string }>();
@@ -1703,17 +2099,24 @@ const PlayQuizPage: React.FC = () => {
   const { slug = '' } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const { lang, t } = useLang();
+  const { user } = useAuth();
 
   const [quiz, setQuiz] = useState<PublicQuiz | null>(null);
   const [loadStatus, setLoadStatus] = useState<
     'loading' | 'ok' | 'unavailable' | 'not_found' | 'error'
   >('loading');
-  const [nickname, setNickname] = useState('');
+  const [nickname, setNickname] = useState(user?.displayName || '');
   const [currentIdx, setCurrentIdx] = useState(0);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [customTexts, setCustomTexts] = useState<Record<string, string>>({});
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (user?.displayName && !nickname) {
+      setNickname(user.displayName);
+    }
+  }, [user]);
 
   useEffect(() => {
     setLoadStatus('loading');
@@ -1755,7 +2158,6 @@ const PlayQuizPage: React.FC = () => {
   const isLast = currentIdx === quiz.questions.length - 1;
   const pct = Math.round(((currentIdx + 1) / quiz.questions.length) * 100);
 
-  // Used slots in Blind Ranking so locked slots cannot be overwritten
   const lockedSlotMap: Record<string, string> = {};
   if (gameType === 'blind_ranking') {
     quiz.questions.forEach((qItem) => {
@@ -1828,7 +2230,6 @@ const PlayQuizPage: React.FC = () => {
           </div>
         )}
 
-        {/* Stage Header & Progress */}
         <div
           style={{
             display: 'flex',
@@ -1848,9 +2249,6 @@ const PlayQuizPage: React.FC = () => {
 
         {errorMsg && <div className="alert-error">{errorMsg}</div>}
 
-        {/* ====================================================================
-         * GAMEPLAY UI 1: GUESS MY SIDE OR WOULD YOU RATHER (Big VS / OR Tiles)
-         * ==================================================================== */}
         {(gameType === 'guess_side' || gameType === 'would_you_rather') && (
           <div style={{ marginBottom: '1.5rem' }}>
             <h2
@@ -1891,9 +2289,6 @@ const PlayQuizPage: React.FC = () => {
           </div>
         )}
 
-        {/* ====================================================================
-         * GAMEPLAY UI 2: TWO TRUTHS & ONE LIE (Mask Icon + 3 Statements)
-         * ==================================================================== */}
         {gameType === 'two_truths' && (
           <div style={{ marginBottom: '1.5rem' }}>
             <div style={{ display: 'grid', placeItems: 'center', marginBottom: '0.6rem' }}>
@@ -1935,9 +2330,6 @@ const PlayQuizPage: React.FC = () => {
           </div>
         )}
 
-        {/* ====================================================================
-         * GAMEPLAY UI 3: BLIND RANKING (Reveal Item 1-by-1 & Lock Slot 1..N)
-         * ==================================================================== */}
         {gameType === 'blind_ranking' && (
           <div style={{ marginBottom: '1.5rem' }}>
             <div className="g" style={{ textAlign: 'center', marginBottom: '1.1rem' }}>
@@ -1969,7 +2361,6 @@ const PlayQuizPage: React.FC = () => {
                       const nextAns = { ...answers, [question.id]: slotId };
                       setAnswers(nextAns);
 
-                      // Auto-advance once locked if strict blind lock is active
                       if (quiz.settings?.lockPositions !== false) {
                         if (!isLast) {
                           setTimeout(() => setCurrentIdx((i) => i + 1), 240);
@@ -1999,9 +2390,6 @@ const PlayQuizPage: React.FC = () => {
           </div>
         )}
 
-        {/* ====================================================================
-         * GAMEPLAY UI 4: CLASSIC FRIENDSHIP QUIZ (3 Fixed + 1 Write-In)
-         * ==================================================================== */}
         {gameType === 'quiz' && (
           <div style={{ marginBottom: '1.5rem' }}>
             <h2 style={{ fontSize: '1.28rem', marginTop: 0, marginBottom: '1.15rem' }}>
@@ -2026,7 +2414,6 @@ const PlayQuizPage: React.FC = () => {
                 );
               })}
 
-              {/* 4th Write-Your-Own Option */}
               <div
                 onClick={() => {
                   setErrorMsg(null);
@@ -2074,7 +2461,6 @@ const PlayQuizPage: React.FC = () => {
           </div>
         )}
 
-        {/* Navigation Buttons */}
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem' }}>
           <button
             type="button"
@@ -2124,7 +2510,7 @@ const PlayQuizPage: React.FC = () => {
 };
 
 /* ============================================================================
- * 6. MULTI-GAME RESULT & COMPARISON PAGE (/result/:submissionId)
+ * 7. MULTI-GAME RESULT & COMPARISON PAGE (/result/:submissionId)
  * ============================================================================ */
 const ResultPage: React.FC = () => {
   const { submissionId = '' } = useParams<{ submissionId: string }>();
@@ -2240,7 +2626,6 @@ const ResultPage: React.FC = () => {
           {result.quizTitle} • by {result.creatorDisplayName}
         </p>
 
-        {/* Liquid Glass Conic Score Ring */}
         <div className="ring" style={{ ['--pct' as any]: `${result.scorePercentage}%` }}>
           <div>{result.scorePercentage}%</div>
         </div>
@@ -2250,7 +2635,6 @@ const ResultPage: React.FC = () => {
           {result.score} of {result.totalQuestions} matched • {fb.subtitle}
         </p>
 
-        {/* Mode-Specific Breakdown (Guess My Side, Two Truths, Blind Ranking, Would You Rather) */}
         {details.length > 0 && gameType === 'guess_side' && (
           <div className="g" style={{ textAlign: 'left', marginBottom: '1.4rem' }}>
             <span className="lab" style={{ display: 'block', marginBottom: '0.6rem' }}>
@@ -2321,7 +2705,12 @@ const ResultPage: React.FC = () => {
                   <div className="o" style={{ justifyContent: 'center', padding: '0.5rem' }}>
                     {userRank} · {d.questionText}
                   </div>
-                  <span style={{ fontWeight: 800, color: d.isCorrect ? 'var(--green)' : 'var(--red)' }}>
+                  <span
+                    style={{
+                      fontWeight: 800,
+                      color: d.isCorrect ? 'var(--green)' : 'var(--red)',
+                    }}
+                  >
                     {d.isCorrect ? '=' : '≠'}
                   </span>
                   <div
@@ -2387,7 +2776,6 @@ const ResultPage: React.FC = () => {
           </div>
         )}
 
-        {/* Custom Written Answers */}
         {result.customAnswers && result.customAnswers.length > 0 && (
           <div className="g" style={{ textAlign: 'left', marginBottom: '1.4rem' }}>
             <strong style={{ display: 'block', marginBottom: '0.45rem', color: 'var(--cy)' }}>
@@ -2461,12 +2849,13 @@ const ResultPage: React.FC = () => {
 };
 
 /* ============================================================================
- * 7. GAME 01 · ASK ME ANYTHING (AMA) INBOX (/inbox) & PUBLIC PAGE (/ama/:slug)
+ * 8. GAME 01 · ASK ME ANYTHING (AMA) INBOX (/inbox) & PUBLIC PAGE (/ama/:slug)
  * ============================================================================ */
 const AmaInboxPage: React.FC = () => {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [inbox, setInbox] = useState<AmaInboxData | null>(null);
-  const [creatorName, setCreatorName] = useState('');
+  const [creatorName, setCreatorName] = useState(user?.displayName || '');
   const [promptText, setPromptText] = useState('Ask me anything anonymously!');
   const [tab, setTab] = useState<'private' | 'published'>('private');
   const [replyingId, setReplyingId] = useState<string | null>(null);
@@ -2482,6 +2871,9 @@ const AmaInboxPage: React.FC = () => {
         setInbox(res.inbox);
         setCreatorName(res.inbox.creatorDisplayName);
         setPromptText(res.inbox.promptText);
+      } else {
+        setInbox(null);
+        if (user?.displayName) setCreatorName(user.displayName);
       }
     } catch (e: any) {
       setErr(e.message);
@@ -2492,7 +2884,7 @@ const AmaInboxPage: React.FC = () => {
 
   useEffect(() => {
     loadInbox();
-  }, []);
+  }, [user?.id]);
 
   const handleSaveInbox = async (nextOpen?: boolean) => {
     setErr(null);
@@ -2522,7 +2914,14 @@ const AmaInboxPage: React.FC = () => {
     return (
       <div className="container animate-in" style={{ paddingTop: '2.2rem', maxWidth: '600px' }}>
         <div className="game-stage" style={{ ['--a' as any]: '#5B9BFA' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem', marginBottom: '1rem' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.85rem',
+              marginBottom: '1rem',
+            }}
+          >
             <GlassArt name="bubble" size={56} />
             <div>
               <span className="t">01 · Ask Me Anything</span>
@@ -2903,7 +3302,6 @@ const PublicAmaPage: React.FC = () => {
           </div>
         )}
 
-        {/* Published Q&A Feed */}
         {inbox.publishedQuestions && inbox.publishedQuestions.length > 0 && (
           <div style={{ marginTop: '2rem' }}>
             <span className="lab" style={{ display: 'block', marginBottom: '0.75rem' }}>
@@ -2935,16 +3333,16 @@ const PublicAmaPage: React.FC = () => {
 };
 
 /* ============================================================================
- * 8. GAME 04 · BFFQUEST WRAPPED (/wrapped) — REAL GAMEPLAY RECAP
+ * 9. GAME 04 · BFFQUEST WRAPPED (/wrapped) — REAL GAMEPLAY RECAP
  * ============================================================================ */
 const WrappedPage: React.FC = () => {
-  const { lang } = useLang();
+  const { user } = useAuth();
   const [recap, setRecap] = useState<WrappedRecapData | null>(null);
   const [slide, setSlide] = useState<'recap' | 'card'>('recap');
 
   useEffect(() => {
     api.getWrappedRecap().then(setRecap);
-  }, []);
+  }, [user?.id]);
 
   if (!recap) {
     return (
@@ -3066,9 +3464,7 @@ const WrappedPage: React.FC = () => {
                 >
                   {recap.totalPlayed + recap.totalCreated}
                 </div>
-                <h2 style={{ margin: '0.3rem 0 0.5rem' }}>
-                  Total Moments Played & Created
-                </h2>
+                <h2 style={{ margin: '0.3rem 0 0.5rem' }}>Total Moments Played & Created</h2>
                 <p style={{ color: 'var(--t2)' }}>
                   Top Game: <strong>{recap.topGameTitle}</strong>
                 </p>
@@ -3128,20 +3524,20 @@ const WrappedPage: React.FC = () => {
 };
 
 /* ============================================================================
- * 9. GAME 07 · DAILY QUEST (/daily) — STREAK CALENDAR & BADGES
+ * 10. GAME 07 · DAILY QUEST (/daily) — STREAK CALENDAR & BADGES
  * ============================================================================ */
 const DailyQuestPage: React.FC = () => {
   const { lang } = useLang();
+  const { user } = useAuth();
   const [status, setStatus] = useState<DailyQuestStatus>(() => api.getDailyQuestStatus());
 
   useEffect(() => {
-    setStatus(api.getDailyQuestStatus());
-  }, []);
+    api.getDailyQuestStatusAsync().then(setStatus);
+  }, [user?.id]);
 
   const daysOfWeek = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
   const completedSet = new Set(status.completedDates);
 
-  // Last 28 days for History Grid
   const last28Days = Array.from({ length: 28 }, (_, idx) => {
     const d = new Date();
     d.setDate(d.getDate() - (27 - idx));
@@ -3169,7 +3565,6 @@ const DailyQuestPage: React.FC = () => {
           <span className="t ok">🔥 {status.currentStreak} Day Streak</span>
         </div>
 
-        {/* Today's Challenge Card */}
         <div
           className="g"
           style={{
@@ -3192,16 +3587,11 @@ const DailyQuestPage: React.FC = () => {
         </div>
 
         {!status.isCompletedToday && (
-          <Link
-            to={targetRoute}
-            className="b"
-            style={{ width: '100%', marginBottom: '1.5rem' }}
-          >
+          <Link to={targetRoute} className="b" style={{ width: '100%', marginBottom: '1.5rem' }}>
             Start Today’s Challenge ›
           </Link>
         )}
 
-        {/* 28-Day Completion History */}
         <div className="g" style={{ marginBottom: '1.4rem' }}>
           <div
             style={{
@@ -3227,7 +3617,6 @@ const DailyQuestPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Real Achievements & Badges */}
         <div className="g">
           <span className="lab" style={{ display: 'block', marginBottom: '0.75rem' }}>
             Badges (Unlocked from Real Gameplay)
@@ -3267,15 +3656,18 @@ const DailyQuestPage: React.FC = () => {
 };
 
 /* ============================================================================
- * 10. PROFILE / MY QUIZZES DASHBOARD (/dashboard)
+ * 11. PROFILE & MY QUIZZES DASHBOARD (/dashboard) WITH PERMANENT CLOUD ID
  * ============================================================================ */
 const DashboardPage: React.FC = () => {
   const { lang, t } = useLang();
+  const { user, refreshUser } = useAuth();
   const [quizzes, setQuizzes] = useState<CreatorQuizSummary[]>([]);
   const [filter, setFilter] = useState<'all' | 'published' | 'disabled'>('all');
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [copiedQuizId, setCopiedQuizId] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState(false);
+  const [nameDraft, setNameDraft] = useState('');
 
   const load = async () => {
     setLoading(true);
@@ -3292,7 +3684,7 @@ const DashboardPage: React.FC = () => {
 
   useEffect(() => {
     load();
-  }, []);
+  }, [user?.id]);
 
   const totalSubs = quizzes.reduce((acc, q) => acc + q.submissionCount, 0);
   const totalWeightedSum = quizzes.reduce(
@@ -3306,6 +3698,121 @@ const DashboardPage: React.FC = () => {
 
   return (
     <div className="container animate-in" style={{ paddingTop: '2rem' }}>
+      {/* Permanent Cloud Account Identity Banner */}
+      <div
+        className="g card-elevated"
+        style={{
+          marginBottom: '1.6rem',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '1rem',
+        }}
+      >
+        {user ? (
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.95rem', flexWrap: 'wrap' }}>
+              <div
+                className="user-avatar-badge"
+                style={{ width: 52, height: 52, fontSize: '1.25rem' }}
+              >
+                {user.avatarUrl ? (
+                  <img src={user.avatarUrl} alt={user.displayName} />
+                ) : (
+                  user.displayName.slice(0, 1).toUpperCase()
+                )}
+              </div>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  {editingName ? (
+                    <div style={{ display: 'inline-flex', gap: '0.4rem', alignItems: 'center' }}>
+                      <input
+                        className="form-input"
+                        style={{ minHeight: 34, padding: '0.25rem 0.65rem', width: 170 }}
+                        value={nameDraft}
+                        onChange={(e) => setNameDraft(e.target.value)}
+                      />
+                      <button
+                        type="button"
+                        className="b btn-sm"
+                        onClick={async () => {
+                          await api.updateProfileName(nameDraft);
+                          await refreshUser();
+                          setEditingName(false);
+                        }}
+                      >
+                        Save
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <h2 style={{ margin: 0, fontSize: '1.3rem' }}>{user.displayName}</h2>
+                      <button
+                        type="button"
+                        className="b o btn-sm"
+                        style={{ minHeight: 28, padding: '0.15rem 0.55rem', fontSize: '0.74rem' }}
+                        onClick={() => {
+                          setNameDraft(user.displayName);
+                          setEditingName(true);
+                        }}
+                      >
+                        <Edit3 size={12} /> Edit
+                      </button>
+                    </>
+                  )}
+                  <span className="t ok">Cloud Synced ({user.provider})</span>
+                </div>
+                <div style={{ fontSize: '0.84rem', color: 'var(--t2)', marginTop: '0.15rem' }}>
+                  {user.email} • Permanent ID: <code style={{ color: 'var(--cy)' }}>{user.id.slice(0, 8)}...</code>
+                </div>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="b x btn-sm"
+              onClick={async () => {
+                await api.signOut();
+                await refreshUser();
+                await load();
+              }}
+            >
+              <LogOut size={15} />
+              <span>{lang === 'bn' ? 'লগআউট' : 'Sign Out'}</span>
+            </button>
+          </>
+        ) : (
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.9rem' }}>
+              <GlassArt name="badge" size={46} />
+              <div>
+                <span className="t w">Guest Session</span>
+                <h3 style={{ margin: '0.2rem 0 0.1rem' }}>
+                  {lang === 'bn'
+                    ? 'আপনার সব গেম ও স্কোর আজীবন সংরক্ষিত রাখতে লগইন করুন'
+                    : 'Save Your Quizzes, Inbox & Streaks Forever'}
+                </h3>
+                <p style={{ margin: 0, fontSize: '0.86rem', color: 'var(--t2)' }}>
+                  {lang === 'bn'
+                    ? 'Google, Facebook বা ইমেইল দিয়ে লগইন করলে যেকোনো ডিভাইস থেকে আপনার সব ডাটা ফিরে পাবেন।'
+                    : 'Sign in with Google, Facebook, or Email so your data stays tied to your permanent Cloud ID on any device.'}
+                </p>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.55rem', flexWrap: 'wrap' }}>
+              <Link to="/auth" className="b btn-sm">
+                <LogIn size={15} /> {lang === 'bn' ? 'সাইন-ইন করুন' : 'Sign In'}
+              </Link>
+              <Link to="/auth?mode=signup" className="b o btn-sm">
+                {lang === 'bn' ? 'অ্যাকাউন্ট খুলুন' : 'Create Account'}
+              </Link>
+            </div>
+          </>
+        )}
+      </div>
+
       <div
         style={{
           display: 'flex',
@@ -3543,7 +4050,7 @@ const DashboardPage: React.FC = () => {
 };
 
 /* ============================================================================
- * 11. LIQUID GLASS SITE-OWNER ADMIN PANEL (/admin)
+ * 12. LIQUID GLASS SITE-OWNER ADMIN PANEL (/admin)
  * ============================================================================ */
 const AdminPage: React.FC = () => {
   const { t } = useLang();
@@ -3589,7 +4096,7 @@ const AdminPage: React.FC = () => {
               marginBottom: '0.5rem',
             }}
           >
-            <Lock size={22} color="var(--cy)" />
+            <KeyRound size={22} color="var(--cy)" />
             <h1 style={{ margin: 0, fontSize: '1.5rem' }}>{t.adminTitle}</h1>
           </div>
           <p style={{ color: 'var(--t2)', fontSize: '0.9rem' }}>
@@ -3669,7 +4176,6 @@ const AdminPage: React.FC = () => {
 
       {err && <div className="alert-error">{err}</div>}
 
-      {/* Liquid Glass Admin Stat Cards */}
       <div className="grid-4" style={{ marginBottom: '1.75rem' }}>
         <div className="g">
           <span className="lab">Published Games</span>
@@ -3701,7 +4207,6 @@ const AdminPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Abuse Reports Queue */}
       <div className="g" style={{ marginBottom: '1.75rem' }}>
         <h2 style={{ marginTop: 0, fontSize: '1.25rem' }}>Moderation & Abuse Reports Queue</h2>
         {data.reports.length === 0 ? (
@@ -3763,7 +4268,6 @@ const AdminPage: React.FC = () => {
         )}
       </div>
 
-      {/* All Games Directory */}
       <div className="g">
         <div
           style={{
@@ -3775,7 +4279,9 @@ const AdminPage: React.FC = () => {
             marginBottom: '1rem',
           }}
         >
-          <h2 style={{ margin: 0, fontSize: '1.25rem' }}>All Cloud Games ({filteredQuizzes.length})</h2>
+          <h2 style={{ margin: 0, fontSize: '1.25rem' }}>
+            All Cloud Games ({filteredQuizzes.length})
+          </h2>
           <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
             <select
               className="form-select"
@@ -3863,7 +4369,7 @@ const AdminPage: React.FC = () => {
 };
 
 /* ============================================================================
- * 12. GUIDES, REPORT ABUSE & INFO PAGES
+ * 13. GUIDES, REPORT ABUSE & INFO PAGES
  * ============================================================================ */
 const GuidesPage: React.FC = () => {
   const { lang } = useLang();
@@ -3985,56 +4491,79 @@ const SimpleInfoPage: React.FC<{ title: string; text: string }> = ({ title, text
 
 export const App: React.FC = () => {
   const [lang, setLang] = useState<Lang>(() => getSavedLang());
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [authLoading, setAuthLoading] = useState<boolean>(true);
+
+  const refreshUser = async () => {
+    try {
+      const synced = await api.syncAuthenticatedUser();
+      setUser(synced);
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    refreshUser();
+    const unsubscribe = api.onAuthStateChange((nextUser) => {
+      setUser(nextUser);
+      setAuthLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
 
   return (
-    <LangContext.Provider value={{ lang, setLang, t: COPY[lang] }}>
-      <BrowserRouter>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/explore" element={<ExplorePage />} />
-            <Route path="/create" element={<CreateQuizPage />} />
-            <Route path="/q/:slug" element={<PublicQuizPage />} />
-            <Route path="/q/:slug/play" element={<PlayQuizPage />} />
-            <Route path="/result/:submissionId" element={<ResultPage />} />
-            <Route path="/inbox" element={<AmaInboxPage />} />
-            <Route path="/ama/:slug" element={<PublicAmaPage />} />
-            <Route path="/wrapped" element={<WrappedPage />} />
-            <Route path="/daily" element={<DailyQuestPage />} />
-            <Route path="/dashboard" element={<DashboardPage />} />
-            <Route path="/admin" element={<AdminPage />} />
-            <Route path="/guides" element={<GuidesPage />} />
-            <Route path="/report" element={<ReportAbusePage />} />
-            <Route
-              path="/about"
-              element={
-                <SimpleInfoPage
-                  title={`About ${BRAND.name}`}
-                  text={`${BRAND.name} is an interactive Liquid Glass friendship gaming platform supporting 8 game modes in English and Bangla without requiring friends to sign up.`}
-                />
-              }
-            />
-            <Route
-              path="/privacy"
-              element={
-                <SimpleInfoPage
-                  title="Privacy Policy"
-                  text="We store only the game prompts you publish, anonymous AMA questions (which remain private until answered), and participant nicknames/scores. Creators can delete their games anytime."
-                />
-              }
-            />
-            <Route
-              path="/terms"
-              element={
-                <SimpleInfoPage
-                  title="Terms & Community Guidelines"
-                  text="Games on BFFquest are playful social experiences. Harassment, bullying, or sharing private personal information is strictly prohibited."
-                />
-              }
-            />
-          </Routes>
-        </Layout>
-      </BrowserRouter>
-    </LangContext.Provider>
+    <AuthContext.Provider value={{ user, authLoading, refreshUser }}>
+      <LangContext.Provider value={{ lang, setLang, t: COPY[lang] }}>
+        <BrowserRouter>
+          <Layout>
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/auth" element={<AuthPage />} />
+              <Route path="/explore" element={<ExplorePage />} />
+              <Route path="/create" element={<CreateQuizPage />} />
+              <Route path="/q/:slug" element={<PublicQuizPage />} />
+              <Route path="/q/:slug/play" element={<PlayQuizPage />} />
+              <Route path="/result/:submissionId" element={<ResultPage />} />
+              <Route path="/inbox" element={<AmaInboxPage />} />
+              <Route path="/ama/:slug" element={<PublicAmaPage />} />
+              <Route path="/wrapped" element={<WrappedPage />} />
+              <Route path="/daily" element={<DailyQuestPage />} />
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/admin" element={<AdminPage />} />
+              <Route path="/guides" element={<GuidesPage />} />
+              <Route path="/report" element={<ReportAbusePage />} />
+              <Route
+                path="/about"
+                element={
+                  <SimpleInfoPage
+                    title={`About ${BRAND.name}`}
+                    text={`${BRAND.name} is an interactive Liquid Glass friendship gaming platform supporting 8 game modes in English and Bangla with permanent cloud accounts.`}
+                  />
+                }
+              />
+              <Route
+                path="/privacy"
+                element={
+                  <SimpleInfoPage
+                    title="Privacy Policy"
+                    text="We store only your profile, the games you publish, anonymous AMA questions (which remain private until answered), and participant scores. Creators can manage or delete their data anytime."
+                  />
+                }
+              />
+              <Route
+                path="/terms"
+                element={
+                  <SimpleInfoPage
+                    title="Terms & Community Guidelines"
+                    text="Games on BFFquest are playful social experiences. Harassment, bullying, or sharing private personal information is strictly prohibited."
+                  />
+                }
+              />
+            </Routes>
+          </Layout>
+        </BrowserRouter>
+      </LangContext.Provider>
+    </AuthContext.Provider>
   );
 };
