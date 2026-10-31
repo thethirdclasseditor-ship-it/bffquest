@@ -5,3 +5,4 @@ Disallow: /dashboard
 Disallow: /inbox
 Disallow: /auth
 Disallow: /result/
+
