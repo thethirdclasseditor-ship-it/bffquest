@@ -380,14 +380,42 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     document.body.appendChild(s);
   }, [path]);
 
+  const getAutoThemeByTime = (): 'light' | 'dark' => {
+    const hour = new Date().getHours();
+    return hour >= 6 && hour < 18 ? 'light' : 'dark';
+  };
+
+  const getTimeSlotKey = (): string => {
+    const now = new Date();
+    const slot = now.getHours() >= 6 && now.getHours() < 18 ? 'day' : 'night';
+    return `${now.getFullYear()}-${now.getMonth()}-${now.getDate()}-${slot}`;
+  };
+
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
-    return localStorage.getItem('bffquest_theme') === 'light' ? 'light' : 'dark';
+    localStorage.removeItem('bffquest_theme');
+    const savedSlot = sessionStorage.getItem('bffquest_theme_slot');
+    const savedTheme = sessionStorage.getItem('bffquest_theme');
+    if (savedSlot === getTimeSlotKey() && (savedTheme === 'light' || savedTheme === 'dark')) {
+      return savedTheme;
+    }
+    return getAutoThemeByTime();
   });
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem('bffquest_theme', theme);
   }, [theme]);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const savedSlot = sessionStorage.getItem('bffquest_theme_slot');
+      if (savedSlot !== getTimeSlotKey()) {
+        sessionStorage.removeItem('bffquest_theme_slot');
+        sessionStorage.removeItem('bffquest_theme');
+        setTheme(getAutoThemeByTime());
+      }
+    }, 60000);
+    return () => clearInterval(timer);
+  }, []);
   const [unreadAma, setUnreadAma] = useState(0);
   useEffect(() => {
     api.getUnreadAmaCount().then(setUnreadAma);
@@ -453,7 +481,12 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             <button
               type="button"
               className="theme-toggle-btn"
-              onClick={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
+              onClick={() => {
+                const next = theme === 'dark' ? 'light' : 'dark';
+                setTheme(next);
+                sessionStorage.setItem('bffquest_theme', next);
+                sessionStorage.setItem('bffquest_theme_slot', getTimeSlotKey());
+              }}
               title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
               aria-label="Toggle Light/Dark Theme"
             >
