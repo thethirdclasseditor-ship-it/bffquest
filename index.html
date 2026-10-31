@@ -26,131 +26,169 @@
 
   </head>
   <body>
-    <!-- Liquid Glass Vector Art & Gradient Definitions -->
+ <!-- Liquid Glass Vector Art & Gradient Definitions -->
     <svg width="0" height="0" style="position: absolute" aria-hidden="true">
       <defs>
+        <!-- Original Core Gradients (Enhanced for Richer Depth) -->
         <linearGradient id="gv" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="#C9B8FF" />
-          <stop offset="1" stop-color="#5B9BFA" />
+          <stop offset="0%" stop-color="#E2D6FF" />
+          <stop offset="45%" stop-color="#A78BFA" />
+          <stop offset="100%" stop-color="#3B82F6" />
         </linearGradient>
         <linearGradient id="gp" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="#D58BF5" />
-          <stop offset="1" stop-color="#7C5CFA" />
+          <stop offset="0%" stop-color="#F5D0FE" />
+          <stop offset="45%" stop-color="#D58BF5" />
+          <stop offset="100%" stop-color="#6D28D9" />
         </linearGradient>
         <linearGradient id="gw" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="#FDE68A" />
-          <stop offset="1" stop-color="#D58BF5" />
+          <stop offset="0%" stop-color="#FEF08A" />
+          <stop offset="48%" stop-color="#F59E0B" />
+          <stop offset="100%" stop-color="#EC4899" />
         </linearGradient>
         <linearGradient id="gc" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="#4FD1E8" />
-          <stop offset="1" stop-color="#3FD08A" />
+          <stop offset="0%" stop-color="#A5F3FC" />
+          <stop offset="45%" stop-color="#38BDF8" />
+          <stop offset="100%" stop-color="#10B981" />
         </linearGradient>
         <radialGradient id="go" cx=".32" cy=".28" r=".8">
-          <stop offset="0" stop-color="#fff" />
-          <stop offset=".3" stop-color="#C9B8FF" />
-          <stop offset="1" stop-color="#6D4FD8" />
+          <stop offset="0%" stop-color="#ffffff" />
+          <stop offset="32%" stop-color="#C9B8FF" />
+          <stop offset="100%" stop-color="#6D4FD8" />
         </radialGradient>
-        <radialGradient id="gl">
-          <stop offset="0" stop-color="#7C5CFA" stop-opacity=".5" />
-          <stop offset="1" stop-color="#7C5CFA" stop-opacity="0" />
+        <radialGradient id="gl" cx=".5" cy=".5" r=".5">
+          <stop offset="0%" stop-color="#8B5CF6" stop-opacity=".55" />
+          <stop offset="55%" stop-color="#38BDF8" stop-opacity=".22" />
+          <stop offset="100%" stop-color="#7C5CFA" stop-opacity="0" />
         </radialGradient>
+
+        <!-- 3D Frosted Glass Squircle Pedestal Gradients -->
+        <linearGradient id="g-tile" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity="0.28" />
+          <stop offset="50%" stop-color="#c9b8ff" stop-opacity="0.1" />
+          <stop offset="100%" stop-color="#4fd1e8" stop-opacity="0.18" />
+        </linearGradient>
+        <linearGradient id="g-rim" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity="0.75" />
+          <stop offset="50%" stop-color="#c9b8ff" stop-opacity="0.3" />
+          <stop offset="100%" stop-color="#ffffff" stop-opacity="0.15" />
+        </linearGradient>
+
+        <!-- 1. Coffee -->
         <symbol id="coffee" viewBox="0 0 64 64">
-          <path d="M12 24h32v14a14 14 0 0 1-14 14h-4a14 14 0 0 1-14-14z" fill="url(#gw)" />
-          <path d="M44 28h3a6 6 0 0 1 0 12h-3" fill="none" stroke="url(#gw)" stroke-width="4" />
-          <path
-            d="M22 8c-3 4 3 6 0 11M32 8c-3 4 3 6 0 11"
-            stroke="#fff"
-            stroke-opacity=".7"
-            stroke-width="3"
-            fill="none"
-            stroke-linecap="round"
-          />
-          <rect x="14" y="26" width="14" height="4" rx="2" fill="#fff" fill-opacity=".45" />
+          <rect x="4" y="4" width="56" height="56" rx="18" fill="url(#g-tile)" stroke="url(#g-rim)" stroke-width="1.4" />
+          <ellipse cx="32" cy="11" rx="18" ry="4" fill="#ffffff" fill-opacity="0.18" />
+          <path d="M14 26h28v12a13 13 0 0 1-13 13h-2a13 13 0 0 1-13-13z" fill="url(#gw)" />
+          <path d="M42 29h3.5a5.5 5.5 0 0 1 0 11H42" fill="none" stroke="url(#gw)" stroke-width="3.6" stroke-linecap="round" />
+          <path d="M23 13c-2.5 3.5 2.5 5.5 0 9.5M33 13c-2.5 3.5 2.5 5.5 0 9.5" stroke="url(#gc)" stroke-width="2.8" fill="none" stroke-linecap="round">
+            <animate attributeName="opacity" values="0.45;0.95;0.45" dur="3.2s" repeatCount="indefinite" />
+          </path>
+          <rect x="17" y="29" width="12" height="3.5" rx="1.75" fill="#ffffff" fill-opacity="0.55" />
         </symbol>
+
+        <!-- 2. Tea -->
         <symbol id="tea" viewBox="0 0 64 64">
-          <path
-            d="M8 30h40v2a16 16 0 0 1-16 16h-8A16 16 0 0 1 8 32z"
-            fill="url(#gv)"
-          />
-          <path d="M32 4c11 4 13 15 0 20C19 19 21 8 32 4z" fill="url(#gc)" />
-          <path d="M32 8v14" stroke="#fff" stroke-opacity=".6" stroke-width="2" />
-          <rect x="14" y="52" width="28" height="4" rx="2" fill="#fff" fill-opacity=".3" />
+          <rect x="4" y="4" width="56" height="56" rx="18" fill="url(#g-tile)" stroke="url(#g-rim)" stroke-width="1.4" />
+          <ellipse cx="32" cy="11" rx="18" ry="4" fill="#ffffff" fill-opacity="0.18" />
+          <path d="M12 31h40v2a15 15 0 0 1-15 15H27a15 15 0 0 1-15-15z" fill="url(#gv)" />
+          <path d="M32 10c9.5 3.5 11 12.5 0 17-11-4.5-9.5-13.5 0-17z" fill="url(#gc)">
+            <animateTransform attributeName="transform" type="rotate" values="-3 32 18;3 32 18;-3 32 18" dur="4s" repeatCount="indefinite" />
+          </path>
+          <path d="M32 13v11" stroke="#ffffff" stroke-opacity="0.75" stroke-width="2" stroke-linecap="round" />
+          <rect x="18" y="51" width="28" height="3.5" rx="1.75" fill="url(#gv)" opacity="0.65" />
         </symbol>
+
+        <!-- 3. Sun -->
         <symbol id="sun" viewBox="0 0 64 64">
-          <circle cx="32" cy="32" r="14" fill="url(#gw)" />
-          <g stroke="url(#gw)" stroke-width="4" stroke-linecap="round">
-            <path d="M32 6v6M32 52v6M6 32h6M52 32h6M14 14l4 4M46 46l4 4M50 14l-4 4M18 46l-4 4" />
+          <rect x="4" y="4" width="56" height="56" rx="18" fill="url(#g-tile)" stroke="url(#g-rim)" stroke-width="1.4" />
+          <circle cx="32" cy="32" r="13.5" fill="url(#gw)" />
+          <ellipse cx="28" cy="26" rx="5" ry="2.5" fill="#ffffff" fill-opacity="0.6" transform="rotate(-22 28 26)" />
+          <g stroke="url(#gw)" stroke-width="3.4" stroke-linecap="round">
+            <path d="M32 10v4.5M32 49.5V54M10 32h4.5M49.5 32H54M16.5 16.5l3.2 3.2M44.3 44.3l3.2 3.2M47.5 16.5l-3.2 3.2M19.7 44.3l-3.2 3.2" />
+            <animateTransform attributeName="transform" type="rotate" from="0 32 32" to="360 32 32" dur="28s" repeatCount="indefinite" />
           </g>
         </symbol>
+
+        <!-- 4. Moon -->
         <symbol id="moon" viewBox="0 0 64 64">
-          <path d="M38 8a24 24 0 1 0 18 38A20 20 0 0 1 38 8z" fill="url(#gv)" />
-          <circle cx="48" cy="14" r="3" fill="#fff" />
-          <circle cx="56" cy="26" r="2" fill="#fff" fill-opacity=".7" />
+          <rect x="4" y="4" width="56" height="56" rx="18" fill="url(#g-tile)" stroke="url(#g-rim)" stroke-width="1.4" />
+          <path d="M37 13a19 19 0 1 0 14 30 15.5 15.5 0 0 1-14-30z" fill="url(#gv)" />
+          <circle cx="46" cy="18" r="2.8" fill="url(#gw)">
+            <animate attributeName="opacity" values="0.4;1;0.4" dur="2.8s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="52" cy="28" r="1.8" fill="url(#gc)">
+            <animate attributeName="opacity" values="1;0.35;1" dur="3.4s" repeatCount="indefinite" />
+          </circle>
         </symbol>
+
+        <!-- 5. Mountain -->
         <symbol id="mount" viewBox="0 0 64 64">
-          <path d="M4 54 25 18l12 20 8-12 15 28z" fill="url(#gv)" />
-          <path d="m25 18 7 12-7-3-7 3z" fill="#fff" fill-opacity=".7" />
-          <circle cx="48" cy="12" r="6" fill="url(#gw)" />
+          <rect x="4" y="4" width="56" height="56" rx="18" fill="url(#g-tile)" stroke="url(#g-rim)" stroke-width="1.4" />
+          <circle cx="46" cy="18" r="5.5" fill="url(#gw)" />
+          <path d="M10 49L26 21l11 18 7-11 10 21H10z" fill="url(#gv)" />
+          <path d="M26 21l5.5 9.5L26 28l-5.5 2.5L26 21z" fill="#ffffff" fill-opacity="0.85" />
         </symbol>
+
+        <!-- 6. Flame (Daily Quest) -->
         <symbol id="flame" viewBox="0 0 64 64">
-          <path
-            d="M32 4c4 12 18 16 18 34a18 18 0 0 1-36 0c0-9 5-13 9-18 0 7 4 9 6 9-3-9-3-17 3-25z"
-            fill="url(#gw)"
-          />
-          <path
-            d="M32 30c3 6 8 8 8 15a8 8 0 0 1-16 0c0-4 3-6 4-9 1 3 3 4 4 4z"
-            fill="#fff"
-            fill-opacity=".6"
-          />
+          <rect x="4" y="4" width="56" height="56" rx="18" fill="url(#g-tile)" stroke="url(#g-rim)" stroke-width="1.4" />
+          <path d="M32 9c3.5 10.5 15.5 14 15.5 29.5a15.5 15.5 0 0 1-31 0c0-7.8 4.3-11.2 7.8-15.5 0 6 3.4 7.8 5.2 7.8-2.6-7.8-2.6-14.7 2.5-21.8z" fill="url(#gw)" />
+          <path d="M32 31c2.6 5.2 7 7 7 13a7 7 0 0 1-14 0c0-3.5 2.6-5.2 3.5-7.8.9 2.6 2.6 3.5 3.5 3.5z" fill="#ffffff" fill-opacity="0.78">
+            <animate attributeName="opacity" values="0.65;0.95;0.65" dur="2.2s" repeatCount="indefinite" />
+          </path>
         </symbol>
+
+        <!-- 7. Badge -->
         <symbol id="badge" viewBox="0 0 64 64">
-          <path d="M32 4l22 8v18c0 15-9 26-22 30C19 56 10 45 10 30V12z" fill="url(#gv)" />
-          <path
-            d="m22 32 7 7 13-15"
-            stroke="#fff"
-            stroke-width="5"
-            fill="none"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-          />
+          <rect x="4" y="4" width="56" height="56" rx="18" fill="url(#g-tile)" stroke="url(#g-rim)" stroke-width="1.4" />
+          <path d="M32 10l18 6.5v14.8c0 12.2-7.4 21.2-18 24.5-10.6-3.3-18-12.3-18-24.5V16.5z" fill="url(#gv)" />
+          <path d="m24 32 5.5 5.5 11-12.5" stroke="#ffffff" stroke-width="4.2" fill="none" stroke-linecap="round" stroke-linejoin="round" />
         </symbol>
+
+        <!-- 8. Bubble (AMA & Quiz) -->
         <symbol id="bubble" viewBox="0 0 64 64">
-          <path
-            d="M8 16a10 10 0 0 1 10-10h28a10 10 0 0 1 10 10v20a10 10 0 0 1-10 10H30L16 58V46A10 10 0 0 1 8 36z"
-            fill="url(#gv)"
-          />
-          <circle cx="22" cy="26" r="3.5" fill="#fff" />
-          <circle cx="32" cy="26" r="3.5" fill="#fff" />
-          <circle cx="42" cy="26" r="3.5" fill="#fff" />
+          <rect x="4" y="4" width="56" height="56" rx="18" fill="url(#g-tile)" stroke="url(#g-rim)" stroke-width="1.4" />
+          <path d="M12 20a9 9 0 0 1 9-9h22a9 9 0 0 1 9 9v16a9 9 0 0 1-9 9H29l-11 9v-9a9 9 0 0 1-6-9z" fill="url(#gv)" />
+          <circle cx="24" cy="28" r="3" fill="#ffffff">
+            <animate attributeName="opacity" values="0.45;1;0.45" dur="1.8s" begin="0s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="32" cy="28" r="3" fill="#ffffff">
+            <animate attributeName="opacity" values="0.45;1;0.45" dur="1.8s" begin="0.3s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="40" cy="28" r="3" fill="#ffffff">
+            <animate attributeName="opacity" values="0.45;1;0.45" dur="1.8s" begin="0.6s" repeatCount="indefinite" />
+          </circle>
         </symbol>
+
+        <!-- 9. Mask (Two Truths & One Lie) -->
         <symbol id="mask" viewBox="0 0 64 64">
-          <path d="M8 16c14-8 34-8 48 0v14c0 15-11 26-24 26S8 45 8 30z" fill="url(#gp)" />
-          <ellipse cx="22" cy="30" rx="6" ry="4.5" fill="#0A1020" />
-          <ellipse cx="42" cy="30" rx="6" ry="4.5" fill="#0A1020" />
-          <path
-            d="M26 44q6 4 12 0"
-            stroke="#fff"
-            stroke-opacity=".7"
-            stroke-width="3"
-            fill="none"
-            stroke-linecap="round"
-          />
+          <rect x="4" y="4" width="56" height="56" rx="18" fill="url(#g-tile)" stroke="url(#g-rim)" stroke-width="1.4" />
+          <path d="M12 20c11.5-6.5 28.5-6.5 40 0v11.5c0 12.5-9.2 21.5-20 21.5s-20-9-20-21.5z" fill="url(#gp)" />
+          <ellipse cx="24" cy="31" rx="4.8" ry="3.6" fill="#0A1020" />
+          <ellipse cx="40" cy="31" rx="4.8" ry="3.6" fill="#0A1020" />
+          <path d="M26 42q6 3.5 12 0" stroke="#ffffff" stroke-opacity="0.85" stroke-width="2.8" fill="none" stroke-linecap="round" />
         </symbol>
+
+        <!-- 10. Spark (Wrapped & Blind Ranking) -->
         <symbol id="spark" viewBox="0 0 64 64">
-          <path
-            d="M32 3c2 15 7 20 21 22-14 2-19 7-21 22-2-15-7-20-21-22 14-2 19-7 21-22z"
-            fill="url(#gp)"
-          />
-          <circle cx="52" cy="50" r="4" fill="url(#gc)" />
+          <rect x="4" y="4" width="56" height="56" rx="18" fill="url(#g-tile)" stroke="url(#g-rim)" stroke-width="1.4" />
+          <path d="M31 10c1.8 12.5 5.8 16.5 17.5 18.2-11.7 1.7-15.7 5.7-17.5 18.2-1.8-12.5-5.8-16.5-17.5-18.2 11.7-1.7 15.7-5.7 17.5-18.2z" fill="url(#gp)">
+            <animateTransform attributeName="transform" type="scale" values="1;1.06;1" additive="sum" dur="3.2s" repeatCount="indefinite" />
+          </path>
+          <circle cx="48" cy="17" r="3.2" fill="url(#gw)" />
+          <circle cx="49" cy="47" r="3.5" fill="url(#gc)" />
         </symbol>
+
+        <!-- 11. Friend Node Avatar Silhouette -->
         <symbol id="pp" viewBox="0 0 32 32">
-          <circle cx="16" cy="12" r="6" fill="#fff" fill-opacity=".92" />
-          <path d="M5 29a11 9 0 0 1 22 0z" fill="#fff" fill-opacity=".92" />
+          <circle cx="16" cy="12" r="5.8" fill="#ffffff" fill-opacity="0.95" />
+          <path d="M5.5 28.5a10.5 8.5 0 0 1 21 0z" fill="#ffffff" fill-opacity="0.95" />
         </symbol>
+
+        <!-- 12. Hero Constellation Orbit Art (Visible in Both Dark & Light Mode) -->
         <symbol id="hero2" viewBox="0 0 420 440">
-          <circle cx="210" cy="220" r="175" fill="url(#gl)" />
-          <circle cx="210" cy="220" r="196" fill="none" stroke="#fff" stroke-opacity=".07" />
-          <circle cx="210" cy="220" r="140" fill="none" stroke="#fff" stroke-opacity=".09" />
+          <circle cx="210" cy="220" r="180" fill="url(#gl)" />
+          <circle cx="210" cy="220" r="196" fill="none" stroke="url(#gv)" stroke-opacity="0.28" stroke-width="1.4" />
+          <circle cx="210" cy="220" r="140" fill="none" stroke="url(#gp)" stroke-opacity="0.32" stroke-width="1.4" stroke-dasharray="6 8" />
           <ellipse
             cx="210"
             cy="220"
@@ -159,18 +197,19 @@
             transform="rotate(-24 210 220)"
             fill="none"
             stroke="url(#gv)"
-            stroke-opacity=".45"
+            stroke-opacity="0.65"
+            stroke-width="2"
           />
           <g
-            stroke="#fff"
-            stroke-opacity=".22"
-            stroke-width="1.5"
-            stroke-dasharray="2 7"
+            stroke="url(#gv)"
+            stroke-opacity="0.45"
+            stroke-width="1.8"
+            stroke-dasharray="3 7"
             stroke-linecap="round"
           >
             <path d="M92 136 165 192M330 126 262 186M360 300 272 254M92 316 158 266M210 72v62" />
           </g>
-          <g stroke="#fff" stroke-opacity=".4">
+          <g stroke="#ffffff" stroke-opacity="0.65" stroke-width="1.5">
             <g transform="translate(70 120)">
               <circle r="28" fill="url(#gv)" />
               <use href="#pp" x="-16" y="-16" width="32" height="32" />
