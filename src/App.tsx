@@ -37,6 +37,8 @@ import {
   LogOut,
   LogIn,
   KeyRound,
+  Sun,
+  Moon,
 } from 'lucide-react';
 import {
   BRAND,
@@ -378,6 +380,14 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     document.body.appendChild(s);
   }, [path]);
 
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    return localStorage.getItem('bffquest_theme') === 'light' ? 'light' : 'dark';
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('bffquest_theme', theme);
+  }, [theme]);
   const [unreadAma, setUnreadAma] = useState(0);
   useEffect(() => {
     api.getUnreadAmaCount().then(setUnreadAma);
@@ -439,6 +449,16 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                 বাংলা
               </button>
             </div>
+
+            <button
+              type="button"
+              className="theme-toggle-btn"
+              onClick={() => setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'))}
+              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              aria-label="Toggle Light/Dark Theme"
+            >
+              {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
+            </button>
 
             {user ? (
               <Link to="/dashboard" className="user-nav-chip" title={user.email}>
@@ -1151,6 +1171,7 @@ const HomePage: React.FC = () => {
             <Link
               key={gm.id}
               to={gm.route}
+              data-game={gm.id}
               className="g game-card"
               style={{ ['--a' as any]: gm.accent }}
             >
@@ -1240,7 +1261,8 @@ const ExplorePage: React.FC = () => {
             return (
               <div
                 key={gm.id}
-                className="g"
+                data-game={gm.id}
+                className="g explore-mode-card"
                 style={{
                   ['--a' as any]: gm.accent,
                   display: 'flex',
@@ -3655,28 +3677,18 @@ const DashboardPage: React.FC = () => {
     0
   );
   const weightedAvg = totalSubs > 0 ? Math.round(totalWeightedSum / totalSubs) : 0;
-
   const shownQuizzes = quizzes.filter((q) => filter === 'all' || q.status === filter);
 
   return (
-    <div className="container animate-in" style={{ paddingTop: '2rem' }}>
-      <div
-        className="g card-elevated"
-        style={{
-          marginBottom: '1.6rem',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          gap: '1rem',
-        }}
-      >
+    <div className="container profile-minimal-wrap animate-in">
+      {/* 1. Minimalist Identity Card */}
+      <div className="g profile-header-clean">
         {user ? (
           <>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.95rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.85rem' }}>
               <div
                 className="user-avatar-badge"
-                style={{ width: 52, height: 52, fontSize: '1.25rem' }}
+                style={{ width: 46, height: 46, fontSize: '1.1rem' }}
               >
                 {user.avatarUrl ? (
                   <img src={user.avatarUrl} alt={user.displayName} />
@@ -3685,20 +3697,19 @@ const DashboardPage: React.FC = () => {
                 )}
               </div>
               <div>
-                <div
-                  style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}
-                >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
                   {editingName ? (
-                    <div style={{ display: 'inline-flex', gap: '0.4rem', alignItems: 'center' }}>
+                    <div style={{ display: 'inline-flex', gap: '0.35rem', alignItems: 'center' }}>
                       <input
                         className="form-input"
-                        style={{ minHeight: 34, padding: '0.25rem 0.65rem', width: 170 }}
+                        style={{ minHeight: 32, padding: '0.2rem 0.6rem', width: 150 }}
                         value={nameDraft}
                         onChange={(e) => setNameDraft(e.target.value)}
                       />
                       <button
                         type="button"
                         className="b btn-sm"
+                        style={{ minHeight: 32, padding: '0 0.7rem' }}
                         onClick={async () => {
                           await api.updateProfileName(nameDraft);
                           await refreshUser();
@@ -3710,30 +3721,41 @@ const DashboardPage: React.FC = () => {
                     </div>
                   ) : (
                     <>
-                      <h2 style={{ margin: 0, fontSize: '1.3rem' }}>{user.displayName}</h2>
+                      <strong style={{ fontSize: '1.15rem' }}>{user.displayName}</strong>
                       <button
                         type="button"
-                        className="b o btn-sm"
-                        style={{ minHeight: 28, padding: '0.15rem 0.55rem', fontSize: '0.74rem' }}
                         onClick={() => {
                           setNameDraft(user.displayName);
                           setEditingName(true);
                         }}
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          color: 'var(--t3)',
+                          cursor: 'pointer',
+                          padding: 2,
+                        }}
+                        title="Edit Name"
                       >
-                        <Edit3 size={12} /> Edit
+                        <Edit3 size={14} />
                       </button>
                     </>
                   )}
-                  <span className="t ok">Cloud Synced ({user.provider})</span>
+                  <span className="t ok" style={{ fontSize: '0.68rem', padding: '0.15rem 0.55rem' }}>
+                    Synced
+                  </span>
                 </div>
-                <div style={{ fontSize: '0.84rem', color: 'var(--t2)', marginTop: '0.15rem' }}>
-                  {user.email} • Permanent ID:{' '}
-                  <code style={{ color: 'var(--cy)' }}>{user.id.slice(0, 8)}...</code>
-                </div>
+                <div style={{ fontSize: '0.8rem', color: 'var(--t3)' }}>{user.email}</div>
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
+              <Link to="/wrapped" className="b o btn-sm">
+                ✨ Wrapped
+              </Link>
+              <Link to="/daily" className="b o btn-sm">
+                🔥 Daily
+              </Link>
               <button
                 type="button"
                 className="b o btn-sm"
@@ -3743,13 +3765,13 @@ const DashboardPage: React.FC = () => {
                   await load();
                 }}
               >
-                <LogOut size={15} />
+                <LogOut size={14} />
                 <span>{lang === 'bn' ? 'লগআউট' : 'Sign Out'}</span>
               </button>
-
               <button
                 type="button"
                 className="b x btn-sm"
+                title="Delete All My Cloud Data"
                 onClick={async () => {
                   if (
                     !window.confirm(
@@ -3766,157 +3788,142 @@ const DashboardPage: React.FC = () => {
                   }
                 }}
               >
-                <Trash2 size={15} />
-                <span>{lang === 'bn' ? 'সব ডাটা মুছুন' : 'Delete My Data'}</span>
+                <Trash2 size={14} />
               </button>
             </div>
           </>
         ) : (
           <>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.9rem' }}>
-              <GlassArt name="badge" size={46} />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+              <GlassArt name="badge" size={38} />
               <div>
-                <span className="t w">Guest Session</span>
-                <h3 style={{ margin: '0.2rem 0 0.1rem' }}>
+                <strong style={{ display: 'block', fontSize: '1rem' }}>
+                  {lang === 'bn' ? 'গেস্ট প্রোফাইল' : 'Guest Profile'}
+                </strong>
+                <span style={{ fontSize: '0.82rem', color: 'var(--t2)' }}>
                   {lang === 'bn'
-                    ? 'আপনার সব গেম ও স্কোর আজীবন সংরক্ষিত রাখতে লগইন করুন'
-                    : 'Save Your Quizzes, Inbox & Streaks Forever'}
-                </h3>
-                <p style={{ margin: 0, fontSize: '0.86rem', color: 'var(--t2)' }}>
-                  {lang === 'bn'
-                    ? 'Google, Facebook বা ইমেইল দিয়ে লগইন করলে যেকোনো ডিভাইস থেকে আপনার সব ডাটা ফিরে পাবেন।'
-                    : 'Sign in with Google, Facebook, or Email so your data stays tied to your permanent Cloud ID.'}
-                </p>
+                    ? 'সব গেম ও স্কোর ক্লাউডে সেভ রাখতে সাইন-ইন করুন'
+                    : 'Sign in to sync your games & scores across devices'}
+                </span>
               </div>
             </div>
-
-            <div style={{ display: 'flex', gap: '0.55rem', flexWrap: 'wrap' }}>
-              <Link to="/auth" className="b btn-sm">
-                <LogIn size={15} /> {lang === 'bn' ? 'সাইন-ইন করুন' : 'Sign In'}
+            <div style={{ display: 'flex', gap: '0.45rem' }}>
+              <Link to="/wrapped" className="b o btn-sm">
+                ✨ Wrapped
               </Link>
-              <Link to="/auth?mode=signup" className="b o btn-sm">
-                {lang === 'bn' ? 'অ্যাকাউন্ট খুলুন' : 'Create Account'}
+              <Link to="/auth" className="b btn-sm">
+                <LogIn size={14} /> {lang === 'bn' ? 'লগইন' : 'Sign In'}
               </Link>
             </div>
           </>
         )}
       </div>
 
+      {/* 2. Compact 3-Column Stat Strip */}
+      <div className="profile-stat-strip">
+        <div className="g profile-stat-box">
+          <strong>{quizzes.length}</strong>
+          <span className="lab">{t.totalQuizzes}</span>
+        </div>
+        <div className="g profile-stat-box">
+          <strong>{totalSubs}</strong>
+          <span className="lab">{t.totalSubmissions}</span>
+        </div>
+        <div className="g profile-stat-box">
+          <strong className="gr">{weightedAvg}%</strong>
+          <span className="lab">{t.avgScore}</span>
+        </div>
+      </div>
+
+      {err && <div className="alert-error">{err}</div>}
+
+      {/* 3. Filter & Create Toolbar */}
       <div
         style={{
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
           flexWrap: 'wrap',
-          gap: '1rem',
-          marginBottom: '0.5rem',
+          gap: '0.75rem',
+          marginBottom: '1rem',
         }}
       >
-        <h1 style={{ margin: 0 }}>{t.dashboardTitle}</h1>
-        <div style={{ display: 'flex', gap: '0.55rem', flexWrap: 'wrap' }}>
-          <Link to="/wrapped" className="b o btn-sm">
-            ✨ Wrapped
-          </Link>
-          <Link to="/daily" className="b o btn-sm">
-            🔥 Daily Quest
-          </Link>
-          <button type="button" className="b o btn-sm" onClick={load}>
-            <RefreshCw size={15} />
+        <div className="seg" style={{ width: 'auto', minWidth: 260 }}>
+          <button
+            type="button"
+            className={filter === 'all' ? 'on' : ''}
+            onClick={() => setFilter('all')}
+          >
+            All ({quizzes.length})
+          </button>
+          <button
+            type="button"
+            className={filter === 'published' ? 'on' : ''}
+            onClick={() => setFilter('published')}
+          >
+            Live
+          </button>
+          <button
+            type="button"
+            className={filter === 'disabled' ? 'on' : ''}
+            onClick={() => setFilter('disabled')}
+          >
+            Paused
+          </button>
+        </div>
+
+        <div style={{ display: 'flex', gap: '0.45rem' }}>
+          <button type="button" className="b o btn-sm" onClick={load} title="Refresh">
+            <RefreshCw size={14} />
           </button>
           <Link to="/create" className="b btn-sm">
             + {t.navCreate}
           </Link>
         </div>
       </div>
-      <p style={{ color: 'var(--t2)', marginTop: 0, marginBottom: '1.5rem' }}>{t.dashboardSub}</p>
 
-      {err && <div className="alert-error">{err}</div>}
-
-      <div className="grid-3" style={{ marginBottom: '1.5rem' }}>
-        <div className="g">
-          <span className="lab">{t.totalQuizzes}</span>
-          <strong style={{ display: 'block', fontSize: '2rem' }}>{quizzes.length}</strong>
-        </div>
-        <div className="g">
-          <span className="lab">{t.totalSubmissions}</span>
-          <strong style={{ display: 'block', fontSize: '2rem' }}>{totalSubs}</strong>
-        </div>
-        <div className="g">
-          <span className="lab">{t.avgScore}</span>
-          <strong className="gr" style={{ display: 'block', fontSize: '2rem' }}>
-            {weightedAvg}%
-          </strong>
-        </div>
-      </div>
-
-      <div className="seg" style={{ marginBottom: '1.25rem', maxWidth: '420px' }}>
-        <button
-          type="button"
-          className={filter === 'all' ? 'on' : ''}
-          onClick={() => setFilter('all')}
-        >
-          All ({quizzes.length})
-        </button>
-        <button
-          type="button"
-          className={filter === 'published' ? 'on' : ''}
-          onClick={() => setFilter('published')}
-        >
-          Live
-        </button>
-        <button
-          type="button"
-          className={filter === 'disabled' ? 'on' : ''}
-          onClick={() => setFilter('disabled')}
-        >
-          Paused
-        </button>
-      </div>
-
+      {/* 4. Minimalist Game List */}
       {loading ? (
-        <div className="g" style={{ textAlign: 'center' }}>
-          Loading your games...
+        <div className="g" style={{ textAlign: 'center', color: 'var(--t2)' }}>
+          Loading...
         </div>
       ) : shownQuizzes.length === 0 ? (
-        <div className="g" style={{ textAlign: 'center', padding: '2.5rem 1.5rem' }}>
-          <p style={{ color: 'var(--t2)', marginBottom: '1.25rem' }}>{t.noQuizzesYet}</p>
-          <Link to="/create" className="b">
+        <div className="g" style={{ textAlign: 'center', padding: '2.2rem 1.2rem' }}>
+          <p style={{ color: 'var(--t2)', margin: '0 0 1rem' }}>{t.noQuizzesYet}</p>
+          <Link to="/create" className="b btn-sm">
             {t.createBtn}
           </Link>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.1rem' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
           {shownQuizzes.map((q) => {
             const fullUrl = `${window.location.origin}/q/${q.slug}`;
             const isCopied = copiedQuizId === q.id;
             const modeMeta = GAME_MODES.find((m) => m.id === q.gameType) || GAME_MODES[0];
 
             return (
-              <div key={q.id} className="g">
-                <div
-                  style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    flexWrap: 'wrap',
-                    gap: '0.75rem',
-                  }}
-                >
-                  <div>
-                    <div style={{ display: 'flex', gap: '0.45rem', alignItems: 'center' }}>
-                      <span className={`t ${q.status === 'published' ? 'ok' : 'w'}`}>
-                        {q.status.toUpperCase()}
-                      </span>
-                      <span className="t">{modeMeta.title[lang]}</span>
+              <div key={q.id} data-game={q.gameType} className="g profile-game-row">
+                <div className="profile-game-row-main">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                    <GlassArt name={modeMeta.icon} size={36} />
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                        <strong style={{ fontSize: '1.02rem' }}>{q.title}</strong>
+                        <span
+                          className={`t ${q.status === 'published' ? 'ok' : 'w'}`}
+                          style={{ fontSize: '0.65rem', padding: '0.1rem 0.45rem' }}
+                        >
+                          {q.status === 'published' ? 'LIVE' : 'PAUSED'}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--t2)' }}>
+                        {modeMeta.title[lang]} • {q.submissionCount} {t.participantsCount} • Avg{' '}
+                        {q.averageScorePercentage}%
+                      </div>
                     </div>
-                    <h3 style={{ margin: '0.4rem 0 0.15rem' }}>{q.title}</h3>
-                    <span style={{ fontSize: '0.86rem', color: 'var(--t2)' }}>
-                      {q.questionCount} {t.questionsCount} • {q.submissionCount}{' '}
-                      {t.participantsCount}
-                    </span>
                   </div>
 
-                  <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
                     <button
                       type="button"
                       className="b btn-sm"
@@ -3930,12 +3937,11 @@ const DashboardPage: React.FC = () => {
                         }
                       }}
                     >
-                      {isCopied ? <Check size={15} /> : <Copy size={15} />}
-                      <span>{isCopied ? t.copiedBtn : t.copyLinkBtn}</span>
+                      {isCopied ? <Check size={14} /> : <Copy size={14} />}
+                      <span>{isCopied ? t.copiedBtn : 'Share'}</span>
                     </button>
-
-                    <Link to={`/q/${q.slug}`} className="b o btn-sm">
-                      <Eye size={15} /> {t.openQuizBtn}
+                    <Link to={`/q/${q.slug}`} className="b o btn-sm" title={t.openQuizBtn}>
+                      <Eye size={14} />
                     </Link>
                     <button
                       type="button"
@@ -3964,7 +3970,7 @@ const DashboardPage: React.FC = () => {
                         }
                       }}
                     >
-                      {t.deleteBtn}
+                      <Trash2 size={14} />
                     </button>
                   </div>
                 </div>
@@ -3972,43 +3978,30 @@ const DashboardPage: React.FC = () => {
                 {q.submissions.length > 0 && (
                   <div
                     style={{
-                      marginTop: '1rem',
-                      paddingTop: '1rem',
-                      borderTop: '1px solid rgba(255,255,255,0.1)',
+                      display: 'flex',
+                      gap: '0.45rem',
+                      flexWrap: 'wrap',
+                      paddingTop: '0.55rem',
+                      borderTop: '1px solid rgba(255,255,255,0.08)',
                     }}
                   >
-                    <strong
-                      style={{ display: 'block', fontSize: '0.86rem', marginBottom: '0.6rem' }}
-                    >
-                      {t.recentSubmissions}
-                    </strong>
-                    <div className="grid-2">
-                      {q.submissions.map((s) => (
-                        <div
-                          key={s.submissionId}
-                          style={{
-                            padding: '0.75rem',
-                            borderRadius: '14px',
-                            background: 'rgba(255,255,255,0.04)',
-                            border: '1px solid rgba(255,255,255,0.09)',
-                          }}
-                        >
-                          <div
-                            style={{
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              alignItems: 'center',
-                            }}
-                          >
-                            <strong>{s.participantNickname}</strong>
-                            <span style={{ color: 'var(--cy)', fontWeight: 700 }}>
-                              {s.score}/{s.totalQuestions} ({Math.round(Number(s.scorePercentage))}
-                              %)
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
+                    {q.submissions.slice(0, 6).map((s) => (
+                      <span
+                        key={s.submissionId}
+                        style={{
+                          fontSize: '0.76rem',
+                          padding: '0.2rem 0.6rem',
+                          borderRadius: '99px',
+                          background: 'rgba(255,255,255,0.06)',
+                          border: '1px solid rgba(255,255,255,0.1)',
+                        }}
+                      >
+                        {s.participantNickname}:{' '}
+                        <strong style={{ color: 'var(--cy)' }}>
+                          {Math.round(Number(s.scorePercentage))}%
+                        </strong>
+                      </span>
+                    ))}
                   </div>
                 )}
               </div>
