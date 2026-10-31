@@ -1379,3 +1379,327 @@ a {
   padding: 0.45rem 1rem;
   text-align: center;
 }
+ /* ============================================================================
+ * 1. LIGHT MODE THEME & IMPROVED AMBIENT BACKGROUND ART
+ * ============================================================================ */
+[data-theme='light'] {
+  --bg: #f4f7fe;
+  --bg2: #ffffff;
+  --el: #eef2ff;
+  --t: #0f172a;
+  --t2: #475569;
+  --t3: #64748b;
+  --text-main: #0f172a;
+  --text-secondary: #475569;
+  --text-muted: #64748b;
+  --lav: #6d28d9;
+  --cy: #0284c7;
+  --pk: #c026d3;
+  --surface: rgba(255, 255, 255, 0.78);
+  --border: rgba(15, 23, 42, 0.1);
+  color-scheme: light;
+}
+
+[data-theme='light'] body {
+  background-color: #f4f7fe;
+  color: var(--t);
+}
+
+/* Improved Multi-Layer Background Art (Dark & Light) */
+.liquid-shell::before,
+.liquid-shell::after {
+  content: '';
+  position: fixed;
+  pointer-events: none;
+  z-index: 0;
+  border-radius: 50%;
+  filter: blur(75px);
+  opacity: 0.45;
+}
+
+.liquid-shell::before {
+  width: 420px;
+  height: 420px;
+  top: 8%;
+  left: -120px;
+  background: radial-gradient(circle, rgba(124, 92, 250, 0.55), rgba(79, 209, 232, 0.15) 70%, transparent);
+}
+
+.liquid-shell::after {
+  width: 380px;
+  height: 380px;
+  bottom: 12%;
+  right: -110px;
+  background: radial-gradient(circle, rgba(213, 139, 245, 0.45), rgba(91, 155, 250, 0.15) 70%, transparent);
+}
+
+.liquid-shell > * {
+  position: relative;
+  z-index: 1;
+}
+
+[data-theme='light'] .liquid-shell {
+  background:
+    radial-gradient(55% 38% at 85% 5%, rgba(124, 92, 250, 0.18), transparent 70%),
+    radial-gradient(48% 35% at 5% 30%, rgba(56, 189, 248, 0.16), transparent 70%),
+    radial-gradient(50% 32% at 95% 75%, rgba(217, 70, 239, 0.12), transparent 70%),
+    radial-gradient(rgba(99, 102, 241, 0.08) 1px, transparent 1.6px) 0 0 / 24px 24px,
+    linear-gradient(180deg, #f8faff 0%, #eef2ff 55%, #f4f7fe 100%);
+}
+
+[data-theme='light'] .site-header {
+  background: rgba(255, 255, 255, 0.8);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+}
+
+[data-theme='light'] .desktop-pill-nav,
+[data-theme='light'] .lang-switch,
+[data-theme='light'] .seg {
+  background: rgba(15, 23, 42, 0.05);
+  border-color: rgba(15, 23, 42, 0.09);
+}
+
+[data-theme='light'] .pill-nav-link.active,
+[data-theme='light'] .seg button.on {
+  background: #ffffff;
+  color: #0f172a;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+}
+
+[data-theme='light'] .user-nav-chip,
+[data-theme='light'] .theme-toggle-btn {
+  background: rgba(15, 23, 42, 0.05);
+  border-color: rgba(15, 23, 42, 0.12);
+  color: #0f172a;
+}
+
+[data-theme='light'] .g,
+[data-theme='light'] .card {
+  background: linear-gradient(150deg, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0.76));
+  border: 1px solid rgba(99, 102, 241, 0.14);
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.06), inset 0 1px 0 #ffffff;
+}
+
+[data-theme='light'] .game-stage {
+  background:
+    radial-gradient(110% 55% at 92% -10%, color-mix(in srgb, var(--a) 22%, transparent), transparent 62%),
+    linear-gradient(185deg, #ffffff, #f8faff 65%, #f1f5f9);
+  border-color: rgba(99, 102, 241, 0.18);
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.08);
+}
+
+[data-theme='light'] .o,
+[data-theme='light'] .option-choice,
+[data-theme='light'] .template-pill,
+[data-theme='light'] .leaderboard-row {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(15, 23, 42, 0.11);
+  color: #0f172a;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.03);
+}
+
+[data-theme='light'] .o.on,
+[data-theme='light'] .template-pill.active {
+  background: linear-gradient(#f5f3ff, #f5f3ff) padding-box,
+    linear-gradient(135deg, var(--a), var(--cy)) border-box;
+  border: 1.5px solid transparent;
+}
+
+[data-theme='light'] .form-input,
+[data-theme='light'] .form-textarea,
+[data-theme='light'] .form-select {
+  background: #ffffff;
+  border-color: rgba(15, 23, 42, 0.15);
+  color: #0f172a;
+}
+
+[data-theme='light'] .b.o,
+[data-theme='light'] .btn-outline {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(15, 23, 42, 0.15);
+  color: #0f172a;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+}
+
+[data-theme='light'] .mobile-dock {
+  background: rgba(255, 255, 255, 0.88);
+  border-color: rgba(15, 23, 42, 0.12);
+  box-shadow: 0 14px 34px rgba(15, 23, 42, 0.14);
+}
+
+[data-theme='light'] .dock-item.active {
+  color: var(--primary);
+}
+
+.theme-toggle-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(255, 255, 255, 0.07);
+  color: var(--t);
+  display: inline-grid;
+  place-items: center;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+
+.theme-toggle-btn:hover {
+  transform: scale(1.06);
+  background: rgba(255, 255, 255, 0.14);
+}
+
+/* ============================================================================
+ * 2. PER-GAME CARD VIBE BACKGROUNDS (Distinct Aura & Pattern per Game Mode)
+ * ============================================================================ */
+.game-card,
+.explore-mode-card {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.game-card::after,
+.explore-mode-card::after {
+  position: absolute;
+  right: 12px;
+  bottom: 6px;
+  font-size: 3.1rem;
+  font-weight: 900;
+  line-height: 1;
+  opacity: 0.08;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* 1. Friendship Quiz: Cosmic Violet Trivia Vibe */
+[data-game='quiz'] {
+  background:
+    radial-gradient(120% 90% at 100% 0%, rgba(124, 92, 250, 0.34), transparent 65%),
+    radial-gradient(80% 80% at 0% 100%, rgba(79, 209, 232, 0.14), transparent 60%),
+    var(--surface);
+  border-color: rgba(124, 92, 250, 0.32);
+}
+[data-game='quiz']::after { content: 'Q&A'; }
+
+/* 2. Ask Me Anything (AMA): Deep Cyan/Blue Secret Whisper Vibe */
+[data-game='ama'] {
+  background:
+    radial-gradient(120% 90% at 100% 0%, rgba(91, 155, 250, 0.36), transparent 65%),
+    radial-gradient(90% 80% at 0% 100%, rgba(56, 189, 248, 0.16), transparent 60%),
+    var(--surface);
+  border-color: rgba(91, 155, 250, 0.34);
+}
+[data-game='ama']::after { content: 'AMA'; }
+
+/* 3. Guess My Side: Dual 50/50 Split Vibe */
+[data-game='guess_side'] {
+  background:
+    linear-gradient(135deg, rgba(79, 209, 232, 0.24) 0%, transparent 48%, rgba(245, 158, 11, 0.22) 100%),
+    var(--surface);
+  border-color: rgba(79, 209, 232, 0.34);
+}
+[data-game='guess_side']::after { content: 'A/B'; }
+
+/* 4. Two Truths & One Lie: Mystery Gold & Crimson Vibe */
+[data-game='two_truths'] {
+  background:
+    radial-gradient(120% 90% at 100% 0%, rgba(242, 184, 75, 0.32), transparent 62%),
+    radial-gradient(90% 80% at 0% 100%, rgba(248, 113, 113, 0.18), transparent 60%),
+    var(--surface);
+  border-color: rgba(242, 184, 75, 0.34);
+}
+[data-game='two_truths']::after { content: '2T1L'; }
+
+/* 5. BFFQuest Wrapped: Holographic Prism Vibe */
+[data-game='wrapped'] {
+  background:
+    linear-gradient(135deg, rgba(213, 139, 245, 0.3), rgba(124, 92, 250, 0.2) 50%, rgba(79, 209, 232, 0.24)),
+    var(--surface);
+  border-color: rgba(213, 139, 245, 0.38);
+}
+[data-game='wrapped']::after { content: '2026'; }
+
+/* 6. Blind Ranking: Podium Tier Vibe */
+[data-game='blind_ranking'] {
+  background:
+    radial-gradient(120% 90% at 100% 0%, rgba(167, 139, 250, 0.34), transparent 65%),
+    repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.025) 0 10px, transparent 10px 20px),
+    var(--surface);
+  border-color: rgba(167, 139, 250, 0.34);
+}
+[data-game='blind_ranking']::after { content: '#1-5'; }
+
+/* 7. Would You Rather: Dilemma Coral & Violet Split Vibe */
+[data-game='would_you_rather'] {
+  background:
+    linear-gradient(140deg, rgba(236, 72, 153, 0.25) 0%, transparent 50%, rgba(99, 102, 241, 0.25) 100%),
+    var(--surface);
+  border-color: rgba(236, 72, 153, 0.32);
+}
+[data-game='would_you_rather']::after { content: 'WYR'; }
+
+/* 8. Daily Quest: Lush Emerald Streak Vibe */
+[data-game='daily_quest'] {
+  background:
+    radial-gradient(120% 90% at 100% 0%, rgba(63, 208, 138, 0.34), transparent 65%),
+    radial-gradient(80% 80% at 0% 100%, rgba(16, 185, 129, 0.16), transparent 60%),
+    var(--surface);
+  border-color: rgba(63, 208, 138, 0.35);
+}
+[data-game='daily_quest']::after { content: '🔥'; }
+
+/* ============================================================================
+ * 3. MINIMALIST CLEAN PROFILE LAYOUT
+ * ============================================================================ */
+.profile-minimal-wrap {
+  max-width: 820px;
+  margin: 0 auto;
+  padding-top: 1.75rem;
+}
+
+.profile-header-clean {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 1.25rem 1.4rem;
+  margin-bottom: 1rem;
+}
+
+.profile-stat-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.profile-stat-box {
+  padding: 0.95rem 1.1rem;
+  border-radius: 18px;
+  text-align: center;
+}
+
+.profile-stat-box strong {
+  display: block;
+  font-size: 1.55rem;
+  line-height: 1.15;
+}
+
+.profile-game-row {
+  padding: 1rem 1.2rem;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.profile-game-row-main {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
