@@ -700,7 +700,16 @@ const AuthPage: React.FC = () => {
         setTimeout(() => navigate('/dashboard'), 1200);
       }
     } catch (error: any) {
-      setErr(error.message || 'Authentication error.');
+      const rawMsg = String(error?.message || '');
+      if (rawMsg.toLowerCase().includes('invalid login credentials')) {
+        setErr(
+          lang === 'bn'
+            ? 'ইমেইল বা পাসওয়ার্ড মেলেনি! আপনি নতুন হলে উপরে "নতুন অ্যাকাউন্ট" ট্যাবে ট্যাপ করে আগে অ্যাকাউন্ট খুলুন অথবা Google দিয়ে লগইন করুন।'
+            : 'Incorrect email or password! If you are new here, tap "Create Account" above to sign up first, or continue with Google.'
+        );
+      } else {
+        setErr(rawMsg || 'Authentication error.');
+      }
     } finally {
       setBusy(false);
     }
@@ -730,6 +739,64 @@ const AuthPage: React.FC = () => {
         </div>
 
         <div className="auth-form-side">
+          {/* Clear Top Mode Switcher so New Users Don't Confuse Sign In with Sign Up */}
+          {(mode === 'signin' || mode === 'signup') && (
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '0.35rem',
+                padding: '0.3rem',
+                borderRadius: '999px',
+                background: '#f1f5f9',
+                border: '1px solid #e2e8f0',
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  setErr(null);
+                  setInfo(null);
+                  setMode('signin');
+                }}
+                style={{
+                  padding: '0.55rem 0.75rem',
+                  borderRadius: '999px',
+                  border: 'none',
+                  fontWeight: 700,
+                  fontSize: '0.84rem',
+                  cursor: 'pointer',
+                  background: mode === 'signin' ? '#6d28d9' : 'transparent',
+                  color: mode === 'signin' ? '#ffffff' : '#475569',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                {lang === 'bn' ? 'সাইন-ইন (লগইন)' : 'Sign In'}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setErr(null);
+                  setInfo(null);
+                  setMode('signup');
+                }}
+                style={{
+                  padding: '0.55rem 0.75rem',
+                  borderRadius: '999px',
+                  border: 'none',
+                  fontWeight: 700,
+                  fontSize: '0.84rem',
+                  cursor: 'pointer',
+                  background: mode === 'signup' ? '#6d28d9' : 'transparent',
+                  color: mode === 'signup' ? '#ffffff' : '#475569',
+                  transition: 'all 0.2s ease',
+                }}
+              >
+                {lang === 'bn' ? 'নতুন অ্যাকাউন্ট' : 'Create Account'}
+              </button>
+            </div>
+          )}
+
           <div>
             <h1 className="auth-hello-title">
               <span>
