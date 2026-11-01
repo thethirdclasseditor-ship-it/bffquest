@@ -2002,3 +2002,97 @@ svg use[href='#hero2'] {
     flex-wrap: nowrap !important;
   }
 }
+/* ============================================================================
+ * 7. FIX OUTLINE BUTTONS (.b.o), LIGHT MODE ALERTS/BADGES & MOBILE AUTH CARD
+ * ============================================================================ */
+
+/* Prevent .b.o outline buttons from stretching like quiz option rows (.o) */
+.b.o {
+  width: auto !important;
+  display: inline-flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 0 1.25rem !important;
+  border-radius: 999px !important;
+}
+
+.b.o.btn-sm {
+  padding: 0 0.85rem !important;
+}
+
+/* Crisp, High-Contrast Alerts & Badges in Light Mode */
+[data-theme='light'] .alert-error {
+  background: #fef2f2 !important;
+  border: 1px solid #fecaca !important;
+  color: #b91c1c !important;
+  font-weight: 600;
+}
+
+[data-theme='light'] .alert-success {
+  background: #ecfdf5 !important;
+  border: 1px solid #a7f3d0 !important;
+  color: #047857 !important;
+  font-weight: 600;
+}
+
+[data-theme='light'] .t {
+  background: rgba(109, 40, 217, 0.08);
+  border-color: rgba(109, 40, 217, 0.2);
+  color: #4c1d95;
+}
+
+[data-theme='light'] .t.ok {
+  background: #d1fae5 !important;
+  border-color: #6ee7b7 !important;
+  color: #065f46 !important;
+}
+
+[data-theme='light'] .t.w {
+  background: #fef3c7 !important;
+  border-color: #fde68a !important;
+  color: #92400e !important;
+}
+
+[data-theme='light'] .b.x {
+  background: #fee2e2 !important;
+  border-color: #fca5a5 !important;
+  color: #b91c1c !important;
+}
+
+/* Fix Mobile Auth Card Right-Side Clipping & Bottom Navbar Overlap */
+@media (max-width: 820px) {
+  .auth-page-wrap {
+    padding: 0.75rem 0.75rem 6.5rem !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .auth-cloud-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    border-radius: 26px !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  .auth-form-side {
+    padding: 1.35rem 1.15rem 2.2rem !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .auth-pill-field,
+  .auth-submit-btn,
+  .auth-social-grid {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .auth-meta-row {
+    flex-wrap: wrap !important;
+    gap: 0.5rem !important;
+  }
+}
