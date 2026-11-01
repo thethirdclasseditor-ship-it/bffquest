@@ -70,6 +70,11 @@ import {
   WrappedRecapData,
   DailyQuestStatus,
 } from './api';
+import {
+  GamesLibraryPage,
+  LudoModeSelectPage,
+  MultiplayerLudoRoomPage,
+} from './ludo/LudoPages';
 
 interface LangContextType {
   lang: Lang;
@@ -368,6 +373,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const isPublicRoute =
       path === '/' ||
       path.startsWith('/explore') ||
+      path.startsWith('/games') ||
       path.startsWith('/q/') ||
       path.startsWith('/guides');
     if (!isPublicRoute || document.getElementById('monetag-pub-script')) return;
@@ -416,6 +422,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     }, 60000);
     return () => clearInterval(timer);
   }, []);
+
   const [unreadAma, setUnreadAma] = useState(0);
   useEffect(() => {
     api.getUnreadAmaCount().then(setUnreadAma);
@@ -427,7 +434,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   };
 
   const isHome = path === '/';
-  const isExplore = path.startsWith('/explore') || path.startsWith('/daily');
+  const isExplore =
+    path.startsWith('/explore') || path.startsWith('/daily') || path.startsWith('/games');
   const isCreate = path.startsWith('/create');
   const isInbox = path.startsWith('/inbox') || path.startsWith('/ama');
   const isProfile =
@@ -578,6 +586,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
               {BRAND.name}
             </span>
             <div style={{ display: 'flex', gap: '1.15rem', flexWrap: 'wrap' }}>
+              <Link to="/games">Ludo & Games</Link>
               <Link to="/explore">{t.navExplore}</Link>
               <Link to="/daily">Daily Quest</Link>
               <Link to="/wrapped">Wrapped</Link>
@@ -1011,8 +1020,8 @@ const HomePage: React.FC = () => {
             <Link to="/create" className="b" style={{ minHeight: '50px', padding: '0 1.75rem' }}>
               {t.createBtn}
             </Link>
-            <Link to="/explore" className="b o" style={{ minHeight: '50px', padding: '0 1.6rem' }}>
-              {t.exploreBtn}
+            <Link to="/games" className="b o" style={{ minHeight: '50px', padding: '0 1.6rem' }}>
+              🎲 Play Ludo & Snake Ludo
             </Link>
           </div>
         </div>
@@ -1089,14 +1098,16 @@ const HomePage: React.FC = () => {
         </Link>
 
         <Link
-          to="/explore"
+          to="/games"
           className="g"
           style={{ display: 'flex', alignItems: 'center', gap: '0.9rem' }}
         >
           <GlassArt name="sun" size={44} />
           <div>
-            <h3 style={{ margin: 0, fontSize: '1.05rem' }}>{t.qaPlayTitle}</h3>
-            <p style={{ margin: 0, color: 'var(--t2)', fontSize: '0.84rem' }}>{t.qaPlaySub}</p>
+            <h3 style={{ margin: 0, fontSize: '1.05rem' }}>Ludo & Snake Ludo</h3>
+            <p style={{ margin: 0, color: 'var(--t2)', fontSize: '0.84rem' }}>
+              Live 2P & 4P multiplayer rooms
+            </p>
           </div>
           <span style={{ marginLeft: 'auto', color: 'var(--t3)', fontSize: '1.3rem' }}>›</span>
         </Link>
@@ -1254,7 +1265,12 @@ const ExplorePage: React.FC = () => {
           }}
         >
           <h1 style={{ margin: 0, fontSize: '1.9rem' }}>{t.exploreGamesTitle}</h1>
-          <span className="t ok">{GAME_MODES.length} Interactive Modes</span>
+          <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+            <Link to="/games" className="b btn-sm">
+              🎲 Multiplayer Ludo Hub
+            </Link>
+            <span className="t ok">{GAME_MODES.length} Interactive Modes</span>
+          </div>
         </div>
 
         <div className="seg" style={{ marginBottom: '1.4rem' }}>
@@ -1277,7 +1293,7 @@ const ExplorePage: React.FC = () => {
             className={filter === 'party' ? 'on' : ''}
             onClick={() => setFilter('party')}
           >
-            Party
+            Party & Board
           </button>
           <button
             type="button"
@@ -3714,7 +3730,6 @@ const DashboardPage: React.FC = () => {
 
   return (
     <div className="container profile-minimal-wrap animate-in">
-      {/* 1. Minimalist Identity Card */}
       <div className="g profile-header-clean">
         {user ? (
           <>
@@ -3730,7 +3745,9 @@ const DashboardPage: React.FC = () => {
                 )}
               </div>
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
+                <div
+                  style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}
+                >
                   {editingName ? (
                     <div style={{ display: 'inline-flex', gap: '0.35rem', alignItems: 'center' }}>
                       <input
@@ -3774,7 +3791,10 @@ const DashboardPage: React.FC = () => {
                       </button>
                     </>
                   )}
-                  <span className="t ok" style={{ fontSize: '0.68rem', padding: '0.15rem 0.55rem' }}>
+                  <span
+                    className="t ok"
+                    style={{ fontSize: '0.68rem', padding: '0.15rem 0.55rem' }}
+                  >
                     Synced
                   </span>
                 </div>
@@ -3782,7 +3802,9 @@ const DashboardPage: React.FC = () => {
               </div>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}>
+            <div
+              style={{ display: 'flex', alignItems: 'center', gap: '0.45rem', flexWrap: 'wrap' }}
+            >
               <Link to="/wrapped" className="b o btn-sm">
                 ✨ Wrapped
               </Link>
@@ -3852,7 +3874,6 @@ const DashboardPage: React.FC = () => {
         )}
       </div>
 
-      {/* 2. Compact 3-Column Stat Strip */}
       <div className="profile-stat-strip">
         <div className="g profile-stat-box">
           <strong>{quizzes.length}</strong>
@@ -3870,7 +3891,6 @@ const DashboardPage: React.FC = () => {
 
       {err && <div className="alert-error">{err}</div>}
 
-      {/* 3. Filter & Create Toolbar */}
       <div
         style={{
           display: 'flex',
@@ -3915,7 +3935,6 @@ const DashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* 4. Minimalist Game List */}
       {loading ? (
         <div className="g" style={{ textAlign: 'center', color: 'var(--t2)' }}>
           Loading...
@@ -4383,11 +4402,18 @@ const GuidesPage: React.FC = () => {
           next!
         </p>
       </div>
-      <div className="g">
+      <div className="g" style={{ marginBottom: '1.1rem' }}>
         <h3>3. Would You Rather, Daily Quests & Wrapped</h3>
         <p style={{ color: 'var(--t2)', margin: 0 }}>
           Vote on tough dilemmas with live group percentages, complete daily challenges to build
           your streak, and export your BFFQuest Wrapped share card anytime.
+        </p>
+      </div>
+      <div className="g">
+        <h3>4. Multiplayer Classic Ludo & Snake Ludo</h3>
+        <p style={{ color: 'var(--t2)', margin: 0 }}>
+          Create a 2-player or 4-player room in Classic Ludo or 1–100 Snake Ludo, share the 6-digit
+          room code or invite link, and play together in real time.
         </p>
       </div>
     </div>
@@ -4507,100 +4533,6 @@ export const App: React.FC = () => {
             <Routes>
               <Route path="/" element={<HomePage />} />
               <Route path="/auth" element={<AuthPage />} />
-              <Route path="/explore" element={<ExplorePage />} />
-              <Route path="/create" element={<CreateQuizPage />} />
-              <Route path="/q/:slug" element={<PublicQuizPage />} />
-              <Route path="/q/:slug/play" element={<PlayQuizPage />} />
-              <Route path="/result/:submissionId" element={<ResultPage />} />
-              <Route path="/inbox" element={<AmaInboxPage />} />
-              <Route path="/ama/:slug" element={<PublicAmaPage />} />
-              <Route path="/wrapped" element={<WrappedPage />} />
-              <Route path="/daily" element={<DailyQuestPage />} />
-              <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/admin" element={<AdminPage />} />
-              <Route path="/guides" element={<GuidesPage />} />
-              <Route path="/report" element={<ReportAbusePage />} />
-              <Route
-                path="/about"
-                element={
-                  <SimpleInfoPage
-                    title={`About ${BRAND.name}`}
-                    text={`${BRAND.name} is an interactive friendship gaming platform supporting multiple game modes in English and Bangla with permanent cloud accounts.`}
-                  />
-                }
-              />
-              <Route
-                path="/privacy"
-                element={
-                  <SimpleInfoPage
-                    title="Privacy Policy"
-                    text="We store your profile, published games, AMA questions, and scores in Supabase Cloud. Browser identifiers are used to prevent spam and duplicate voting, and public pages may display third-party ads (Monetag). Signed-in users can permanently delete all their cloud data anytime from their Profile."
-                  />
-                }
-              />
-              <Route
-                path="/terms"
-                element={
-                  <SimpleInfoPage
-                    title="Terms & Community Guidelines"
-                    text="Games on BFFquest are playful social experiences. Harassment, bullying, or sharing private personal information is strictly prohibited."
-                  />
-                }
-              />
-              <Route
-                path="*"
-                element={
-                  <SimpleInfoPage
-                    title="404 — Page Not Found"
-                    text="The page or game link you are looking for does not exist."
-                  />
-                }
-              />
-            </Routes>
-          </Layout>
-        </BrowserRouter>
-      </LangContext.Provider>
-    </AuthContext.Provider>
-  );
-};
-
-import {
-  GamesLibraryPage,
-  LudoModeSelectPage,
-  MultiplayerLudoRoomPage,
-} from './ludo/LudoPages';
-
-export const App: React.FC = () => {
-  const [lang, setLang] = useState<Lang>(() => getSavedLang());
-  const [user, setUser] = useState<AuthUser | null>(null);
-  const [authLoading, setAuthLoading] = useState<boolean>(true);
-
-  const refreshUser = async () => {
-    try {
-      const synced = await api.syncAuthenticatedUser();
-      setUser(synced);
-    } finally {
-      setAuthLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    refreshUser();
-    const unsubscribe = api.onAuthStateChange((nextUser) => {
-      setUser(nextUser);
-      setAuthLoading(false);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  return (
-    <AuthContext.Provider value={{ user, authLoading, refreshUser }}>
-      <LangContext.Provider value={{ lang, setLang, t: COPY[lang] }}>
-        <BrowserRouter>
-          <Layout>
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/auth" element={<AuthPage />} />
               <Route path="/games" element={<GamesLibraryPage user={user} lang={lang} />} />
               <Route
                 path="/games/ludo"
@@ -4674,3 +4606,5 @@ export const App: React.FC = () => {
     </AuthContext.Provider>
   );
 };
+
+export default App;
