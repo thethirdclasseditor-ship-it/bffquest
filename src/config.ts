@@ -1429,3 +1429,15 @@ export function getScoreFeedback(pct: number, lang: Lang) {
     subtitle: 'Low scores just mean more stories to share over coffee next time!',
   };
 }
+
+export type GameType =
+  | 'quiz'
+  | 'ama'
+  | 'guess_side'
+  | 'two_truths'
+  | 'wrapped'
+  | 'blind_ranking'
+  | 'would_you_rather'
+  | 'daily_quest'
+  | 'classic_ludo'
+  | 'snake_ludo';
