@@ -4570,7 +4570,38 @@ import {
   MultiplayerLudoRoomPage,
 } from './ludo/LudoPages';
 
-<Route path="/games" element={<GamesLibraryPage user={user} lang={lang} />} />
+export const App: React.FC = () => {
+  const [lang, setLang] = useState<Lang>(() => getSavedLang());
+  const [user, setUser] = useState<AuthUser | null>(null);
+  const [authLoading, setAuthLoading] = useState<boolean>(true);
+
+  const refreshUser = async () => {
+    try {
+      const synced = await api.syncAuthenticatedUser();
+      setUser(synced);
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    refreshUser();
+    const unsubscribe = api.onAuthStateChange((nextUser) => {
+      setUser(nextUser);
+      setAuthLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  return (
+    <AuthContext.Provider value={{ user, authLoading, refreshUser }}>
+      <LangContext.Provider value={{ lang, setLang, t: COPY[lang] }}>
+        <BrowserRouter>
+          <Layout>
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/auth" element={<AuthPage />} />
+              <Route path="/games" element={<GamesLibraryPage user={user} lang={lang} />} />
               <Route
                 path="/games/ludo"
                 element={<LudoModeSelectPage mode="classic" user={user} lang={lang} />}
@@ -4587,3 +4618,59 @@ import {
                 path="/games/snake-ludo/room/:roomId"
                 element={<MultiplayerLudoRoomPage expectedMode="snake" user={user} lang={lang} />}
               />
+              <Route path="/explore" element={<ExplorePage />} />
+              <Route path="/create" element={<CreateQuizPage />} />
+              <Route path="/q/:slug" element={<PublicQuizPage />} />
+              <Route path="/q/:slug/play" element={<PlayQuizPage />} />
+              <Route path="/result/:submissionId" element={<ResultPage />} />
+              <Route path="/inbox" element={<AmaInboxPage />} />
+              <Route path="/ama/:slug" element={<PublicAmaPage />} />
+              <Route path="/wrapped" element={<WrappedPage />} />
+              <Route path="/daily" element={<DailyQuestPage />} />
+              <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/admin" element={<AdminPage />} />
+              <Route path="/guides" element={<GuidesPage />} />
+              <Route path="/report" element={<ReportAbusePage />} />
+              <Route
+                path="/about"
+                element={
+                  <SimpleInfoPage
+                    title={`About ${BRAND.name}`}
+                    text={`${BRAND.name} is an interactive friendship gaming platform supporting multiple game modes in English and Bangla with permanent cloud accounts.`}
+                  />
+                }
+              />
+              <Route
+                path="/privacy"
+                element={
+                  <SimpleInfoPage
+                    title="Privacy Policy"
+                    text="We store your profile, published games, AMA questions, and scores in Supabase Cloud. Browser identifiers are used to prevent spam and duplicate voting, and public pages may display third-party ads (Monetag). Signed-in users can permanently delete all their cloud data anytime from their Profile."
+                  />
+                }
+              />
+              <Route
+                path="/terms"
+                element={
+                  <SimpleInfoPage
+                    title="Terms & Community Guidelines"
+                    text="Games on BFFquest are playful social experiences. Harassment, bullying, or sharing private personal information is strictly prohibited."
+                  />
+                }
+              />
+              <Route
+                path="*"
+                element={
+                  <SimpleInfoPage
+                    title="404 — Page Not Found"
+                    text="The page or game link you are looking for does not exist."
+                  />
+                }
+              />
+            </Routes>
+          </Layout>
+        </BrowserRouter>
+      </LangContext.Provider>
+    </AuthContext.Provider>
+  );
+};
