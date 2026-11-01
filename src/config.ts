@@ -1441,3 +1441,34 @@ export type GameType =
   | 'daily_quest'
   | 'classic_ludo'
   | 'snake_ludo';
+
+{
+    id: 'classic_ludo',
+    numberTag: '09',
+    icon: 'spark',
+    accent: '#EF4444',
+    route: '/games/ludo',
+    isCreatable: false,
+    category: 'party',
+    badge: { en: 'Multiplayer', bn: 'মাল্টিপ্লেয়ার' },
+    title: { en: 'Classic Ludo (2P / 4P)', bn: 'ক্লাসিক লুডু (২/৪ জন)' },
+    subtitle: {
+      en: 'Real-time 4-colour Ludo with room codes & live dice.',
+      bn: 'রুম কোড ও লাইভ ডাইসসহ ৪ রঙের ক্লাসিক লুডু।',
+    },
+  },
+  {
+    id: 'snake_ludo',
+    numberTag: '10',
+    icon: 'flame',
+    accent: '#10B981',
+    route: '/games/snake-ludo',
+    isCreatable: false,
+    category: 'party',
+    badge: { en: '1–100 Board', bn: '১–১০০ বোর্ড' },
+    title: { en: 'Snake Ludo (Snakes & Ladders)', bn: 'সাপ-লুডু (১–১০০)' },
+    subtitle: {
+      en: 'Climb ladders, dodge snakes, and race to Square 100 live.',
+      bn: 'মই বেয়ে উঠুন, সাপ এড়িয়ে সবার আগে ১০০ ঘরে পৌঁছান।',
+    },
+  },
