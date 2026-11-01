@@ -4563,3 +4563,27 @@ export const App: React.FC = () => {
     </AuthContext.Provider>
   );
 };
+
+import {
+  GamesLibraryPage,
+  LudoModeSelectPage,
+  MultiplayerLudoRoomPage,
+} from './ludo/LudoPages';
+
+<Route path="/games" element={<GamesLibraryPage user={user} lang={lang} />} />
+              <Route
+                path="/games/ludo"
+                element={<LudoModeSelectPage mode="classic" user={user} lang={lang} />}
+              />
+              <Route
+                path="/games/ludo/room/:roomId"
+                element={<MultiplayerLudoRoomPage expectedMode="classic" user={user} lang={lang} />}
+              />
+              <Route
+                path="/games/snake-ludo"
+                element={<LudoModeSelectPage mode="snake" user={user} lang={lang} />}
+              />
+              <Route
+                path="/games/snake-ludo/room/:roomId"
+                element={<MultiplayerLudoRoomPage expectedMode="snake" user={user} lang={lang} />}
+              />
