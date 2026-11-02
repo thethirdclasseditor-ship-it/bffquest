@@ -6,7 +6,6 @@ import {
   Copy,
   Check,
   MessageCircle,
-  Trophy,
   Volume2,
   VolumeX,
   LogOut,
@@ -17,6 +16,7 @@ import {
   ShieldCheck,
   Wifi,
   WifiOff,
+  Palette,
 } from 'lucide-react';
 import { AuthUser, copyTextSafely } from '../api';
 import { BRAND, Lang } from '../config';
@@ -26,6 +26,7 @@ import {
   PlayerCount,
   ClassicLudoState,
   SnakeLudoState,
+  ALL_LUDO_COLORS,
   OUTER_TRACK_COORDS,
   HOME_LANE_COORDS,
   BASE_TOKEN_COORDS,
@@ -47,6 +48,20 @@ const COLOR_HEX: Record<LudoColor, string> = {
   blue: '#3B82F6',
 };
 
+const COLOR_DARK_HEX: Record<LudoColor, string> = {
+  red: '#991B1B',
+  green: '#065F46',
+  yellow: '#B45309',
+  blue: '#1E40AF',
+};
+
+const COLOR_LIGHT_HEX: Record<LudoColor, string> = {
+  red: '#FCA5A5',
+  green: '#6EE7B7',
+  yellow: '#FDE047',
+  blue: '#93C5FD',
+};
+
 const COLOR_LABEL: Record<LudoColor, string> = {
   red: 'Red',
   green: 'Green',
@@ -55,10 +70,10 @@ const COLOR_LABEL: Record<LudoColor, string> = {
 };
 
 /* ============================================================================
- * LIGHTWEIGHT WEB AUDIO SYNTHESIZER (NO EXTERNAL ASSETS REQUIRED)
+ * WEB AUDIO SYNTHESIZER (INCLUDES 1-BY-1 STEP HOP SOUND)
  * ============================================================================ */
 function playSynthSound(
-  type: 'roll' | 'move' | 'capture' | 'ladder' | 'snake' | 'win',
+  type: 'roll' | 'step' | 'release' | 'capture' | 'ladder' | 'snake' | 'win',
   enabled: boolean
 ) {
   if (!enabled || typeof window === 'undefined') return;
@@ -72,34 +87,42 @@ function playSynthSound(
     gain.connect(ctx.destination);
 
     const now = ctx.currentTime;
-    if (type === 'roll') {
+    if (type === 'step') {
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(520, now);
+      osc.frequency.exponentialRampToValueAtTime(760, now + 0.065);
+      gain.gain.setValueAtTime(0.11, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.07);
+      osc.start(now);
+      osc.stop(now + 0.07);
+    } else if (type === 'release') {
       osc.type = 'triangle';
-      osc.frequency.setValueAtTime(280, now);
-      osc.frequency.exponentialRampToValueAtTime(520, now + 0.12);
+      osc.frequency.setValueAtTime(420, now);
+      osc.frequency.exponentialRampToValueAtTime(840, now + 0.14);
+      gain.gain.setValueAtTime(0.15, now);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+      osc.start(now);
+      osc.stop(now + 0.15);
+    } else if (type === 'roll') {
+      osc.type = 'triangle';
+      osc.frequency.setValueAtTime(260, now);
+      osc.frequency.exponentialRampToValueAtTime(540, now + 0.12);
       gain.gain.setValueAtTime(0.12, now);
       gain.gain.exponentialRampToValueAtTime(0.01, now + 0.14);
       osc.start(now);
       osc.stop(now + 0.14);
-    } else if (type === 'move') {
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(440, now);
-      osc.frequency.exponentialRampToValueAtTime(660, now + 0.09);
-      gain.gain.setValueAtTime(0.14, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-      osc.start(now);
-      osc.stop(now + 0.1);
     } else if (type === 'capture' || type === 'ladder') {
       osc.type = 'triangle';
-      osc.frequency.setValueAtTime(380, now);
-      osc.frequency.exponentialRampToValueAtTime(880, now + 0.24);
+      osc.frequency.setValueAtTime(360, now);
+      osc.frequency.exponentialRampToValueAtTime(920, now + 0.25);
       gain.gain.setValueAtTime(0.18, now);
-      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.25);
+      gain.gain.exponentialRampToValueAtTime(0.01, now + 0.26);
       osc.start(now);
-      osc.stop(now + 0.25);
+      osc.stop(now + 0.26);
     } else if (type === 'snake') {
       osc.type = 'sawtooth';
       osc.frequency.setValueAtTime(480, now);
-      osc.frequency.exponentialRampToValueAtTime(160, now + 0.28);
+      osc.frequency.exponentialRampToValueAtTime(150, now + 0.28);
       gain.gain.setValueAtTime(0.14, now);
       gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
       osc.start(now);
@@ -121,70 +144,158 @@ function playSynthSound(
 }
 
 /* ============================================================================
- * SVG DICE FACE RENDERER (1..6 PIPS)
+ * 3D PAWN ("GUTI") PREVIEW ICON FOR COLOR PICKER & HUD
  * ============================================================================ */
-const DiceFaceSvg: React.FC<{ value: number | null }> = ({ value }) => {
+const PawnPreviewSvg: React.FC<{ color: LudoColor; size?: number }> = ({
+  color,
+  size = 34,
+}) => (
+  <svg width={size} height={size} viewBox="0 0 40 40" aria-hidden="true">
+    <defs>
+      <radialGradient id={`pawn_grad_${color}`} cx="35%" cy="28%" r="70%">
+        <stop offset="0%" stopColor="#ffffff" />
+        <stop offset="28%" stopColor={COLOR_LIGHT_HEX[color]} />
+        <stop offset="72%" stopColor={COLOR_HEX[color]} />
+        <stop offset="100%" stopColor={COLOR_DARK_HEX[color]} />
+      </radialGradient>
+    </defs>
+    <ellipse cx="20" cy="35" rx="11" ry="3.2" fill="rgba(0,0,0,0.35)" />
+    <ellipse
+      cx="20"
+      cy="33"
+      rx="9.5"
+      ry="3"
+      fill={COLOR_DARK_HEX[color]}
+      stroke="#ffffff"
+      strokeWidth="1.5"
+    />
+    <path
+      d="M12.5 32 C12.5 23, 15.5 19, 17 15 C14.5 13, 14.5 7, 20 7 C25.5 7, 25.5 13, 23 15 C24.5 19, 27.5 23, 27.5 32 Z"
+      fill={`url(#pawn_grad_${color})`}
+      stroke="#ffffff"
+      strokeWidth="1.5"
+      strokeLinejoin="round"
+    />
+    <ellipse
+      cx="18"
+      cy="10.5"
+      rx="2.6"
+      ry="1.4"
+      fill="#ffffff"
+      fillOpacity="0.85"
+      transform="rotate(-20 18 10.5)"
+    />
+  </svg>
+);
+
+/* ============================================================================
+ * 3D BEVELED DICE FACE RENDERER (LUDO KING STYLE)
+ * ============================================================================ */
+const DiceFaceSvg: React.FC<{ value: number | null; rolling?: boolean }> = ({
+  value,
+  rolling,
+}) => {
+  const [animFace, setAnimFace] = useState(6);
+
+  useEffect(() => {
+    if (!rolling) return;
+    const id = setInterval(() => {
+      setAnimFace((prev) => (prev % 6) + 1);
+    }, 75);
+    return () => clearInterval(id);
+  }, [rolling]);
+
+  const shownVal = rolling ? animFace : value;
+
   const pips: Record<number, [number, number][]> = {
-    1: [[24, 24]],
+    1: [[26, 26]],
     2: [
-      [14, 14],
-      [34, 34],
+      [15, 15],
+      [37, 37],
     ],
     3: [
-      [14, 14],
-      [24, 24],
-      [34, 34],
+      [15, 15],
+      [26, 26],
+      [37, 37],
     ],
     4: [
-      [14, 14],
-      [34, 14],
-      [14, 34],
-      [34, 34],
+      [15, 15],
+      [37, 15],
+      [15, 37],
+      [37, 37],
     ],
     5: [
-      [14, 14],
-      [34, 14],
-      [24, 24],
-      [14, 34],
-      [34, 34],
+      [15, 15],
+      [37, 15],
+      [26, 26],
+      [15, 37],
+      [37, 37],
     ],
     6: [
-      [14, 12],
-      [34, 12],
-      [14, 24],
-      [34, 24],
-      [14, 36],
-      [34, 36],
+      [15, 13],
+      [37, 13],
+      [15, 26],
+      [37, 26],
+      [15, 39],
+      [37, 39],
     ],
   };
 
-  const dots = value && pips[value] ? pips[value] : [];
+  const dots = shownVal && pips[shownVal] ? pips[shownVal] : [];
 
   return (
-    <svg width="48" height="48" viewBox="0 0 48 48" aria-hidden="true">
+    <svg width="56" height="56" viewBox="0 0 52 52" aria-hidden="true">
+      <defs>
+        <linearGradient id="diceBodyGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#ffffff" />
+          <stop offset="65%" stopColor="#f8fafc" />
+          <stop offset="100%" stopColor="#cbd5e1" />
+        </linearGradient>
+      </defs>
       <rect
         x="3"
         y="3"
-        width="42"
-        height="42"
-        rx="11"
-        fill="rgba(255,255,255,0.94)"
-        stroke="#7c5cfa"
-        strokeWidth="2"
+        width="46"
+        height="46"
+        rx="13"
+        fill="url(#diceBodyGrad)"
+        stroke="#94a3b8"
+        strokeWidth="1.5"
+      />
+      <rect
+        x="6"
+        y="6"
+        width="40"
+        height="40"
+        rx="10"
+        fill="none"
+        stroke="#ffffff"
+        strokeWidth="1.2"
       />
       {dots.length > 0 ? (
-        dots.map(([cx, cy], idx) => <circle key={idx} cx={cx} cy={cy} r="4.2" fill="#1e1b4b" />)
+        dots.map(([cx, cy], idx) => (
+          <circle
+            key={idx}
+            cx={cx}
+            cy={cy}
+            r={shownVal === 1 ? 6 : 4.3}
+            fill={shownVal === 1 ? '#ef4444' : '#0f172a'}
+          />
+        ))
       ) : (
-        <text
-          x="24"
-          y="29"
-          textAnchor="middle"
-          fontSize="14"
-          fontWeight="800"
-          fill="#6d28d9"
-        >
-          ROLL
-        </text>
+        <>
+          <circle cx="26" cy="20" r="3.5" fill="#7c5cfa" />
+          <text
+            x="26"
+            y="37"
+            textAnchor="middle"
+            fontSize="10.5"
+            fontWeight="900"
+            fill="#4c1d95"
+          >
+            ROLL
+          </text>
+        </>
       )}
     </svg>
   );
@@ -243,12 +354,14 @@ export const GamesLibraryPage: React.FC<{ user: AuthUser | null; lang: Lang }> =
             <Sparkles size={13} /> Real-Time Online Multiplayer
           </span>
           <h1 style={{ margin: '0.4rem 0 0.2rem', fontSize: '2.1rem' }}>
-            {lang === 'bn' ? 'মাল্টিপ্লেয়ার লুডু এবং সাপ-লুডু' : 'BFFquest Multiplayer Board Games'}
+            {lang === 'bn'
+              ? 'মাল্টিপ্লেয়ার লুডু এবং সাপ-লুডু অ্যারেনা'
+              : 'BFFquest Royal Board Arena'}
           </h1>
           <p style={{ margin: 0, color: 'var(--t2)' }}>
             {lang === 'bn'
-              ? 'রুম তৈরি করে বন্ধুদের লিংক বা কোড পাঠান এবং রিয়েল-টাইমে একসাথে খেলুন।'
-              : 'Create a private room, share the invite link or 6-digit code, and play live with friends.'}
+              ? 'পছন্দের রঙের ঘুঁটি বেছে নিন, রুম কোড শেয়ার করুন এবং ১ ঘর ১ ঘর করে স্মুথ অ্যানিমেশনে খেলুন!'
+              : 'Pick your 3D pawn colour, share the room code, and play live with step-by-step animations.'}
           </p>
         </div>
 
@@ -258,8 +371,8 @@ export const GamesLibraryPage: React.FC<{ user: AuthUser | null; lang: Lang }> =
         >
           <input
             className="form-input"
-            style={{ width: 170, minHeight: 42, textTransform: 'uppercase', fontWeight: 700 }}
-            placeholder="Room Code (e.g. BFF7X9)"
+            style={{ width: 175, minHeight: 42, textTransform: 'uppercase', fontWeight: 700 }}
+            placeholder="Room Code (e.g. ADZAHP)"
             maxLength={12}
             value={joinCode}
             onChange={(e) => setJoinCode(e.target.value)}
@@ -292,49 +405,49 @@ export const GamesLibraryPage: React.FC<{ user: AuthUser | null; lang: Lang }> =
                 marginBottom: '0.9rem',
               }}
             >
-              <span className="t ok">2 or 4 Players • 4 Tokens Each</span>
-              <span className="t">Classic Board</span>
+              <span className="t ok">2 or 4 Players • Custom Colour Pick</span>
+              <span className="t">3D Pawns</span>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.8rem' }}>
+            <div
+              style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.9rem' }}
+            >
               <div
                 style={{
-                  width: 64,
-                  height: 64,
-                  borderRadius: 18,
+                  width: 68,
+                  height: 68,
+                  borderRadius: 20,
                   display: 'grid',
                   gridTemplateColumns: '1fr 1fr',
-                  gap: 4,
-                  padding: 8,
+                  placeItems: 'center',
+                  padding: 6,
                   background: 'rgba(255,255,255,0.08)',
                   border: '1px solid rgba(255,255,255,0.2)',
                 }}
               >
-                <span style={{ background: '#EF4444', borderRadius: 6 }} />
-                <span style={{ background: '#10B981', borderRadius: 6 }} />
-                <span style={{ background: '#3B82F6', borderRadius: 6 }} />
-                <span style={{ background: '#F59E0B', borderRadius: 6 }} />
+                <PawnPreviewSvg color="red" size={26} />
+                <PawnPreviewSvg color="green" size={26} />
+                <PawnPreviewSvg color="blue" size={26} />
+                <PawnPreviewSvg color="yellow" size={26} />
               </div>
               <div>
-                <h2 style={{ margin: 0, fontSize: '1.55rem' }}>Classic Ludo</h2>
+                <h2 style={{ margin: 0, fontSize: '1.6rem' }}>Classic Ludo</h2>
                 <span style={{ color: 'var(--t2)', fontSize: '0.9rem' }}>
-                  Traditional 4-Colour Cross Board
+                  Royal 4-Colour Cross Board
                 </span>
               </div>
             </div>
 
             <p style={{ color: 'var(--t2)', fontSize: '0.94rem', marginBottom: '1.25rem' }}>
-              Roll a 6 to release tokens from your base, race clockwise across 52 track squares,
-              capture opponents on unsafe tiles, rest on star safe squares, and bring all 4 tokens
-              into your home triangle!
+              Pick your favorite colour (Red, Green, Yellow, or Blue), roll 6 to deploy your 3D
+              pawns, watch them hop step-by-step across the 52-tile track, capture opponents, and
+              race into the royal home crown!
             </p>
           </div>
 
-          <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap' }}>
-            <Link to="/games/ludo" className="b" style={{ flex: 1 }}>
-              <Play size={17} /> Play Classic Ludo
-            </Link>
-          </div>
+          <Link to="/games/ludo" className="b" style={{ width: '100%' }}>
+            <Play size={17} /> Play Classic Ludo
+          </Link>
         </div>
 
         {/* Mode B: Snake Ludo Card */}
@@ -356,19 +469,21 @@ export const GamesLibraryPage: React.FC<{ user: AuthUser | null; lang: Lang }> =
                 marginBottom: '0.9rem',
               }}
             >
-              <span className="t ok">2 or 4 Players • 1–100 Grid</span>
+              <span className="t ok">2 or 4 Players • 1–100 Serpentine</span>
               <span className="t">Snakes & Ladders</span>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.8rem' }}>
+            <div
+              style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.9rem' }}
+            >
               <div
                 style={{
-                  width: 64,
-                  height: 64,
-                  borderRadius: 18,
+                  width: 68,
+                  height: 68,
+                  borderRadius: 20,
                   display: 'grid',
                   placeItems: 'center',
-                  fontSize: '1.9rem',
+                  fontSize: '2rem',
                   background: 'rgba(16,185,129,0.16)',
                   border: '1px solid rgba(16,185,129,0.35)',
                 }}
@@ -376,31 +491,39 @@ export const GamesLibraryPage: React.FC<{ user: AuthUser | null; lang: Lang }> =
                 🐍🪜
               </div>
               <div>
-                <h2 style={{ margin: 0, fontSize: '1.55rem' }}>Snake Ludo</h2>
+                <h2 style={{ margin: 0, fontSize: '1.6rem' }}>Snake Ludo</h2>
                 <span style={{ color: 'var(--t2)', fontSize: '0.9rem' }}>
-                  10×10 Serpentine Numbered Board
+                  10×10 Illustrated Snakes & Ladders
                 </span>
               </div>
             </div>
 
             <p style={{ color: 'var(--t2)', fontSize: '0.94rem', marginBottom: '1.25rem' }}>
-              Race from Square 1 to Square 100 across alternating serpentine rows! Climb tall
-              ladders to shortcut ahead, dodge dangerous snake heads, and land on 100 with an exact
-              dice roll to claim victory.
+              Step tile-by-tile from Square 1 to Square 100! Climb multi-rung golden ladders to
+              shortcut up the board, dodge coiled snakes, and land on 100 with an exact roll.
             </p>
           </div>
 
-          <div style={{ display: 'flex', gap: '0.65rem', flexWrap: 'wrap' }}>
-            <Link to="/games/snake-ludo" className="b" style={{ flex: 1 }}>
-              <Play size={17} /> Play Snake Ludo
-            </Link>
-          </div>
+          <Link to="/games/snake-ludo" className="b" style={{ width: '100%' }}>
+            <Play size={17} /> Play Snake Ludo
+          </Link>
         </div>
       </div>
 
-      <div className="g" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+      <div
+        className="g"
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          flexWrap: 'wrap',
+          gap: '1rem',
+        }}
+      >
         <div>
-          <strong style={{ fontSize: '1.05rem' }}>Looking for Friendship Quizzes, AMA Inbox & Party Polls?</strong>
+          <strong style={{ fontSize: '1.05rem' }}>
+            Looking for Friendship Quizzes, AMA Inbox & Party Polls?
+          </strong>
           <p style={{ margin: '0.2rem 0 0', color: 'var(--t2)', fontSize: '0.88rem' }}>
             All 8 original BFFquest quiz and social modes remain available in Explore.
           </p>
@@ -414,7 +537,7 @@ export const GamesLibraryPage: React.FC<{ user: AuthUser | null; lang: Lang }> =
 };
 
 /* ============================================================================
- * 2. MODE SELECTION & ROOM CREATION PAGE (/games/ludo & /games/snake-ludo)
+ * 2. MODE SELECTION & COLOR PICKING PAGE (/games/ludo & /games/snake-ludo)
  * ============================================================================ */
 export const LudoModeSelectPage: React.FC<{
   mode: LudoGameMode;
@@ -423,6 +546,7 @@ export const LudoModeSelectPage: React.FC<{
 }> = ({ mode, user }) => {
   const navigate = useNavigate();
   const [playerCount, setPlayerCount] = useState<PlayerCount>(2);
+  const [preferredColor, setPreferredColor] = useState<LudoColor>('red');
   const [displayName, setDisplayName] = useState(user?.displayName || '');
   const [roomCodeInput, setRoomCodeInput] = useState('');
   const [busy, setBusy] = useState(false);
@@ -451,6 +575,7 @@ export const LudoModeSelectPage: React.FC<{
         playerKey: getPlayerSessionKey(user),
         displayName: displayName.trim(),
         avatarUrl: user?.avatarUrl || '',
+        preferredColor,
       });
       navigate(`${basePath}/room/${room.id}`);
     } catch (error: any) {
@@ -478,6 +603,7 @@ export const LudoModeSelectPage: React.FC<{
         playerKey: getPlayerSessionKey(user),
         displayName: displayName.trim(),
         avatarUrl: user?.avatarUrl || '',
+        preferredColor,
       });
       const targetBase = room.mode === 'classic' ? '/games/ludo' : '/games/snake-ludo';
       navigate(`${targetBase}/room/${room.id}`);
@@ -496,20 +622,16 @@ export const LudoModeSelectPage: React.FC<{
         </Link>
       </div>
 
-      <div
-        className="game-stage"
-        style={{ ['--a' as any]: isClassic ? '#7C5CFA' : '#10B981' }}
-      >
+      <div className="game-stage" style={{ ['--a' as any]: isClassic ? '#7C5CFA' : '#10B981' }}>
         <span className="t ok">
           {isClassic ? 'Classic 4-Colour Ludo' : 'Snake Ludo (1–100 Snakes & Ladders)'}
         </span>
         <h1 style={{ margin: '0.45rem 0 0.3rem' }}>
-          {isClassic ? 'Create or Join a Classic Ludo Room' : 'Create or Join a Snake Ludo Room'}
+          {isClassic ? 'Setup Your Classic Ludo Room' : 'Setup Your Snake Ludo Room'}
         </h1>
         <p style={{ color: 'var(--t2)', marginTop: 0, marginBottom: '1.35rem' }}>
-          {isClassic
-            ? '2-Player mode pits Red vs Yellow on opposite corners. 4-Player mode activates Red, Green, Yellow, and Blue clockwise.'
-            : 'Race from Square 1 to Square 100 with 9 ladders and 11 snakes. Authoritative server dice rolls keep every match fair.'}
+          Choose your player count, pick your favorite 3D pawn colour, and invite friends with a
+          room code or link.
         </p>
 
         {!ludoApi.isOnlineReady && (
@@ -522,10 +644,10 @@ export const LudoModeSelectPage: React.FC<{
         {err && <div className="alert-error">{err}</div>}
 
         <div className="form-group">
-          <label className="form-label">Your Player Name *</label>
+          <label className="form-label">1. Your Player Name *</label>
           <input
             className="form-input"
-            placeholder="e.g., Alex"
+            placeholder="e.g., Ahad"
             maxLength={32}
             value={displayName}
             onChange={(e) => setDisplayName(e.target.value)}
@@ -533,22 +655,56 @@ export const LudoModeSelectPage: React.FC<{
         </div>
 
         <div className="form-group">
-          <label className="form-label">Select Player Count *</label>
+          <label className="form-label">2. Select Player Mode *</label>
           <div className="seg">
             <button
               type="button"
               className={playerCount === 2 ? 'on' : ''}
               onClick={() => setPlayerCount(2)}
             >
-              2 Players (Red vs Yellow)
+              2 Players (1v1 Duel)
             </button>
             <button
               type="button"
               className={playerCount === 4 ? 'on' : ''}
               onClick={() => setPlayerCount(4)}
             >
-              4 Players (Red · Green · Yellow · Blue)
+              4 Players (4-Way Royal)
             </button>
+          </div>
+        </div>
+
+        <div className="form-group">
+          <label
+            className="form-label"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+          >
+            <Palette size={15} /> 3. Pick Your Pawn Colour *
+          </label>
+          <div className="ludo-color-picker-grid">
+            {ALL_LUDO_COLORS.map((c) => {
+              const isSelected = preferredColor === c;
+              return (
+                <button
+                  key={c}
+                  type="button"
+                  onClick={() => setPreferredColor(c)}
+                  className={`ludo-color-option ${isSelected ? 'selected' : ''}`}
+                  style={{ ['--pick-color' as any]: COLOR_HEX[c] }}
+                >
+                  <PawnPreviewSvg color={c} size={36} />
+                  <span>{COLOR_LABEL[c]}</span>
+                  {isSelected && (
+                    <span
+                      className="t ok"
+                      style={{ fontSize: '0.64rem', padding: '0.1rem 0.45rem' }}
+                    >
+                      Selected ✓
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -557,20 +713,25 @@ export const LudoModeSelectPage: React.FC<{
           disabled={busy || !ludoApi.isOnlineReady}
           onClick={handleCreateRoom}
           className="b"
-          style={{ width: '100%', minHeight: 50, marginTop: '0.5rem' }}
+          style={{ width: '100%', minHeight: 52, marginTop: '0.6rem' }}
         >
-          {busy ? 'Creating Room...' : `Create ${playerCount}-Player Room`}
+          {busy
+            ? 'Creating Room...'
+            : `Create ${playerCount}-Player Room as ${COLOR_LABEL[preferredColor]}`}
         </button>
 
         <div
           style={{
-            margin: '1.6rem 0 1.2rem',
+            margin: '1.6rem 0 0.4rem',
             paddingTop: '1.2rem',
             borderTop: '1px solid rgba(255,255,255,0.12)',
           }}
         >
-          <label className="form-label">Have a Room Code from a Friend?</label>
-          <form onSubmit={handleJoinByCode} style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
+          <label className="form-label">Or Join a Friend’s Room Code</label>
+          <form
+            onSubmit={handleJoinByCode}
+            style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}
+          >
             <input
               className="form-input"
               style={{ flex: 1, textTransform: 'uppercase', fontWeight: 700 }}
@@ -590,27 +751,29 @@ export const LudoModeSelectPage: React.FC<{
 };
 
 /* ============================================================================
- * 3. CLASSIC LUDO 15x15 SVG BOARD COMPONENT
+ * 3. ROYAL CLASSIC LUDO 15x15 SVG BOARD (WITH 3D PAWNS & STEP HOPPING)
  * ============================================================================ */
 const ClassicLudoBoardSvg: React.FC<{
   state: ClassicLudoState;
+  displayTokens: Record<LudoColor, [number, number, number, number]>;
+  hoppingToken: { color: LudoColor; tokenIndex: number } | null;
   myColor: LudoColor | null;
   canMoveToken: boolean;
   onSelectToken: (tokenIndex: number) => void;
-}> = ({ state, myColor, canMoveToken, onSelectToken }) => {
+}> = ({ state, displayTokens, hoppingToken, myColor, canMoveToken, onSelectToken }) => {
   const legalIndices =
     canMoveToken && myColor && state.turnColor === myColor
       ? new Set(getLegalTokenIndicesForClassic(state, myColor, state.diceValue))
       : new Set<number>();
 
-  // Group tokens by their grid coordinate so stacked tokens offset cleanly
+  // Group displayed tokens by grid coordinate so stacked tokens offset cleanly
   const coordGroups = new Map<
     string,
     { color: LudoColor; tokenIndex: number; step: number; row: number; col: number }[]
   >();
 
   for (const color of state.activeColors) {
-    const tokens = state.tokens[color] || [-1, -1, -1, -1];
+    const tokens = displayTokens[color] || state.tokens[color] || [-1, -1, -1, -1];
     tokens.forEach((step, tIdx) => {
       const [row, col] = getClassicTokenGridCoord(color, step, tIdx);
       const key = `${row.toFixed(1)},${col.toFixed(1)}`;
@@ -623,50 +786,113 @@ const ClassicLudoBoardSvg: React.FC<{
   return (
     <div className="ludo-board-frame">
       <svg viewBox="0 0 15 15" className="ludo-board-svg">
-        {/* Background Base */}
-        <rect x="0" y="0" width="15" height="15" fill="#0f172a" />
+        <defs>
+          {ALL_LUDO_COLORS.map((c) => (
+            <radialGradient key={`grad_${c}`} id={`board_pawn_${c}`} cx="35%" cy="25%" r="70%">
+              <stop offset="0%" stopColor="#ffffff" />
+              <stop offset="26%" stopColor={COLOR_LIGHT_HEX[c]} />
+              <stop offset="70%" stopColor={COLOR_HEX[c]} />
+              <stop offset="100%" stopColor={COLOR_DARK_HEX[c]} />
+            </radialGradient>
+          ))}
+          <linearGradient id="boardTrackTile" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stopColor="#ffffff" />
+            <stop offset="100%" stopColor="#e2e8f0" />
+          </linearGradient>
+        </defs>
 
-        {/* 4 Colored Home Bases (6x6 corners) */}
-        {/* Red Top-Left */}
-        <rect x="0" y="0" width="6" height="6" fill="#ef4444" fillOpacity="0.88" />
-        <rect x="0.8" y="0.8" width="4.4" height="4.4" rx="0.6" fill="#0f172a" fillOpacity="0.82" />
-        {/* Green Top-Right */}
-        <rect x="9" y="0" width="6" height="6" fill="#10b981" fillOpacity="0.88" />
-        <rect x="9.8" y="0.8" width="4.4" height="4.4" rx="0.6" fill="#0f172a" fillOpacity="0.82" />
-        {/* Yellow Bottom-Right */}
-        <rect x="9" y="9" width="6" height="6" fill="#f59e0b" fillOpacity="0.88" />
-        <rect x="9.8" y="9.8" width="4.4" height="4.4" rx="0.6" fill="#0f172a" fillOpacity="0.82" />
-        {/* Blue Bottom-Left */}
-        <rect x="0" y="9" width="6" height="6" fill="#3b82f6" fillOpacity="0.88" />
-        <rect x="0.8" y="9.8" width="4.4" height="4.4" rx="0.6" fill="#0f172a" fillOpacity="0.82" />
+        {/* Board Base */}
+        <rect x="0" y="0" width="15" height="15" fill="#1e293b" />
 
-        {/* Base Token Slots */}
-        {(['red', 'green', 'yellow', 'blue'] as LudoColor[]).map((c) =>
+        {/* 4 Royal Corner Yards (6x6 each) */}
+        {[
+          { color: 'red' as LudoColor, x: 0, y: 0 },
+          { color: 'green' as LudoColor, x: 9, y: 0 },
+          { color: 'yellow' as LudoColor, x: 9, y: 9 },
+          { color: 'blue' as LudoColor, x: 0, y: 9 },
+        ].map(({ color, x, y }) => {
+          const isActiveTurn = state.turnColor === color;
+          return (
+            <g key={`yard_${color}`}>
+              <rect
+                x={x}
+                y={y}
+                width="6"
+                height="6"
+                fill={COLOR_HEX[color]}
+                stroke="#0f172a"
+                strokeWidth="0.08"
+              />
+              {/* Inner White/Glass Yard Box */}
+              <rect
+                x={x + 0.85}
+                y={y + 0.85}
+                width="4.3"
+                height="4.3"
+                rx="0.65"
+                fill="#f8fafc"
+                stroke={isActiveTurn ? '#fde047' : COLOR_DARK_HEX[color]}
+                strokeWidth={isActiveTurn ? '0.14' : '0.08'}
+              />
+              {/* Corner Label */}
+              <text
+                x={x + 3}
+                y={y + 0.58}
+                textAnchor="middle"
+                fontSize="0.38"
+                fontWeight="900"
+                fill="#ffffff"
+                letterSpacing="0.04"
+              >
+                {COLOR_LABEL[color].toUpperCase()}
+              </text>
+            </g>
+          );
+        })}
+
+        {/* 4 Recessed Base Sockets per Yard */}
+        {ALL_LUDO_COLORS.map((c) =>
           BASE_TOKEN_COORDS[c].map(([r, col], idx) => (
-            <circle
-              key={`${c}_slot_${idx}`}
-              cx={col + 0.5}
-              cy={r + 0.5}
-              r="0.52"
-              fill={COLOR_HEX[c]}
-              fillOpacity={state.activeColors.includes(c) ? 0.32 : 0.1}
-              stroke={COLOR_HEX[c]}
-              strokeWidth="0.08"
-            />
+            <g key={`${c}_base_socket_${idx}`}>
+              <circle
+                cx={col + 0.5}
+                cy={r + 0.5}
+                r="0.54"
+                fill={COLOR_HEX[c]}
+                fillOpacity="0.22"
+                stroke={COLOR_HEX[c]}
+                strokeWidth="0.08"
+              />
+              <circle
+                cx={col + 0.5}
+                cy={r + 0.5}
+                r="0.36"
+                fill={COLOR_HEX[c]}
+                fillOpacity="0.45"
+              />
+            </g>
           ))
         )}
 
-        {/* 52 Outer Track Squares */}
+        {/* 52 Outer Track Tiles */}
         {OUTER_TRACK_COORDS.map(([r, c], idx) => {
-          let fill = 'rgba(255,255,255,0.92)';
-          if (idx === START_TRACK_INDEX.red) fill = '#ef4444';
-          else if (idx === START_TRACK_INDEX.green) fill = '#10b981';
-          else if (idx === START_TRACK_INDEX.yellow) fill = '#f59e0b';
-          else if (idx === START_TRACK_INDEX.blue) fill = '#3b82f6';
+          let fill = 'url(#boardTrackTile)';
+          let startArrow = '';
+          if (idx === START_TRACK_INDEX.red) {
+            fill = COLOR_HEX.red;
+            startArrow = '➔';
+          } else if (idx === START_TRACK_INDEX.green) {
+            fill = COLOR_HEX.green;
+            startArrow = '⬇';
+          } else if (idx === START_TRACK_INDEX.yellow) {
+            fill = COLOR_HEX.yellow;
+            startArrow = '⬅';
+          } else if (idx === START_TRACK_INDEX.blue) {
+            fill = COLOR_HEX.blue;
+            startArrow = '⬆';
+          }
 
           const isStar = STAR_TRACK_INDICES.has(idx);
-          const isStart =
-            idx === 0 || idx === 13 || idx === 26 || idx === 39;
 
           return (
             <g key={`track_${idx}`}>
@@ -675,95 +901,197 @@ const ClassicLudoBoardSvg: React.FC<{
                 y={r}
                 width="1"
                 height="1"
+                rx="0.08"
                 fill={fill}
-                stroke="#1e293b"
-                strokeWidth="0.05"
+                stroke="#475569"
+                strokeWidth="0.045"
               />
-              {(isStar || isStart) && (
+              {startArrow && (
                 <text
                   x={c + 0.5}
                   y={r + 0.68}
                   textAnchor="middle"
                   fontSize="0.52"
-                  fill={isStart ? '#ffffff' : '#475569'}
+                  fontWeight="900"
+                  fill="#ffffff"
                 >
-                  ★
+                  {startArrow}
                 </text>
+              )}
+              {isStar && (
+                <g transform={`translate(${c + 0.5}, ${r + 0.5})`}>
+                  <circle r="0.36" fill="rgba(245, 158, 11, 0.2)" />
+                  <text
+                    x="0"
+                    y="0.18"
+                    textAnchor="middle"
+                    fontSize="0.55"
+                    fill="#d97706"
+                  >
+                    ★
+                  </text>
+                </g>
               )}
             </g>
           );
         })}
 
-        {/* 4 Colored Home Corridors (Steps 51..55) */}
-        {(['red', 'green', 'yellow', 'blue'] as LudoColor[]).map((color) =>
+        {/* 4 Colored Home Lanes (Steps 51..55) with Directional Chevrons */}
+        {ALL_LUDO_COLORS.map((color) =>
           HOME_LANE_COORDS[color].slice(0, 5).map(([r, c], i) => (
-            <rect
-              key={`home_${color}_${i}`}
-              x={c}
-              y={r}
-              width="1"
-              height="1"
-              fill={COLOR_HEX[color]}
-              fillOpacity="0.85"
-              stroke="#1e293b"
-              strokeWidth="0.05"
-            />
+            <g key={`home_lane_${color}_${i}`}>
+              <rect
+                x={c}
+                y={r}
+                width="1"
+                height="1"
+                rx="0.06"
+                fill={COLOR_HEX[color]}
+                stroke="#ffffff"
+                strokeWidth="0.05"
+              />
+              <circle
+                cx={c + 0.5}
+                cy={r + 0.5}
+                r="0.14"
+                fill="#ffffff"
+                fillOpacity="0.45"
+              />
+            </g>
           ))
         )}
 
-        {/* Center 3x3 Home Triangles */}
-        <polygon points="6,6 6,9 7.5,7.5" fill="#ef4444" stroke="#0f172a" strokeWidth="0.06" />
-        <polygon points="6,6 9,6 7.5,7.5" fill="#10b981" stroke="#0f172a" strokeWidth="0.06" />
-        <polygon points="9,6 9,9 7.5,7.5" fill="#f59e0b" stroke="#0f172a" strokeWidth="0.06" />
-        <polygon points="6,9 9,9 7.5,7.5" fill="#3b82f6" stroke="#0f172a" strokeWidth="0.06" />
+        {/* Center 3x3 Royal Home Zone */}
+        <polygon points="6,6 6,9 7.5,7.5" fill={COLOR_HEX.red} stroke="#ffffff" strokeWidth="0.06" />
+        <polygon
+          points="6,6 9,6 7.5,7.5"
+          fill={COLOR_HEX.green}
+          stroke="#ffffff"
+          strokeWidth="0.06"
+        />
+        <polygon
+          points="9,6 9,9 7.5,7.5"
+          fill={COLOR_HEX.yellow}
+          stroke="#ffffff"
+          strokeWidth="0.06"
+        />
+        <polygon
+          points="6,9 9,9 7.5,7.5"
+          fill={COLOR_HEX.blue}
+          stroke="#ffffff"
+          strokeWidth="0.06"
+        />
+        <circle
+          cx="7.5"
+          cy="7.5"
+          r="0.58"
+          fill="#0f172a"
+          stroke="#fde047"
+          strokeWidth="0.08"
+        />
+        <text x="7.5" y="7.72" textAnchor="middle" fontSize="0.62">
+          👑
+        </text>
 
-        {/* Render Active Player Tokens */}
+        {/* Render 3D Sculpted Pawn Tokens ("Guti") */}
         {Array.from(coordGroups.values()).map((group) =>
           group.map((item, stackIdx) => {
             const isSelectable =
               item.color === myColor && legalIndices.has(item.tokenIndex);
+            const isHopping =
+              hoppingToken?.color === item.color &&
+              hoppingToken?.tokenIndex === item.tokenIndex;
+
             const offsets: [number, number][] =
               group.length === 1
                 ? [[0, 0]]
                 : [
-                    [-0.16, -0.16],
-                    [0.16, -0.16],
-                    [-0.16, 0.16],
-                    [0.16, 0.16],
+                    [-0.18, -0.16],
+                    [0.18, -0.16],
+                    [-0.18, 0.18],
+                    [0.18, 0.18],
                   ];
             const [dx, dy] = offsets[stackIdx % 4];
             const cx = item.col + 0.5 + dx;
             const cy = item.row + 0.5 + dy;
+            const scale = group.length > 1 ? 0.78 : 1;
 
             return (
               <g
                 key={`tok_${item.color}_${item.tokenIndex}`}
+                transform={`translate(${cx}, ${cy}) scale(${scale})`}
                 className={`ludo-token-group ${isSelectable ? '' : 'disabled'}`}
                 onClick={() => {
                   if (isSelectable) onSelectToken(item.tokenIndex);
                 }}
               >
-                {isSelectable && (
-                  <circle cx={cx} cy={cy} r="0.45" className="ludo-token-selectable-ring" />
-                )}
-                <circle
-                  cx={cx}
-                  cy={cy}
-                  r={group.length > 1 ? 0.31 : 0.36}
-                  fill={COLOR_HEX[item.color]}
-                  stroke="#ffffff"
-                  strokeWidth="0.1"
-                />
-                <text
-                  x={cx}
-                  y={cy + 0.11}
-                  textAnchor="middle"
-                  fontSize="0.3"
-                  fontWeight="800"
-                  fill="#ffffff"
-                >
-                  {item.tokenIndex + 1}
-                </text>
+                <g className={`ludo-token-inner ${isHopping ? 'hopping' : ''}`}>
+                  {/* Rotating Selection Halo */}
+                  {isSelectable && (
+                    <>
+                      <circle cx="0" cy="0.05" r="0.48" className="ludo-token-selectable-ring" />
+                      <polygon
+                        points="0,-0.62 -0.16,-0.84 0.16,-0.84"
+                        fill="#fde047"
+                        stroke="#0f172a"
+                        strokeWidth="0.03"
+                        className="ludo-token-pointer"
+                      />
+                    </>
+                  )}
+
+                  {/* Ground Drop Shadow */}
+                  <ellipse
+                    cx="0"
+                    cy="0.26"
+                    rx={isHopping ? '0.22' : '0.32'}
+                    ry={isHopping ? '0.08' : '0.13'}
+                    fill="rgba(0,0,0,0.48)"
+                  />
+
+                  {/* Metallic Base Ring */}
+                  <ellipse
+                    cx="0"
+                    cy="0.2"
+                    rx="0.28"
+                    ry="0.11"
+                    fill={COLOR_DARK_HEX[item.color]}
+                    stroke="#ffffff"
+                    strokeWidth="0.055"
+                  />
+
+                  {/* Sculpted 3D Pawn Body */}
+                  <path
+                    d="M -0.22 0.18 C -0.22 -0.06, -0.12 -0.16, -0.08 -0.26 C -0.16 -0.32, -0.15 -0.5, 0 -0.5 C 0.15 -0.5, 0.16 -0.32, 0.08 -0.26 C 0.12 -0.16, 0.22 -0.06, 0.22 0.18 Z"
+                    fill={`url(#board_pawn_${item.color})`}
+                    stroke="#ffffff"
+                    strokeWidth="0.055"
+                    strokeLinejoin="round"
+                  />
+
+                  {/* Glossy Specular Crown Highlight */}
+                  <ellipse
+                    cx="-0.05"
+                    cy="-0.39"
+                    rx="0.075"
+                    ry="0.042"
+                    fill="#ffffff"
+                    fillOpacity="0.9"
+                    transform="rotate(-20 -0.05 -0.39)"
+                  />
+
+                  {/* Token Number Badge */}
+                  <text
+                    x="0"
+                    y="0.11"
+                    textAnchor="middle"
+                    fontSize="0.22"
+                    fontWeight="900"
+                    fill="#ffffff"
+                  >
+                    {item.tokenIndex + 1}
+                  </text>
+                </g>
               </g>
             );
           })
@@ -774,11 +1102,13 @@ const ClassicLudoBoardSvg: React.FC<{
 };
 
 /* ============================================================================
- * 4. SNAKE LUDO 10x10 SERPENTINE BOARD COMPONENT
+ * 4. SNAKE LUDO 10x10 SERPENTINE BOARD (WITH REAL LADDERS, SNAKES & 3D PAWNS)
  * ============================================================================ */
 const SnakeLudoBoardView: React.FC<{
   state: SnakeLudoState;
-}> = ({ state }) => {
+  displayPositions: Record<LudoColor, number>;
+  hoppingColor: LudoColor | null;
+}> = ({ state, displayPositions, hoppingColor }) => {
   const cells: { row: number; col: number; num: number }[] = [];
   for (let r = 0; r < 10; r++) {
     for (let c = 0; c < 10; c++) {
@@ -793,7 +1123,7 @@ const SnakeLudoBoardView: React.FC<{
           const ladderTop = SNAKE_BOARD_DEFAULT_CONFIG.ladders[cell.num];
           const snakeTail = SNAKE_BOARD_DEFAULT_CONFIG.snakes[cell.num];
           const playersHere = state.activeColors.filter(
-            (color) => state.positions[color] === cell.num
+            (color) => (displayPositions[color] ?? state.positions[color]) === cell.num
           );
 
           return (
@@ -803,33 +1133,45 @@ const SnakeLudoBoardView: React.FC<{
                 ladderTop ? 'is-ladder' : ''
               } ${snakeTail ? 'is-snake' : ''} ${cell.num === 100 ? 'is-100' : ''}`}
             >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  zIndex: 4,
+                }}
+              >
                 <span>{cell.num}</span>
                 {ladderTop && (
-                  <span style={{ fontSize: '0.58rem', color: '#34d399' }}>🪜{ladderTop}</span>
+                  <span style={{ fontSize: '0.54rem', color: '#10b981' }}>▲{ladderTop}</span>
                 )}
                 {snakeTail && (
-                  <span style={{ fontSize: '0.58rem', color: '#f87171' }}>🐍{snakeTail}</span>
+                  <span style={{ fontSize: '0.54rem', color: '#ef4444' }}>▼{snakeTail}</span>
                 )}
                 {cell.num === 100 && <span>👑</span>}
               </div>
 
               {playersHere.length > 0 && (
-                <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', marginTop: 'auto' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    gap: 2,
+                    flexWrap: 'wrap',
+                    marginTop: 'auto',
+                    zIndex: 5,
+                  }}
+                >
                   {playersHere.map((c) => (
-                    <span
+                    <div
                       key={c}
                       style={{
-                        width: 15,
-                        height: 15,
-                        borderRadius: '50%',
-                        background: COLOR_HEX[c],
-                        border: '2px solid #ffffff',
-                        boxShadow: '0 2px 6px rgba(0,0,0,0.45)',
-                        display: 'inline-block',
+                        transform: hoppingColor === c ? 'translateY(-4px) scale(1.18)' : 'none',
+                        transition: 'transform 0.14s ease',
                       }}
                       title={COLOR_LABEL[c]}
-                    />
+                    >
+                      <PawnPreviewSvg color={c} size={playersHere.length > 1 ? 18 : 24} />
+                    </div>
                   ))}
                 </div>
               )}
@@ -838,8 +1180,9 @@ const SnakeLudoBoardView: React.FC<{
         })}
       </div>
 
-      {/* Visual SVG Overlay for Ladders & Snakes */}
+      {/* Illustrated Multi-Rung Ladders & Coiled Snakes SVG Overlay */}
       <svg viewBox="0 0 100 100" className="snake-overlay-svg">
+        {/* Render Realistic Ladders with 2 Side Rails + Rungs */}
         {Object.entries(SNAKE_BOARD_DEFAULT_CONFIG.ladders).map(([fromStr, to]) => {
           const from = Number(fromStr);
           const a = getSnakeSquareCoord(from);
@@ -848,20 +1191,55 @@ const SnakeLudoBoardView: React.FC<{
           const y1 = a.row * 10 + 5;
           const x2 = b.col * 10 + 5;
           const y2 = b.row * 10 + 5;
+
+          const dx = x2 - x1;
+          const dy = y2 - y1;
+          const len = Math.hypot(dx, dy) || 1;
+          const nx = (-dy / len) * 1.45;
+          const ny = (dx / len) * 1.45;
+          const numRungs = Math.max(4, Math.floor(len / 4.2));
+
           return (
-            <line
-              key={`ladder_${from}`}
-              x1={x1}
-              y1={y1}
-              x2={x2}
-              y2={y2}
-              stroke="#10b981"
-              strokeWidth="1.2"
-              strokeDasharray="2 1.5"
-              strokeOpacity="0.65"
-            />
+            <g key={`ladder_${from}`} opacity="0.82">
+              <line
+                x1={x1 - nx}
+                y1={y1 - ny}
+                x2={x2 - nx}
+                y2={y2 - ny}
+                stroke="#f59e0b"
+                strokeWidth="0.85"
+                strokeLinecap="round"
+              />
+              <line
+                x1={x1 + nx}
+                y1={y1 + ny}
+                x2={x2 + nx}
+                y2={y2 + ny}
+                stroke="#f59e0b"
+                strokeWidth="0.85"
+                strokeLinecap="round"
+              />
+              {Array.from({ length: numRungs - 1 }, (_, i) => {
+                const t = (i + 1) / numRungs;
+                const rx = x1 + dx * t;
+                const ry = y1 + dy * t;
+                return (
+                  <line
+                    key={i}
+                    x1={rx - nx}
+                    y1={ry - ny}
+                    x2={rx + nx}
+                    y2={ry + ny}
+                    stroke="#fef08a"
+                    strokeWidth="0.65"
+                  />
+                );
+              })}
+            </g>
           );
         })}
+
+        {/* Render Coiled Snakes with Head, Eyes & Tail */}
         {Object.entries(SNAKE_BOARD_DEFAULT_CONFIG.snakes).map(([headStr, tail]) => {
           const head = Number(headStr);
           const a = getSnakeSquareCoord(head);
@@ -870,17 +1248,36 @@ const SnakeLudoBoardView: React.FC<{
           const y1 = a.row * 10 + 5;
           const x2 = b.col * 10 + 5;
           const y2 = b.row * 10 + 5;
-          const mx = (x1 + x2) / 2 + 4;
+
+          const mx = (x1 + x2) / 2;
           const my = (y1 + y2) / 2;
+          const cx1 = (x1 + mx) / 2 + 5.5;
+          const cy1 = (y1 + my) / 2 - 2;
+          const cx2 = (mx + x2) / 2 - 5.5;
+          const cy2 = (my + y2) / 2 + 2;
+
           return (
-            <path
-              key={`snake_${head}`}
-              d={`M ${x1} ${y1} Q ${mx} ${my} ${x2} ${y2}`}
-              fill="none"
-              stroke="#ef4444"
-              strokeWidth="1.2"
-              strokeOpacity="0.65"
-            />
+            <g key={`snake_${head}`} opacity="0.85">
+              <path
+                d={`M ${x1} ${y1} Q ${cx1} ${cy1} ${mx} ${my} T ${x2} ${y2}`}
+                fill="none"
+                stroke="#ef4444"
+                strokeWidth="1.9"
+                strokeLinecap="round"
+              />
+              <path
+                d={`M ${x1} ${y1} Q ${cx1} ${cy1} ${mx} ${my} T ${x2} ${y2}`}
+                fill="none"
+                stroke="#fde047"
+                strokeWidth="0.9"
+                strokeDasharray="1.4 1.8"
+                strokeLinecap="round"
+              />
+              {/* Snake Head at x1, y1 */}
+              <circle cx={x1} cy={y1} r="1.8" fill="#dc2626" stroke="#ffffff" strokeWidth="0.3" />
+              <circle cx={x1 - 0.6} cy={y1 - 0.4} r="0.4" fill="#ffffff" />
+              <circle cx={x1 + 0.6} cy={y1 - 0.4} r="0.4" fill="#ffffff" />
+            </g>
           );
         })}
       </svg>
@@ -889,13 +1286,13 @@ const SnakeLudoBoardView: React.FC<{
 };
 
 /* ============================================================================
- * 5. MULTIPLAYER ROOM PAGE (/games/ludo/room/:roomId & /games/snake-ludo/room/:roomId)
+ * 5. MULTIPLAYER ROOM PAGE (WITH 1-BY-1 STEP ANIMATOR & LOBBY COLOR SWITCHER)
  * ============================================================================ */
 export const MultiplayerLudoRoomPage: React.FC<{
   expectedMode: LudoGameMode;
   user: AuthUser | null;
   lang: Lang;
-}> = ({ expectedMode, user }) => {
+}> = ({ user }) => {
   const { roomId = '' } = useParams<{ roomId: string }>();
   const navigate = useNavigate();
   const playerKey = getPlayerSessionKey(user);
@@ -904,12 +1301,226 @@ export const MultiplayerLudoRoomPage: React.FC<{
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [joinName, setJoinName] = useState(user?.displayName || '');
+  const [joinColor, setJoinColor] = useState<LudoColor>('yellow');
   const [joining, setJoining] = useState(false);
   const [rollingAnim, setRollingAnim] = useState(false);
   const [actionBusy, setActionBusy] = useState(false);
   const [soundOn, setSoundOn] = useState(true);
   const [copiedLink, setCopiedLink] = useState(false);
   const [onlineKeys, setOnlineKeys] = useState<Set<string>>(new Set());
+
+  // Step-by-Step Visual Interpolation State (Prevents Teleportation!)
+  const [displayTokens, setDisplayTokens] = useState<
+    Record<LudoColor, [number, number, number, number]>
+  >({
+    red: [-1, -1, -1, -1],
+    green: [-1, -1, -1, -1],
+    yellow: [-1, -1, -1, -1],
+    blue: [-1, -1, -1, -1],
+  });
+  const [hoppingToken, setHoppingToken] = useState<{
+    color: LudoColor;
+    tokenIndex: number;
+  } | null>(null);
+
+  const [displaySnakePos, setDisplaySnakePos] = useState<Record<LudoColor, number>>({
+    red: 1,
+    green: 1,
+    yellow: 1,
+    blue: 1,
+  });
+  const [hoppingSnakeColor, setHoppingSnakeColor] = useState<LudoColor | null>(null);
+
+  const [eventBanner, setEventBanner] = useState<{
+    id: number;
+    text: string;
+    type: 'six' | 'capture' | 'ladder' | 'snake' | 'info';
+  } | null>(null);
+
+  const isInitializedRef = useRef(false);
+  const stepTimerRef = useRef<number | null>(null);
+
+  const triggerBanner = (
+    text: string,
+    type: 'six' | 'capture' | 'ladder' | 'snake' | 'info' = 'info'
+  ) => {
+    setEventBanner({ id: Date.now(), text, type });
+  };
+
+  // Step-by-Step 1-Square-at-a-Time Animator whenever room.board_state updates
+  useEffect(() => {
+    if (!room) return;
+    const bs = room.board_state;
+
+    if (bs.diceValue === 6 && bs.phase === 'WAITING_FOR_MOVE') {
+      triggerBanner('🎲 ROLLED A 6! EXTRA ROLL!', 'six');
+    }
+
+    if (room.mode === 'classic') {
+      const target = (bs as ClassicLudoState).tokens;
+      if (!isInitializedRef.current) {
+        setDisplayTokens({
+          red: [...target.red] as [number, number, number, number],
+          green: [...target.green] as [number, number, number, number],
+          yellow: [...target.yellow] as [number, number, number, number],
+          blue: [...target.blue] as [number, number, number, number],
+        });
+        isInitializedRef.current = true;
+        return;
+      }
+
+      // Find any token that advanced forward or left base
+      let mover: {
+        color: LudoColor;
+        tokenIndex: number;
+        fromStep: number;
+        toStep: number;
+      } | null = null;
+      const capturedList: { color: LudoColor; tokenIndex: number }[] = [];
+
+      for (const c of ALL_LUDO_COLORS) {
+        for (let i = 0; i < 4; i++) {
+          const cur = displayTokens[c][i];
+          const nxt = target[c][i];
+          if (cur !== nxt) {
+            if (nxt === -1 && cur >= 0) {
+              capturedList.push({ color: c, tokenIndex: i });
+            } else if (nxt > cur) {
+              mover = { color: c, tokenIndex: i, fromStep: cur, toStep: nxt };
+            }
+          }
+        }
+      }
+
+      if (!mover) {
+        setDisplayTokens({
+          red: [...target.red] as [number, number, number, number],
+          green: [...target.green] as [number, number, number, number],
+          yellow: [...target.yellow] as [number, number, number, number],
+          blue: [...target.blue] as [number, number, number, number],
+        });
+        return;
+      }
+
+      if (stepTimerRef.current) window.clearInterval(stepTimerRef.current);
+
+      const { color, tokenIndex, fromStep, toStep } = mover;
+
+      // Case A: Token released from base (-1 -> 0)
+      if (fromStep === -1 && toStep === 0) {
+        setHoppingToken({ color, tokenIndex });
+        playSynthSound('release', soundOn);
+        setDisplayTokens((prev) => {
+          const next = { ...prev, [color]: [...prev[color]] as [number, number, number, number] };
+          next[color][tokenIndex] = 0;
+          return next;
+        });
+        setTimeout(() => setHoppingToken(null), 220);
+        return;
+      }
+
+      // Case B: Step 1 square at a time (fromStep + 1 ... toStep)
+      let currentStep = fromStep;
+      stepTimerRef.current = window.setInterval(() => {
+        currentStep += 1;
+        setHoppingToken({ color, tokenIndex });
+        playSynthSound('step', soundOn);
+
+        setDisplayTokens((prev) => {
+          const next = { ...prev, [color]: [...prev[color]] as [number, number, number, number] };
+          next[color][tokenIndex] = currentStep;
+          return next;
+        });
+
+        if (currentStep >= toStep) {
+          if (stepTimerRef.current) window.clearInterval(stepTimerRef.current);
+          setTimeout(() => setHoppingToken(null), 160);
+
+          if (capturedList.length > 0) {
+            triggerBanner('💥 OPPONENT CAPTURED! +1 EXTRA ROLL!', 'capture');
+            playSynthSound('capture', soundOn);
+          } else if (toStep === 56) {
+            triggerBanner('👑 TOKEN REACHED HOME!', 'six');
+            playSynthSound('win', soundOn);
+          }
+
+          // Sync all tokens (including any captured tokens returning to -1)
+          setDisplayTokens({
+            red: [...target.red] as [number, number, number, number],
+            green: [...target.green] as [number, number, number, number],
+            yellow: [...target.yellow] as [number, number, number, number],
+            blue: [...target.blue] as [number, number, number, number],
+          });
+        }
+      }, 155);
+    } else {
+      // Snake Ludo 1-by-1 Square Step Animator
+      const targetPos = (bs as SnakeLudoState).positions;
+      if (!isInitializedRef.current) {
+        setDisplaySnakePos({ ...targetPos });
+        isInitializedRef.current = true;
+        return;
+      }
+
+      let movedColor: LudoColor | null = null;
+      for (const c of ALL_LUDO_COLORS) {
+        if (displaySnakePos[c] !== targetPos[c]) {
+          movedColor = c;
+          break;
+        }
+      }
+
+      if (!movedColor) return;
+      if (stepTimerRef.current) window.clearInterval(stepTimerRef.current);
+
+      const c = movedColor;
+      const startSq = displaySnakePos[c];
+      const finalSq = targetPos[c];
+
+      // Determine intermediate landed square if a ladder or snake was triggered
+      let landedSq = finalSq;
+      for (let d = 1; d <= 6; d++) {
+        const candidate = startSq + d;
+        if (SNAKE_BOARD_DEFAULT_CONFIG.ladders[candidate] === finalSq) {
+          landedSq = candidate;
+          break;
+        }
+        if (SNAKE_BOARD_DEFAULT_CONFIG.snakes[candidate] === finalSq) {
+          landedSq = candidate;
+          break;
+        }
+      }
+
+      let curSq = startSq;
+      stepTimerRef.current = window.setInterval(() => {
+        if (curSq < landedSq) {
+          curSq += 1;
+          setHoppingSnakeColor(c);
+          playSynthSound('step', soundOn);
+          setDisplaySnakePos((prev) => ({ ...prev, [c]: curSq }));
+        } else {
+          if (stepTimerRef.current) window.clearInterval(stepTimerRef.current);
+          setHoppingSnakeColor(null);
+
+          if (finalSq > landedSq) {
+            triggerBanner(`🪜 CLIMBED LADDER ${landedSq} → ${finalSq}!`, 'ladder');
+            playSynthSound('ladder', soundOn);
+            setTimeout(() => {
+              setDisplaySnakePos((prev) => ({ ...prev, [c]: finalSq }));
+            }, 220);
+          } else if (finalSq < landedSq) {
+            triggerBanner(`🐍 SNAKE BITE AT ${landedSq} → ${finalSq}!`, 'snake');
+            playSynthSound('snake', soundOn);
+            setTimeout(() => {
+              setDisplaySnakePos((prev) => ({ ...prev, [c]: finalSq }));
+            }, 220);
+          } else {
+            setDisplaySnakePos((prev) => ({ ...prev, [c]: finalSq }));
+          }
+        }
+      }, 155);
+    }
+  }, [room?.version, room?.board_state]);
 
   const subRef = useRef<{
     broadcastRolling: (color: LudoColor) => void;
@@ -928,13 +1539,15 @@ export const MultiplayerLudoRoomPage: React.FC<{
       }
       setRoom(fetched);
 
-      // Auto-rejoin if player is already part of the room
       const alreadyIn = fetched.players.some((p) => p.playerKey === playerKey);
       if (alreadyIn) {
         const rejoined = await ludoApi.joinRoom({
           roomIdentifier: fetched.id,
           playerKey,
-          displayName: user?.displayName || fetched.players.find((p) => p.playerKey === playerKey)?.displayName || 'Player',
+          displayName:
+            user?.displayName ||
+            fetched.players.find((p) => p.playerKey === playerKey)?.displayName ||
+            'Player',
           avatarUrl: user?.avatarUrl || '',
         });
         setRoom(rejoined);
@@ -958,7 +1571,7 @@ export const MultiplayerLudoRoomPage: React.FC<{
         onRollingBroadcast: () => {
           setRollingAnim(true);
           playSynthSound('roll', soundOn);
-          setTimeout(() => setRollingAnim(false), 600);
+          setTimeout(() => setRollingAnim(false), 550);
         },
       });
     } catch (error: any) {
@@ -972,6 +1585,7 @@ export const MultiplayerLudoRoomPage: React.FC<{
     loadAndSubscribe();
     return () => {
       if (subRef.current) subRef.current.unsubscribe();
+      if (stepTimerRef.current) window.clearInterval(stepTimerRef.current);
     };
   }, [roomId, user?.id]);
 
@@ -1005,7 +1619,9 @@ export const MultiplayerLudoRoomPage: React.FC<{
   }/room/${room.id}`;
 
   const boardState = room.board_state;
-  const isMyTurn = Boolean(myColor && boardState.turnColor === myColor && room.status === 'playing');
+  const isMyTurn = Boolean(
+    myColor && boardState.turnColor === myColor && room.status === 'playing'
+  );
 
   const handleJoinSeat = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -1021,6 +1637,7 @@ export const MultiplayerLudoRoomPage: React.FC<{
         playerKey,
         displayName: joinName.trim(),
         avatarUrl: user?.avatarUrl || '',
+        preferredColor: joinColor,
       });
       setRoom(updated);
     } catch (error: any) {
@@ -1055,14 +1672,6 @@ export const MultiplayerLudoRoomPage: React.FC<{
     setErr(null);
     try {
       const updated = await ludoApi.moveToken(room.id, playerKey, tokenIndex);
-      const lastAct = updated.board_state.lastAction || '';
-      if (lastAct.includes('Captured') || lastAct.includes('🪜')) {
-        playSynthSound('capture', soundOn);
-      } else if (lastAct.includes('🐍')) {
-        playSynthSound('snake', soundOn);
-      } else {
-        playSynthSound('move', soundOn);
-      }
       setRoom(updated);
     } catch (error: any) {
       setErr(error.message || 'Move rejected.');
@@ -1100,7 +1709,11 @@ export const MultiplayerLudoRoomPage: React.FC<{
 
     ctx.fillStyle = '#FFFFFF';
     ctx.font = 'bold 54px sans-serif';
-    ctx.fillText(`🏆 Winner: ${winnerPlayer?.displayName || boardState.winnerColor || 'Player'}`, 60, 175);
+    ctx.fillText(
+      `🏆 Winner: ${winnerPlayer?.displayName || boardState.winnerColor || 'Player'}`,
+      60,
+      175
+    );
 
     ctx.fillStyle = '#4FD1E8';
     ctx.font = 'bold 26px sans-serif';
@@ -1124,21 +1737,35 @@ export const MultiplayerLudoRoomPage: React.FC<{
   };
 
   /* ==========================================================================
-   * LOBBY VIEW (WAITING FOR PLAYERS & READY STATUS)
+   * LOBBY VIEW (WITH COLOR PICKING / SWITCHING)
    * ========================================================================== */
   if (room.status === 'waiting') {
     const allJoined = room.players.length === room.max_players;
     const allReady = allJoined && room.players.every((p) => p.ready);
+    const takenColors = new Set(room.players.map((p) => p.color));
 
     return (
-      <div className="container ludo-page-wrap animate-in" style={{ maxWidth: 720 }}>
-        <div className="game-stage" style={{ ['--a' as any]: room.mode === 'classic' ? '#7C5CFA' : '#10B981' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '0.75rem', marginBottom: '1rem' }}>
+      <div className="container ludo-page-wrap animate-in" style={{ maxWidth: 740 }}>
+        <div
+          className="game-stage"
+          style={{ ['--a' as any]: room.mode === 'classic' ? '#7C5CFA' : '#10B981' }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '0.75rem',
+              marginBottom: '1rem',
+            }}
+          >
             <div>
               <span className="t ok">
-                {room.mode === 'classic' ? 'Classic Ludo Lobby' : 'Snake Ludo Lobby'} • {room.max_players} Players
+                {room.mode === 'classic' ? 'Classic Ludo Lobby' : 'Snake Ludo Lobby'} •{' '}
+                {room.max_players} Players
               </span>
-              <h1 style={{ margin: '0.35rem 0 0', fontSize: '1.8rem' }}>
+              <h1 style={{ margin: '0.35rem 0 0', fontSize: '1.85rem' }}>
                 Room Code: <span className="gr">{room.room_code}</span>
               </h1>
             </div>
@@ -1159,8 +1786,8 @@ export const MultiplayerLudoRoomPage: React.FC<{
 
           {err && <div className="alert-error">{err}</div>}
 
-          {/* Invite Link & Copy Box */}
-          <div className="g" style={{ marginBottom: '1.25rem' }}>
+          {/* Share Link & WhatsApp Invite */}
+          <div className="g" style={{ marginBottom: '1.2rem' }}>
             <label className="form-label" style={{ display: 'block', marginBottom: '0.4rem' }}>
               Share Room Invite Link with Friends
             </label>
@@ -1189,7 +1816,9 @@ export const MultiplayerLudoRoomPage: React.FC<{
               </button>
               <a
                 href={`https://wa.me/?text=${encodeURIComponent(
-                  `Join my ${room.mode === 'classic' ? 'Classic Ludo' : 'Snake Ludo'} room (${room.room_code}) on ${BRAND.name}! ${inviteUrl}`
+                  `Join my ${
+                    room.mode === 'classic' ? 'Classic Ludo' : 'Snake Ludo'
+                  } room (${room.room_code}) on ${BRAND.name}! ${inviteUrl}`
                 )}`}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -1200,10 +1829,34 @@ export const MultiplayerLudoRoomPage: React.FC<{
             </div>
           </div>
 
-          {/* If visitor hasn't joined a seat yet */}
+          {/* Visitor Join Form with Color Picker */}
           {!myPlayer && room.players.length < room.max_players && (
             <form onSubmit={handleJoinSeat} className="g" style={{ marginBottom: '1.25rem' }}>
-              <h3 style={{ marginTop: 0 }}>Join an Open Seat</h3>
+              <h3 style={{ marginTop: 0, marginBottom: '0.75rem' }}>
+                Join Match & Pick Your Colour
+              </h3>
+              <div className="ludo-color-picker-grid" style={{ marginBottom: '0.9rem' }}>
+                {ALL_LUDO_COLORS.map((c) => {
+                  const isTaken = takenColors.has(c);
+                  const isSelected = joinColor === c && !isTaken;
+                  return (
+                    <button
+                      key={c}
+                      type="button"
+                      disabled={isTaken}
+                      onClick={() => setJoinColor(c)}
+                      className={`ludo-color-option ${isSelected ? 'selected' : ''}`}
+                      style={{ ['--pick-color' as any]: COLOR_HEX[c] }}
+                    >
+                      <PawnPreviewSvg color={c} size={32} />
+                      <span>{COLOR_LABEL[c]}</span>
+                      <span className="t" style={{ fontSize: '0.62rem' }}>
+                        {isTaken ? 'Taken' : isSelected ? 'Selected ✓' : 'Available'}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
               <div style={{ display: 'flex', gap: '0.6rem', flexWrap: 'wrap' }}>
                 <input
                   className="form-input"
@@ -1221,52 +1874,114 @@ export const MultiplayerLudoRoomPage: React.FC<{
             </form>
           )}
 
-          {/* Player Slots List */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.7rem', marginBottom: '1.4rem' }}>
-            {boardState.activeColors.map((color, idx) => {
-              const p = room.players.find((pl) => pl.color === color);
-              const isOnline = p ? onlineKeys.has(p.playerKey) || p.connected : false;
+          {/* Interactive 4-Colour Picker for Joined Players */}
+          {myPlayer && (
+            <div className="g" style={{ marginBottom: '1.25rem' }}>
+              <label
+                className="form-label"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+              >
+                <Palette size={15} /> Choose Your Pawn Colour (Tap any available colour to switch)
+              </label>
+              <div className="ludo-color-picker-grid">
+                {ALL_LUDO_COLORS.map((c) => {
+                  const holder = room.players.find((p) => p.color === c);
+                  const isMine = myPlayer.color === c;
+                  const isTakenByOther = Boolean(holder && !isMine);
+
+                  return (
+                    <button
+                      key={c}
+                      type="button"
+                      disabled={isTakenByOther}
+                      onClick={async () => {
+                        if (isMine || isTakenByOther) return;
+                        try {
+                          setErr(null);
+                          const updated = await ludoApi.changeColor(room.id, playerKey, c);
+                          setRoom(updated);
+                        } catch (e: any) {
+                          setErr(e.message);
+                        }
+                      }}
+                      className={`ludo-color-option ${isMine ? 'selected' : ''}`}
+                      style={{ ['--pick-color' as any]: COLOR_HEX[c] }}
+                    >
+                      <PawnPreviewSvg color={c} size={34} />
+                      <span>{COLOR_LABEL[c]}</span>
+                      <span className={`t ${isMine ? 'ok' : ''}`} style={{ fontSize: '0.65rem' }}>
+                        {isMine
+                          ? 'Your Colour ✓'
+                          : holder
+                          ? holder.displayName.slice(0, 10)
+                          : 'Tap to Pick'}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Joined Players List */}
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '0.65rem',
+              marginBottom: '1.4rem',
+            }}
+          >
+            {room.players.map((p, idx) => {
+              const isOnline = onlineKeys.has(p.playerKey) || p.connected;
               return (
-                <div key={color} className="ludo-player-pill">
+                <div key={p.playerKey} className="ludo-player-pill">
                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                    <span
-                      className="ludo-color-dot"
-                      style={{ color: COLOR_HEX[color], background: COLOR_HEX[color] }}
-                    />
+                    <PawnPreviewSvg color={p.color} size={30} />
                     <div>
                       <strong>
-                        Seat #{idx + 1} ({COLOR_LABEL[color]}):{' '}
-                        {p ? p.displayName : 'Waiting for player...'}
+                        Player #{idx + 1} ({COLOR_LABEL[p.color]}): {p.displayName}
                       </strong>
-                      {p && p.playerKey === room.host_player_key && (
+                      {p.playerKey === room.host_player_key && (
                         <span className="t" style={{ marginLeft: '0.45rem', fontSize: '0.68rem' }}>
                           HOST
                         </span>
                       )}
                     </div>
                   </div>
-
-                  <div>
-                    {p ? (
-                      <span className={`t ${p.ready ? 'ok' : 'w'}`}>
-                        {isOnline ? '● ' : ''}
-                        {p.ready ? 'Ready ✓' : 'Not Ready'}
-                      </span>
-                    ) : (
-                      <span className="t">Open Slot</span>
-                    )}
-                  </div>
+                  <span className={`t ${p.ready ? 'ok' : 'w'}`}>
+                    {isOnline ? '● ' : ''}
+                    {p.ready ? 'Ready ✓' : 'Not Ready'}
+                  </span>
                 </div>
               );
             })}
+
+            {Array.from({ length: Math.max(0, room.max_players - room.players.length) }).map(
+              (_, i) => (
+                <div key={`empty_${i}`} className="ludo-player-pill" style={{ opacity: 0.6 }}>
+                  <span>Waiting for Player #{room.players.length + i + 1} to join...</span>
+                  <span className="t">Open Seat</span>
+                </div>
+              )
+            )}
           </div>
 
           {/* Ready & Host Start Controls */}
           {myPlayer && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', gap: '0.75rem', flexWrap: 'wrap' }}>
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: '0.75rem',
+                flexWrap: 'wrap',
+              }}
+            >
               <button
                 type="button"
-                className="b o"
+                className="b o btn-sm"
+                style={{ minHeight: 44 }}
                 onClick={async () => {
                   try {
                     const updated = await ludoApi.toggleReady(room.id, playerKey, !myPlayer.ready);
@@ -1285,8 +2000,10 @@ export const MultiplayerLudoRoomPage: React.FC<{
                   type="button"
                   disabled={!allReady}
                   className="b"
+                  style={{ minHeight: 46, padding: '0 1.6rem' }}
                   onClick={async () => {
                     try {
+                      setErr(null);
                       const updated = await ludoApi.startGame(room.id, playerKey);
                       setRoom(updated);
                     } catch (e: any) {
@@ -1302,7 +2019,7 @@ export const MultiplayerLudoRoomPage: React.FC<{
                   </span>
                 </button>
               ) : (
-                <span style={{ color: 'var(--t2)', alignSelf: 'center', fontWeight: 600 }}>
+                <span style={{ color: 'var(--t2)', fontWeight: 600 }}>
                   Waiting for Host to start the match...
                 </span>
               )}
@@ -1314,7 +2031,7 @@ export const MultiplayerLudoRoomPage: React.FC<{
   }
 
   /* ==========================================================================
-   * IN-GAME & FINISHED MATCH VIEW
+   * IN-GAME & FINISHED MATCH VIEW (ROYAL ARCADE UI)
    * ========================================================================== */
   const currentTurnPlayer = room.players.find((p) => p.color === boardState.turnColor);
   const matchDurationSec =
@@ -1343,7 +2060,7 @@ export const MultiplayerLudoRoomPage: React.FC<{
         <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
           <span className="t ok">Room {room.room_code}</span>
           <h2 style={{ margin: 0, fontSize: '1.35rem' }}>
-            {room.mode === 'classic' ? 'Classic Ludo' : 'Snake Ludo (1–100)'}
+            {room.mode === 'classic' ? 'Classic Ludo Arena' : 'Snake Ludo Arena (1–100)'}
           </h2>
         </div>
 
@@ -1411,14 +2128,20 @@ export const MultiplayerLudoRoomPage: React.FC<{
             {boardState.finishOrder.map((c, i) => {
               const pl = room.players.find((p) => p.color === c);
               return (
-                <span key={c} className="t ok" style={{ fontSize: '0.88rem', padding: '0.4rem 0.9rem' }}>
+                <span
+                  key={c}
+                  className="t ok"
+                  style={{ fontSize: '0.88rem', padding: '0.4rem 0.9rem' }}
+                >
                   #{i + 1} {pl?.displayName || COLOR_LABEL[c]} ({COLOR_LABEL[c]})
                 </span>
               );
             })}
           </div>
 
-          <div style={{ display: 'flex', justifyContent: 'center', gap: '0.65rem', flexWrap: 'wrap' }}>
+          <div
+            style={{ display: 'flex', justifyContent: 'center', gap: '0.65rem', flexWrap: 'wrap' }}
+          >
             <button type="button" className="b" onClick={downloadResultCard}>
               <Download size={16} /> Download Result Card
             </button>
@@ -1436,23 +2159,37 @@ export const MultiplayerLudoRoomPage: React.FC<{
       )}
 
       <div className="ludo-layout-grid">
-        {/* Left Column: Board */}
-        <div>
+        {/* Left Column: Board with Floating Arcade Event Banner */}
+        <div className="ludo-board-stage">
+          {eventBanner && (
+            <div key={eventBanner.id} className={`ludo-event-banner ${eventBanner.type}`}>
+              {eventBanner.text}
+            </div>
+          )}
+
           {room.mode === 'classic' ? (
             <ClassicLudoBoardSvg
               state={boardState as ClassicLudoState}
+              displayTokens={displayTokens}
+              hoppingToken={hoppingToken}
               myColor={myColor}
-              canMoveToken={isMyTurn && boardState.phase === 'WAITING_FOR_MOVE'}
+              canMoveToken={
+                isMyTurn && boardState.phase === 'WAITING_FOR_MOVE' && !hoppingToken
+              }
               onSelectToken={handleMoveToken}
             />
           ) : (
-            <SnakeLudoBoardView state={boardState as SnakeLudoState} />
+            <SnakeLudoBoardView
+              state={boardState as SnakeLudoState}
+              displayPositions={displaySnakePos}
+              hoppingColor={hoppingSnakeColor}
+            />
           )}
         </div>
 
-        {/* Right Column: Dice Control, Active Turn, Player List & Move Log */}
+        {/* Right Column: Arcade Dice Dock, Player Cards & Match Log */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {/* Turn & Dice Card */}
+          {/* Turn & 3D Dice Dock */}
           <div className="g" style={{ textAlign: 'center' }}>
             <div style={{ marginBottom: '0.65rem' }}>
               <span
@@ -1461,6 +2198,8 @@ export const MultiplayerLudoRoomPage: React.FC<{
                   background: COLOR_HEX[boardState.turnColor],
                   color: '#ffffff',
                   border: 'none',
+                  padding: '0.3rem 0.9rem',
+                  fontSize: '0.82rem',
                 }}
               >
                 {currentTurnPlayer?.displayName || COLOR_LABEL[boardState.turnColor]}’s Turn (
@@ -1473,13 +2212,15 @@ export const MultiplayerLudoRoomPage: React.FC<{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: '1.1rem',
-                margin: '0.8rem 0',
+                gap: '1.15rem',
+                margin: '0.85rem 0',
               }}
             >
               <button
                 type="button"
-                className={`ludo-dice-btn ${rollingAnim ? 'rolling' : ''}`}
+                className={`ludo-dice-btn ${rollingAnim ? 'rolling' : ''} ${
+                  isMyTurn && boardState.phase === 'WAITING_FOR_ROLL' ? 'my-turn-glow' : ''
+                }`}
                 disabled={
                   !isMyTurn ||
                   boardState.phase !== 'WAITING_FOR_ROLL' ||
@@ -1489,26 +2230,29 @@ export const MultiplayerLudoRoomPage: React.FC<{
                 onClick={handleRollDice}
                 title={isMyTurn ? 'Tap to Roll Dice' : 'Wait for your turn'}
               >
-                <DiceFaceSvg value={boardState.diceValue} />
+                <DiceFaceSvg value={boardState.diceValue} rolling={rollingAnim} />
               </button>
 
               <div style={{ textAlign: 'left' }}>
-                <strong style={{ display: 'block', fontSize: '1.05rem' }}>
-                  {boardState.diceValue ? `Rolled: ${boardState.diceValue}` : 'Ready to Roll'}
+                <strong style={{ display: 'block', fontSize: '1.1rem' }}>
+                  {rollingAnim
+                    ? 'Rolling Dice...'
+                    : boardState.diceValue
+                    ? `Rolled: ${boardState.diceValue}`
+                    : 'Ready to Roll'}
                 </strong>
                 <span style={{ fontSize: '0.84rem', color: 'var(--t2)' }}>
                   {isMyTurn
                     ? boardState.phase === 'WAITING_FOR_ROLL'
-                      ? 'Tap the dice to roll!'
+                      ? '👉 Tap the 3D dice to roll!'
                       : room.mode === 'classic'
-                      ? 'Tap a glowing token on the board!'
-                      : 'Tap the Move button below!'
-                    : 'Waiting for opponent...'}
+                      ? '👉 Tap a glowing pawn on the board!'
+                      : '👉 Tap Move Token below!'
+                    : 'Waiting for opponent’s move...'}
                 </span>
               </div>
             </div>
 
-            {/* In Snake Ludo, single-token move button when WAITING_FOR_MOVE */}
             {room.mode === 'snake' && isMyTurn && boardState.phase === 'WAITING_FOR_MOVE' && (
               <button
                 type="button"
@@ -1517,44 +2261,51 @@ export const MultiplayerLudoRoomPage: React.FC<{
                 style={{ width: '100%', marginTop: '0.4rem' }}
                 onClick={() => handleMoveToken(0)}
               >
-                Move Token +{boardState.diceValue} Squares ›
+                Move Pawn +{boardState.diceValue} Squares ›
               </button>
             )}
 
             <div
               style={{
                 marginTop: '0.75rem',
-                padding: '0.6rem 0.8rem',
-                borderRadius: 12,
-                background: 'rgba(255,255,255,0.04)',
-                fontSize: '0.85rem',
+                padding: '0.6rem 0.85rem',
+                borderRadius: 14,
+                background: 'rgba(124, 92, 250, 0.1)',
+                border: '1px solid rgba(124, 92, 250, 0.24)',
+                fontSize: '0.84rem',
                 color: 'var(--cy)',
-                fontWeight: 600,
+                fontWeight: 700,
               }}
             >
               {boardState.lastAction}
             </div>
           </div>
 
-          {/* Players Status List */}
+          {/* Players Status & Token Progress Pips */}
           <div className="g">
-            <span className="lab" style={{ display: 'block', marginBottom: '0.6rem' }}>
-              <Users size={13} /> Players & Token Status
+            <span className="lab" style={{ display: 'block', marginBottom: '0.65rem' }}>
+              <Users size={13} /> Players & Pawn Progress
             </span>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.55rem' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem' }}>
               {boardState.activeColors.map((color) => {
                 const pl = room.players.find((p) => p.color === color);
                 const isOnline = pl ? onlineKeys.has(pl.playerKey) || pl.connected : false;
                 const isTurn = boardState.turnColor === color && room.status === 'playing';
+                const toks =
+                  room.mode === 'classic'
+                    ? (boardState as ClassicLudoState).tokens[color] || [-1, -1, -1, -1]
+                    : [];
 
                 let statusSub = '';
                 if (room.mode === 'classic') {
-                  const toks = (boardState as ClassicLudoState).tokens[color] || [-1, -1, -1, -1];
                   const homeCount = toks.filter((s) => s === 56).length;
                   const outCount = toks.filter((s) => s >= 0 && s < 56).length;
-                  statusSub = `Home: ${homeCount}/4 • Active: ${outCount}`;
+                  statusSub = `Home: ${homeCount}/4 • Track: ${outCount}`;
                 } else {
-                  const sq = (boardState as SnakeLudoState).positions[color] || 1;
+                  const sq =
+                    displaySnakePos[color] ??
+                    (boardState as SnakeLudoState).positions[color] ??
+                    1;
                   statusSub = `Square: ${sq} / 100`;
                 }
 
@@ -1562,18 +2313,34 @@ export const MultiplayerLudoRoomPage: React.FC<{
                   <div
                     key={color}
                     className={`ludo-player-pill ${isTurn ? 'active-turn' : ''}`}
+                    style={{ ['--turn-color' as any]: COLOR_HEX[color] }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
-                      <span
-                        className="ludo-color-dot"
-                        style={{ color: COLOR_HEX[color], background: COLOR_HEX[color] }}
-                      />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.7rem' }}>
+                      <PawnPreviewSvg color={color} size={32} />
                       <div>
-                        <strong style={{ fontSize: '0.92rem' }}>
+                        <strong style={{ fontSize: '0.94rem', display: 'block' }}>
                           {pl?.displayName || COLOR_LABEL[color]}
                           {pl?.playerKey === playerKey ? ' (You)' : ''}
                         </strong>
                         <div style={{ fontSize: '0.76rem', color: 'var(--t2)' }}>{statusSub}</div>
+                        {room.mode === 'classic' && (
+                          <div
+                            className="ludo-pip-strip"
+                            style={{ ['--pip-color' as any]: COLOR_HEX[color] }}
+                          >
+                            {toks.map((s, idx) => (
+                              <span
+                                key={idx}
+                                className={`ludo-pip-token ${
+                                  s === 56 ? 'home' : s >= 0 ? 'out' : ''
+                                }`}
+                                title={
+                                  s === 56 ? 'Home' : s >= 0 ? 'On Track' : 'In Yard'
+                                }
+                              />
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -1591,14 +2358,14 @@ export const MultiplayerLudoRoomPage: React.FC<{
             </div>
           </div>
 
-          {/* Recent Move History Log */}
+          {/* Recent Match Log */}
           <div className="g">
             <span className="lab" style={{ display: 'block', marginBottom: '0.5rem' }}>
               Recent Match Log
             </span>
             <div
               style={{
-                maxHeight: 150,
+                maxHeight: 140,
                 overflowY: 'auto',
                 display: 'flex',
                 flexDirection: 'column',
@@ -1611,7 +2378,13 @@ export const MultiplayerLudoRoomPage: React.FC<{
                 .slice()
                 .reverse()
                 .map((entry, idx) => (
-                  <div key={idx} style={{ padding: '0.25rem 0', borderBottom: '1px dashed rgba(255,255,255,0.07)' }}>
+                  <div
+                    key={idx}
+                    style={{
+                      padding: '0.25rem 0',
+                      borderBottom: '1px dashed rgba(255,255,255,0.08)',
+                    }}
+                  >
                     {entry}
                   </div>
                 ))}
