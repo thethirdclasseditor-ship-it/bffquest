@@ -58,19 +58,35 @@ export const ludoApi = {
     playerKey: string;
     displayName: string;
     avatarUrl?: string;
+    preferredColor?: LudoColor;
   }): Promise<LudoRoomRecord> {
     const client = ensureSupabaseMultiplayer();
+    const prefColor = params.preferredColor || 'red';
+
     const { data, error } = await client.rpc('ludo_create_room', {
       p_mode: params.mode,
       p_max_players: params.maxPlayers,
       p_player_key: params.playerKey,
       p_display_name: params.displayName.trim() || 'Player 1',
       p_avatar_url: params.avatarUrl || '',
+      p_preferred_color: prefColor,
     });
 
-    if (error || !data) {
-      throw new Error(error?.message || 'Could not create multiplayer room.');
+    if (error) {
+      // Fallback if DB function still has 5-arg signature
+      const fallback = await client.rpc('ludo_create_room', {
+        p_mode: params.mode,
+        p_max_players: params.maxPlayers,
+        p_player_key: params.playerKey,
+        p_display_name: params.displayName.trim() || 'Player 1',
+        p_avatar_url: params.avatarUrl || '',
+      });
+      if (fallback.error || !fallback.data) {
+        throw new Error(fallback.error?.message || error.message || 'Could not create room.');
+      }
+      return fallback.data as LudoRoomRecord;
     }
+
     return data as LudoRoomRecord;
   },
 
@@ -79,6 +95,7 @@ export const ludoApi = {
     playerKey: string;
     displayName: string;
     avatarUrl?: string;
+    preferredColor?: LudoColor;
   }): Promise<LudoRoomRecord> {
     const client = ensureSupabaseMultiplayer();
     const { data, error } = await client.rpc('ludo_join_room', {
@@ -86,10 +103,39 @@ export const ludoApi = {
       p_player_key: params.playerKey,
       p_display_name: params.displayName.trim() || 'Player',
       p_avatar_url: params.avatarUrl || '',
+      p_preferred_color: params.preferredColor || '',
     });
 
+    if (error) {
+      const fallback = await client.rpc('ludo_join_room', {
+        p_room_identifier: params.roomIdentifier.trim(),
+        p_player_key: params.playerKey,
+        p_display_name: params.displayName.trim() || 'Player',
+        p_avatar_url: params.avatarUrl || '',
+      });
+      if (fallback.error || !fallback.data) {
+        throw new Error(fallback.error?.message || error.message || 'Could not join room.');
+      }
+      return fallback.data as LudoRoomRecord;
+    }
+
+    return data as LudoRoomRecord;
+  },
+
+  async changeColor(
+    roomId: string,
+    playerKey: string,
+    color: LudoColor
+  ): Promise<LudoRoomRecord> {
+    const client = ensureSupabaseMultiplayer();
+    const { data, error } = await client.rpc('ludo_lobby_action', {
+      p_room_id: roomId,
+      p_player_key: playerKey,
+      p_action: `color:${color}`,
+      p_ready: true,
+    });
     if (error || !data) {
-      throw new Error(error?.message || 'Could not join multiplayer room.');
+      throw new Error(error?.message || 'Could not switch colour.');
     }
     return data as LudoRoomRecord;
   },
